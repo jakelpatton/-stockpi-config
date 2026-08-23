@@ -1,0 +1,119 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>StockPi Dashboard</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header>
+  <div>
+    <h1>StockPi</h1>
+    <div id="status">Loading quotes…</div>
+    <div id="cloudStatus" class="cloud-status">Checking thesis feed…</div>
+  </div>
+  <div id="clock"></div>
+</header>
+
+<main class="dashboard-main">
+  <section class="watch">
+    <div class="section-title">PORTFOLIO / WATCHLIST</div>
+    <div id="rows"></div>
+  </section>
+</main>
+
+<section class="ticker-shell" aria-label="Latest portfolio, AI chip, and AI headlines">
+  <div class="ticker-label">NEWS</div>
+  <div class="ticker-window">
+    <div id="tickerTrack" class="ticker-track" aria-live="off">
+      <span class="ticker-item"><b>StockPi</b> Loading latest headlines…</span>
+    </div>
+  </div>
+</section>
+
+<footer>Phone settings: <b>http://stockpi.local:8080/settings</b></footer>
+
+<script>
+function money(v){return v==null?"—":"$"+Number(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fallbackAction(price,s){
+  if(price==null) return "HOLD";
+  const aggressive=s.aggressive_buy ?? s.aggressive;
+  const strong=s.strong_buy ?? s.strong;
+  if(aggressive!=null && price<=aggressive) return "AGGRESSIVE BUY";
+  if(strong!=null && price<=strong) return "STRONG BUY";
+  if(s.buy!=null && price<=s.buy) return "BUY";
+  return "HOLD";
+}
+function actionClass(a){
+  if(["AGGRESSIVE BUY","STRONG BUY","BUY"].includes(a)) return "buy-action";
+  if(a==="HOLD") return "hold-action";
+  if(a==="CONSIDER TRIM") return "trim-action";
+  if(a==="THESIS WARNING") return "warn-action";
+  if(["SELL","SELL/EXIT","EXIT"].includes(a)) return "sell-action";
+  return "";
+}
+async function update(){
+  const [qs,ss,cs]=await Promise.all([
+    fetch('/api/quotes').then(r=>r.json()),
+    fetch('/api/stocks').then(r=>r.json()),
+    fetch('/api/cloud-status').then(r=>r.json())
+  ]);
+  const rows=document.getElementById('rows'); rows.innerHTML="";
+  for(const s of ss){
+    const q=qs.quotes[s.symbol]||{};
+    const pctcls=q.pct>0?'up':(q.pct<0?'down':'');
+    const strong=s.strong_buy ?? s.strong;
+    const aggressive=s.aggressive_buy ?? s.aggressive;
+    const action=(s.action || fallbackAction(q.price,s)).toUpperCase();
+    const cls=actionClass(action);
+    const d=document.createElement('div');
+    d.className='stock '+cls;
+    d.innerHTML=`
+      <div class="symbol">${s.symbol}</div>
+      <div class="price">${money(q.price)}</div>
+      <div class="pct ${pctcls}">${q.pct==null?'—':(q.pct>0?'+':'')+q.pct.toFixed(2)+'%'}</div>
+      <div class="zones">
+        Buy ≤ ${money(s.buy)}
+        ${strong!=null?' • Strong ≤ '+money(strong):''}
+        ${aggressive!=null?' • Agg ≤ '+money(aggressive):''}
+        ${s.consider_trim!=null?' • Trim ≥ '+money(s.consider_trim):''}
+        ${s.sell_exit!=null?' • Exit ≥ '+money(s.sell_exit):''}
+        <div class="subline">Thesis: <b>${(s.thesis||'—').toUpperCase()}</b>${s.last_reviewed?' • Reviewed '+s.last_reviewed:''}${s.note?' • '+s.note:''}</div>
+      </div>
+      <div class="badge">${action}</div>`;
+    rows.appendChild(d);
+  }
+  document.getElementById('status').textContent='Quotes auto-refresh • '+new Date().toLocaleTimeString();
+  const c=document.getElementById('cloudStatus');
+  c.textContent=cs.ok ? `Thesis feed online${cs.updated?' • '+cs.updated:''}` : `Using cached thesis feed${cs.updated?' • '+cs.updated:''}`;
+  c.className='cloud-status '+(cs.ok?'cloud-ok':'cloud-warn');
+}
+function esc(s){
+  return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+}
+async function updateNews(){
+  const n=await fetch('/api/news').then(r=>r.json());
+  const track=document.getElementById('tickerTrack');
+  const items=(n.news||[]).slice(0,36);
+  if(!items.length){
+    track.innerHTML='<span class="ticker-item"><b>NEWS</b> No headlines available right now.</span>';
+    return;
+  }
+  const html=items.map(item=>{
+    const tag=item.category==="PORTFOLIO" ? item.symbol : item.category;
+    const content=`<span class="ticker-tag ${item.category==='PORTFOLIO'?'portfolio-tag':item.category==='AI CHIPS'?'chip-tag':'ai-tag'}">${esc(tag)}</span><span>${esc(item.title)}</span>`;
+    return item.url
+      ? `<a class="ticker-item" href="${esc(item.url)}" target="_blank" rel="noopener">${content}</a>`
+      : `<span class="ticker-item">${content}</span>`;
+  }).join('<span class="ticker-sep">◆</span>');
+
+  track.innerHTML=`<div class="ticker-group">${html}</div><div class="ticker-group" aria-hidden="true">${html}</div>`;
+}
+setInterval(()=>document.getElementById('clock').textContent=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),1000);
+update(); updateNews();
+setInterval(update,5000);
+setInterval(updateNews,300000);
+</script>
+</body>
+</html>

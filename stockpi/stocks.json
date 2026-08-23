@@ -1,0 +1,9 @@
+[
+  {"symbol":"LRCX","buy":285,"strong":260,"aggressive":null},
+  {"symbol":"KLAC","buy":170,"strong":155,"aggressive":null},
+  {"symbol":"AMAT","buy":450,"strong":410,"aggressive":null},
+  {"symbol":"ASML","buy":1600,"strong":1450,"aggressive":null},
+  {"symbol":"ALAB","buy":250,"strong":220,"aggressive":null},
+  {"symbol":"EXE","buy":100,"strong":90,"aggressive":85},
+  {"symbol":"TER","buy":340,"strong":317.5,"aggressive":292.5}
+]

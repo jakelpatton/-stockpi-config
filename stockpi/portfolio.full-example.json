@@ -1,0 +1,12 @@
+{
+  "updated": "2026-08-23",
+  "stocks": [
+    {"symbol":"LRCX","action":"HOLD","buy":285,"strong_buy":260,"aggressive_buy":null,"consider_trim":null,"sell_exit":null,"thesis":"INTACT","last_reviewed":"2026-08-23","note":"Core memory/AI manufacturing thesis"},
+    {"symbol":"KLAC","action":"HOLD","buy":170,"strong_buy":155,"aggressive_buy":null,"consider_trim":null,"sell_exit":null,"thesis":"INTACT","last_reviewed":"2026-08-23","note":"Process control / yield exposure"},
+    {"symbol":"AMAT","action":"HOLD","buy":450,"strong_buy":410,"aggressive_buy":null,"consider_trim":null,"sell_exit":null,"thesis":"INTACT","last_reviewed":"2026-08-23","note":"Broad semiconductor manufacturing + HBM"},
+    {"symbol":"ASML","action":"HOLD","buy":1600,"strong_buy":1450,"aggressive_buy":null,"consider_trim":null,"sell_exit":null,"thesis":"INTACT","last_reviewed":"2026-08-23","note":"Lithography moat; less direct memory exposure"},
+    {"symbol":"ALAB","action":"HOLD","buy":250,"strong_buy":220,"aggressive_buy":null,"consider_trim":null,"sell_exit":null,"thesis":"INTACT","last_reviewed":"2026-08-23","note":"High-upside AI connectivity; valuation-sensitive"},
+    {"symbol":"EXE","action":"BUY","buy":100,"strong_buy":90,"aggressive_buy":85,"consider_trim":null,"sell_exit":null,"thesis":"INTACT","last_reviewed":"2026-08-23","note":"Natural gas / LNG / power-demand thesis"},
+    {"symbol":"TER","action":"HOLD","buy":340,"strong_buy":317.5,"aggressive_buy":292.5,"consider_trim":null,"sell_exit":null,"thesis":"INTACT","last_reviewed":"2026-08-23","note":"AI/HBM semiconductor-test exposure"}
+  ]
+}

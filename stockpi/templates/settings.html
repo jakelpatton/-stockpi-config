@@ -1,0 +1,74 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>StockPi Settings</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="settings-page">
+<header><div><h1>StockPi Settings</h1><div>Local watchlist + cloud thesis feed</div></div></header>
+<main class="settings-main">
+<div class="info-card">
+<b>Cloud thesis feed</b><br>
+<small>{{cloud_url}}</small><br>
+The Pi checks this GitHub file automatically about every 3 minutes and keeps the last good copy if GitHub or the internet is unavailable.
+</div>
+
+<form method="post">
+<input type="hidden" name="action" value="save">
+{% for s in stocks %}
+<div class="edit-row">
+<input name="symbol_{{loop.index0}}" value="{{s.symbol}}">
+<input name="buy_{{loop.index0}}" value="{{s.buy if s.buy is not none else ''}}" placeholder="Fallback buy">
+<input name="strong_{{loop.index0}}" value="{{s.strong if s.strong is not none else ''}}" placeholder="Fallback strong">
+<input name="aggressive_{{loop.index0}}" value="{{s.aggressive if s.aggressive is not none else ''}}" placeholder="Fallback aggressive">
+<button name="action" value="up" onclick="this.form.index.value='{{loop.index0}}'">↑</button>
+<button name="action" value="down" onclick="this.form.index.value='{{loop.index0}}'">↓</button>
+<button class="danger" name="action" value="delete" onclick="this.form.symbol.value='{{s.symbol}}'">Delete</button>
+</div>
+{% endfor %}
+<input type="hidden" name="index" value="">
+<input type="hidden" name="symbol" value="">
+<button class="primary" type="submit">Save Changes</button>
+</form>
+
+<h2>Add symbol</h2>
+<form method="post" class="add-form">
+<input type="hidden" name="action" value="add">
+<input name="symbol" placeholder="Ticker e.g. MU" required>
+<input name="buy" placeholder="Fallback buy">
+<input name="strong" placeholder="Fallback strong buy">
+<input name="aggressive" placeholder="Fallback aggressive">
+<button class="primary" type="submit">Add Symbol</button>
+</form>
+
+<h2>TV Power Schedule</h2>
+<div class="info-card">
+<p>Uses HDMI-CEC to wake the TV, switch to the Pi HDMI input, and put the TV into standby automatically.</p>
+<div class="power-grid">
+<label><input id="cecEnabled" type="checkbox"> Enable automatic TV power</label>
+<label>Wake time <input id="wakeTime" type="time"></label>
+<label>Sleep time <input id="sleepTime" type="time"></label>
+<label><input id="cecInput" type="checkbox"> Switch TV to Pi input when waking</label>
+</div>
+<div class="power-actions">
+<button type="button" class="primary" id="savePower">Save TV Schedule</button>
+<button type="button" id="testOn">Test TV On</button>
+<button type="button" id="testInput">Test Pi Input</button>
+<button type="button" class="danger" id="testOff">Test TV Standby</button>
+</div>
+<div id="powerMsg" class="subline"></div>
+</div>
+
+<p><a href="/">Open dashboard</a></p>
+</main>
+
+<script>
+async function loadPower(){const c=await fetch('/api/power-settings').then(r=>r.json());cecEnabled.checked=!!c.enabled;wakeTime.value=c.wake_time||'07:15';sleepTime.value=c.sleep_time||'22:30';cecInput.checked=!!c.switch_to_pi_input_on_wake;}
+async function savePower(){const p={enabled:cecEnabled.checked,wake_time:wakeTime.value,sleep_time:sleepTime.value,switch_to_pi_input_on_wake:cecInput.checked};const r=await fetch('/api/power-settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)}).then(r=>r.json());powerMsg.textContent=r.ok?'TV schedule saved.':'Could not save TV schedule.';}
+async function tvTest(a){powerMsg.textContent='Sending HDMI-CEC command…';const r=await fetch('/api/tv/'+a,{method:'POST'}).then(r=>r.json());powerMsg.textContent=r.ok?'CEC command sent successfully.':'CEC failed: '+(r.message||'unknown error');}
+savePower.addEventListener('click',savePower);testOn.addEventListener('click',()=>tvTest('on'));testInput.addEventListener('click',()=>tvTest('input'));testOff.addEventListener('click',()=>tvTest('standby'));loadPower();
+</script>
+</body>
+</html>

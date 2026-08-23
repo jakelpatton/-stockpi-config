@@ -1,0 +1,25 @@
+:root{color-scheme:dark;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}
+*{box-sizing:border-box}body{margin:0;background:#080d12;color:#eef3f7}
+header{display:flex;justify-content:space-between;align-items:center;padding:22px 28px;border-bottom:1px solid #26313a}
+h1{margin:0;font-size:34px}#status,header div div{color:#8da0af;margin-top:5px}#clock{font-size:30px;font-weight:700}
+main{padding:22px 28px;display:grid;grid-template-columns:1.25fr .75fr;gap:24px}
+.section-title{font-size:14px;letter-spacing:.18em;color:#8da0af;margin-bottom:12px}
+.stock{display:grid;grid-template-columns:110px 150px 90px 1fr 170px;gap:12px;align-items:center;padding:18px;border:1px solid #26313a;border-radius:14px;margin-bottom:12px;background:#0d141b}
+.symbol{font-size:28px;font-weight:800}.price{font-size:25px;font-weight:700}.pct{font-weight:700}.up{color:#44d07b}.down{color:#ff6b6b}
+.zones{color:#aab8c3}.badge{font-weight:900;text-align:right}.subline{margin-top:7px;font-size:13px;color:#8193a1}
+.buy-action{border-color:#2e7d55}.buy-action .badge{color:#49d98a}
+.hold-action .badge{color:#9fb0bc}.trim-action{border-color:#9c7a24}.trim-action .badge{color:#f2c14e}
+.warn-action{border-color:#9c5e24}.warn-action .badge{color:#ff9f43}.sell-action{border-color:#8a3030}.sell-action .badge{color:#ff6b6b}
+.headline{display:block;padding:15px 0;border-bottom:1px solid #26313a;color:#e8eef2;text-decoration:none;line-height:1.35}
+.headline span{display:inline-block;min-width:70px;font-weight:900;color:#64b5ff}
+footer{padding:10px 28px 22px;color:#667985}.cloud-status{margin-top:4px;font-size:13px}.cloud-ok{color:#49d98a}.cloud-warn{color:#f2b84b}
+.settings-page main{display:block;max-width:1000px;margin:auto}.info-card{padding:16px;border:1px solid #34434f;border-radius:12px;background:#0d141b;margin-bottom:20px;word-break:break-all}
+.edit-row,.add-form{display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr auto auto auto;gap:8px;margin:10px 0}
+input,button{font-size:17px;padding:12px;border-radius:10px;border:1px solid #34434f;background:#111a22;color:white}
+button{cursor:pointer}.primary{background:#173c2a;border-color:#2c8157}.danger{background:#3b1717;border-color:#7d3030}a{color:#64b5ff}
+@media(max-width:900px){main{grid-template-columns:1fr}.stock{grid-template-columns:80px 120px 75px 1fr}.badge{grid-column:1/-1;text-align:left}.edit-row,.add-form{grid-template-columns:1fr 1fr}}
+.dashboard-main{display:block;padding-bottom:18px}
+.ticker-shell{display:flex;align-items:center;min-height:58px;border-top:1px solid #26313a;border-bottom:1px solid #26313a;background:#0a1117;overflow:hidden}
+.ticker-label{flex:0 0 auto;align-self:stretch;display:flex;align-items:center;padding:0 18px;font-size:14px;font-weight:900;letter-spacing:.16em;color:#eef3f7;background:#17222c;z-index:2}
+.ticker-window{min-width:0;overflow:hidden;flex:1}.ticker-track{display:flex;width:max-content;will-change:transform;animation:stockpi-scroll 95s linear infinite}.ticker-group{display:flex;align-items:center;white-space:nowrap}.ticker-item{display:inline-flex;align-items:center;gap:9px;padding:16px 10px;color:#e8eef2;text-decoration:none;font-size:17px}.ticker-sep{color:#3d4a55;padding:0 8px}.ticker-tag{display:inline-block;font-weight:900;font-size:13px;letter-spacing:.05em;border:1px solid #42515d;border-radius:6px;padding:3px 6px}.portfolio-tag{color:#65d995;border-color:#2e7653}.chip-tag{color:#7fc1ff;border-color:#3d668b}.ai-tag{color:#d3a5ff;border-color:#72518f}.ticker-shell:hover .ticker-track{animation-play-state:paused}@keyframes stockpi-scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}@media (prefers-reduced-motion: reduce){.ticker-track{animation:none;max-width:100%;overflow:auto}}@media(max-width:700px){.ticker-label{padding:0 10px;font-size:12px}.ticker-item{font-size:15px;padding:14px 8px}}
+.power-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}.power-grid label{display:flex;gap:10px;align-items:center;color:#c8d2da}.power-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}@media(max-width:700px){.power-grid{grid-template-columns:1fr}}

@@ -1,0 +1,6 @@
+{
+  "enabled": true,
+  "wake_time": "07:15",
+  "sleep_time": "22:30",
+  "switch_to_pi_input_on_wake": true
+}
