@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>StockPi Dashboard</title>
+<title>FarmPi Dashboard</title>
 <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 <header>
   <div>
-    <h1>StockPi</h1>
+    <h1>FarmPi</h1>
     <div id="status">Loading quotes…</div>
     <div id="cloudStatus" class="cloud-status">Checking thesis feed…</div>
   </div>
@@ -27,12 +27,12 @@
   <div class="ticker-label">NEWS</div>
   <div class="ticker-window">
     <div id="tickerTrack" class="ticker-track" aria-live="off">
-      <span class="ticker-item"><b>StockPi</b> Loading latest headlines…</span>
+      <span class="ticker-item"><b>FarmPi</b> Loading latest headlines…</span>
     </div>
   </div>
 </section>
 
-<footer>Phone settings: <b>http://stockpi.local:8080/settings</b></footer>
+<footer>Phone settings: <b>http://farmpi.local:8080/settings</b></footer>
 
 <script>
 function money(v){return v==null?"—":"$"+Number(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
