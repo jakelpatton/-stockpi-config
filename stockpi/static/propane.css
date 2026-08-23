@@ -3,8 +3,8 @@
 .propane-card{min-height:245px;padding:18px;border-top:4px solid var(--blue);display:flex;flex-direction:column;justify-content:space-between}
 .propane-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
 .propane-head small{display:block;color:var(--muted);font-size:10px;margin-top:4px}
-.propane-demo{font-size:9px;letter-spacing:.11em;font-weight:850;padding:4px 7px;border-radius:99px;background:#e8f2f8;color:#477a98;border:1px solid #d3e5ef}
-.farm-dark .propane-demo{background:#102433;color:#8ac5e6;border-color:#24465b}
+.propane-level-label{font-size:9px;letter-spacing:.11em;font-weight:850;padding:4px 7px;border-radius:99px;background:#eef6fa;color:#477a98;border:1px solid #d8e8f0}
+.farm-dark .propane-level-label{background:#102433;color:#8ac5e6;border-color:#24465b}
 .propane-visual{display:grid;grid-template-columns:1fr 74px;align-items:center;gap:10px;margin:13px 0 8px}
 .propane-tank-wrap{position:relative;padding:0 4px 8px}
 .propane-tank{height:52px;border:2px solid #a7b7bd;border-radius:28px;background:linear-gradient(180deg,#f9fcfd,#dbe6e9);position:relative;overflow:hidden;box-shadow:inset 0 -7px 14px rgba(70,100,110,.08)}
@@ -13,10 +13,10 @@
 .propane-tank:before{left:17px}.propane-tank:after{right:17px}
 .propane-fill{position:absolute;left:0;bottom:0;height:100%;width:calc(var(--level,0) * 1%);background:linear-gradient(90deg,rgba(77,137,184,.18),rgba(77,137,184,.43));transition:width .5s ease}
 .propane-cap{position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:24px;height:10px;border-radius:5px 5px 2px 2px;background:#7d8e94;border:2px solid #687b82}
-.propane-gauge{width:70px;height:70px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--gauge-color,#4f9a5a) calc(var(--level,0)*1%),#e6ecea 0);position:relative}
+.propane-gauge{width:70px;height:70px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--gauge-color,#4f9a5a) calc(var(--level,0)*1%),#e6ecea 0);position:relative;box-shadow:0 5px 16px rgba(45,70,63,.08)}
 .propane-gauge:before{content:"";position:absolute;inset:7px;border-radius:50%;background:var(--panel)}
 .propane-gauge strong{position:relative;z-index:1;font-size:19px;line-height:1}.propane-gauge span{font-size:9px;color:var(--muted);position:absolute;z-index:1;top:42px}
-.propane-detail{display:grid;gap:5px}.propane-detail>div{display:flex;justify-content:space-between;gap:8px;padding-top:5px;border-top:1px solid var(--line);font-size:10px}.propane-detail span{color:var(--muted)}.propane-detail b{text-align:right;font-size:10px}.propane-status.good{color:#3d9a61}.propane-status.watch{color:var(--gold)}.propane-status.low{color:var(--red)}
+.propane-detail{display:grid;gap:4px}.propane-detail>div{display:flex;justify-content:space-between;gap:8px;padding-top:5px;border-top:1px solid var(--line);font-size:10px}.propane-detail span{color:var(--muted)}.propane-detail b{text-align:right;font-size:10px}.propane-status.good{color:#3d9a61}.propane-status.watch{color:var(--gold)}.propane-status.low{color:var(--red)}
 @media(max-width:1450px){.overview-grid.has-propane{grid-template-columns:1fr 1fr 1fr}.propane-card{min-height:210px}}
 @media(max-width:900px){.overview-grid.has-propane{grid-template-columns:1fr 1fr}.propane-card{min-height:200px}}
 @media(max-width:600px){.overview-grid.has-propane{grid-template-columns:1fr}}
