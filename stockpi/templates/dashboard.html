@@ -7,86 +7,91 @@
 <link rel="stylesheet" href="/static/style.css">
 </head>
 <body class="farm-light">
-<header>
+<header class="topbar">
   <div class="brand">
-    <div class="brand-mark">
-      <img src="/static/art1/main-house.png" data-fallback="/static/242E7528-C848-41B1-972E-24E23B4DE69F.png" onerror="useFallback(this)" alt="Main House">
-    </div>
+    <div class="brand-mark"><img src="/static/38C388BD-A21A-4A6D-9EC6-14B5CC26F7C1.png" alt="Main House"></div>
     <div><h1>Farm</h1><div id="status">Loading systems…</div></div>
   </div>
+  <div class="location-block"><span class="pin">●</span><div><b>Mt. Vernon, Missouri</b><small>Southwest Missouri</small></div></div>
   <div class="header-right-wrap">
-    <div class="bob-status">
-      <img src="/static/art1/bob.png" data-fallback="/static/0CDB6933-4ACC-42AC-9089-600D0BDC904E.png" onerror="useFallback(this)" alt="Bob">
-      <div><b>Bob</b><span>in charge</span></div>
-    </div>
+    <div class="bob-status"><img src="/static/0CDB6933-4ACC-42AC-9089-600D0BDC904E.png" alt="Bob"><div><b>Bob</b><span>in charge</span></div></div>
     <div class="header-right"><div id="screenName">Stocks</div><div id="clock"></div></div>
   </div>
 </header>
-
 <div class="rotation-dots" id="dots"></div>
 
 <main class="screens">
 <section class="screen active" data-screen="stocks">
-  <div class="eyebrow">MARKETS</div><h2>Stocks</h2><div id="rows"></div>
+  <div class="screen-heading"><div><div class="eyebrow">MARKETS</div><h2>Stocks</h2></div><div class="section-caption">Portfolio / watchlist • live quotes • thesis levels</div></div>
+  <div id="rows" class="stock-list"></div>
 </section>
 
 <section class="screen" data-screen="home">
-  <div class="eyebrow">TODAY AT THE FARM</div>
-  <div class="hero-row"><div><h2>Home Overview</h2><p class="lede">Main House, Rockhouse, gate, vehicle and property status at a glance.</p></div><div class="weather"><div class="weather-temp" id="wTemp">—</div><div><b id="wCond">—</b><br><span id="wDetail">—</span></div></div></div>
-  <div class="card-grid">
-    <article class="card house art-card">
-      <img class="card-art" src="/static/art1/main-house.png" data-fallback="/static/242E7528-C848-41B1-972E-24E23B4DE69F.png" onerror="useFallback(this)" alt="Main House">
-      <h3>Main House</h3><div class="big" id="mainTemp">—</div><div class="muted" id="mainClimate">—</div>
+  <div class="home-weather-grid">
+    <article class="weather-hero panel">
+      <div class="weather-icon">☀︎</div>
+      <div><span class="kicker">CURRENT WEATHER</span><h2 class="weather-title" id="wCond">—</h2><div class="weather-number" id="wTemp">—</div><div class="muted" id="wDetail">—</div></div>
+      <div class="weather-mini"><div><span>Humidity</span><b>58%</b></div><div><span>Wind</span><b>SW 8 mph</b></div><div><span>Rain</span><b>20%</b></div></div>
     </article>
-    <article class="card rock art-card">
-      <img class="card-art" src="/static/art1/rockhouse.png" data-fallback="/static/38C388BD-A21A-4A6D-9EC6-14B5CC26F7C1.png" onerror="useFallback(this)" alt="Rockhouse">
-      <h3>Rockhouse</h3><div class="big" id="rockTemp">—</div><div class="muted" id="rockClimate">—</div>
+    <article class="forecast panel">
+      <div class="panel-title">TODAY'S FORECAST</div>
+      <div class="forecast-row"><div><span>8 AM</span><i>☀︎</i><b>70°</b></div><div><span>11 AM</span><i>☀︎</i><b>77°</b></div><div><span>2 PM</span><i>☀︎</i><b>84°</b></div><div><span>5 PM</span><i>☀︎</i><b>82°</b></div><div><span>8 PM</span><i>☾</i><b>74°</b></div></div>
     </article>
-    <article class="card gate"><div class="icon">↔</div><h3>Gate</h3><div class="big" id="gateState">—</div><div class="muted" id="gateDetail">—</div></article>
-    <article class="card tesla"><div class="icon">⚡</div><h3>Tesla</h3><div class="big" id="teslaCharge">—</div><div class="muted" id="teslaDetail">—</div></article>
+    <article class="today panel"><div class="panel-title">TODAY</div><div class="today-high"><b>84°</b><span>HIGH</span></div><div class="today-low"><b>67°</b><span>LOW</span></div></article>
   </div>
-  <div class="bob-note"><img src="/static/art1/bob.png" data-fallback="/static/0CDB6933-4ACC-42AC-9089-600D0BDC904E.png" onerror="useFallback(this)" alt="Bob"><div><b>Bob’s watch</b><span>All monitored systems normal.</span></div></div>
+
+  <div class="overview-grid">
+    <article class="property-card main-house-card panel">
+      <img class="property-art" src="/static/38C388BD-A21A-4A6D-9EC6-14B5CC26F7C1.png" alt="Main House">
+      <div class="property-body"><div class="panel-title purple">MAIN HOUSE</div><div class="zone"><span>UPSTAIRS</span><b id="mainUp">—</b><em>Cooling</em></div><div class="zone"><span>DOWNSTAIRS</span><b id="mainTemp">—</b><em>Cooling</em></div><div class="muted" id="mainClimate">—</div></div>
+    </article>
+    <article class="property-card rockhouse-card panel">
+      <img class="property-art" src="/static/242E7528-C848-41B1-972E-24E23B4DE69F.png" alt="Rockhouse">
+      <div class="property-body"><div class="panel-title green">ROCKHOUSE</div><div class="single-temp" id="rockTemp">—</div><div class="green-text">Auto Mode</div><div class="muted" id="rockClimate">—</div></div>
+    </article>
+    <article class="gate-card panel"><div class="panel-title gold">NORTH DRIVE GATE</div><div class="gate-state"><span>▥</span><b id="gateState">—</b></div><div class="detail-list"><div><span>Battery</span><b id="gateBattery">—</b></div><div><span>Solar</span><b class="ok">Charging</b></div><div><span>Signal</span><b class="ok">Strong</b></div><div><span>Cycles Today</span><b>3</b></div><div><span>Last Event</span><b id="gateLast">—</b></div></div></article>
+    <article class="tesla-card panel"><div class="tesla-head"><div><div class="panel-title rose">TESLA MODEL Y LONG RANGE</div><small>Home</small></div><div class="tesla-t">T</div></div><div class="tesla-visual"><div class="car-shape">◢</div><div><div class="battery-number" id="teslaCharge">—</div><div class="charge-bar"><span></span></div></div></div><div class="detail-list two-col"><div><span>Range</span><b id="teslaRange">—</b></div><div><span>Charging</span><b id="teslaCharging">—</b></div><div><span>Full by</span><b>5:35 AM</b></div><div><span>Cabin</span><b>74°F</b></div></div></article>
+  </div>
+  <div class="status-strip"><div>● <b>Network</b><span>Online</span></div><div>● <b>Cameras</b><span>Online</span></div><div>● <b>Leak Sensors</b><span>Normal</span></div><div>● <b>Power</b><span>Normal</span></div><div class="bob-mini"><img src="/static/0CDB6933-4ACC-42AC-9089-600D0BDC904E.png" alt="Bob"><b>Bob's watch</b><span>All normal</span></div></div>
 </section>
 
 <section class="screen" data-screen="water">
-  <div class="eyebrow">WATER & WELL SYSTEMS</div><h2>Water Systems</h2>
-  <div class="water-grid">
-    <article class="card water-card">
-      <div class="card-title-art"><h3>Main House well</h3><img src="/static/art1/main-house.png" data-fallback="/static/242E7528-C848-41B1-972E-24E23B4DE69F.png" onerror="useFallback(this)" alt="Main House"></div>
-      <div class="metric-row"><div><span>Pressure</span><b id="mwPressure">—</b></div><div><span>Flow</span><b id="mwFlow">—</b></div><div><span>Today</span><b id="mwToday">—</b></div></div>
-      <div class="status-line"><span class="pill watch">RAIN WATCH</span><span id="mwQuality">—</span></div>
-    </article>
-    <article class="card water-card">
-      <div class="card-title-art"><h3>Rockhouse well</h3><img src="/static/art1/rockhouse.png" data-fallback="/static/38C388BD-A21A-4A6D-9EC6-14B5CC26F7C1.png" onerror="useFallback(this)" alt="Rockhouse"></div>
-      <div class="metric-row"><div><span>Pressure</span><b id="rwPressure">—</b></div><div><span>Flow</span><b id="rwFlow">—</b></div><div><span>Today</span><b id="rwToday">—</b></div></div>
-      <div class="status-line"><span class="pill good">CLEAR</span><span id="rwQuality">—</span></div>
-    </article>
-    <article class="card well-card"><h3>Wellhouse</h3><div class="metric-row"><div><span>Temp</span><b id="whTemp">—</b></div><div><span>Pump</span><b id="whPump">—</b></div><div><span>Supply</span><b id="whVolt">—</b></div></div></article>
-    <article class="card leak-card"><h3>Leak / flood detectors</h3><div class="leaks" id="leaks"></div></article>
+  <div class="screen-heading"><div><div class="eyebrow">WATER & WELL SYSTEMS</div><h2>Water Systems</h2></div><div class="water-banner"><span>◉</span><div><b>All leak / flood sensors normal</b><small>Water systems online</small></div></div></div>
+  <div class="water-top-grid">
+    <article class="well-panel panel purple-border"><div class="card-title-art"><div class="panel-title purple">MAIN HOUSE WELL</div><img src="/static/38C388BD-A21A-4A6D-9EC6-14B5CC26F7C1.png" alt="Main House"></div><div class="three-metrics"><div><span>PRESSURE</span><b id="mwPressure">—</b></div><div><span>FLOW</span><b id="mwFlow">—</b></div><div><span>PUMP</span><b>OFF</b></div></div><div class="detail-list two-col"><div><span>Tank Status</span><b class="ok">Healthy</b></div><div><span>Last Pump Cycle</span><b>2:41 PM</b></div><div><span>Today's Usage</span><b id="mwToday">—</b></div><div><span>Water Quality</span><b id="mwQuality">—</b></div><div><span>Filter Delta</span><b>2.3 PSI</b></div><div><span>Rain Influence</span><b>Monitor Only</b></div></div></article>
+    <article class="well-panel panel green-border"><div class="card-title-art"><div class="panel-title green">ROCKHOUSE WELL</div><img src="/static/242E7528-C848-41B1-972E-24E23B4DE69F.png" alt="Rockhouse"></div><div class="three-metrics"><div><span>PRESSURE</span><b id="rwPressure">—</b></div><div><span>FLOW</span><b id="rwFlow">—</b></div><div><span>PUMP</span><b>OFF</b></div></div><div class="detail-list two-col"><div><span>System Status</span><b class="ok">Normal</b></div><div><span>Last Pump Cycle</span><b>1:58 PM</b></div><div><span>Today's Usage</span><b id="rwToday">—</b></div><div><span>Water Quality</span><b id="rwQuality">—</b></div><div><span>Filter Delta</span><b>4.8 PSI</b></div><div><span>Turbidity</span><b class="ok">Low</b></div></div></article>
+    <article class="environment-panel panel"><div class="panel-title blue">WELLHOUSE ENVIRONMENT</div><div class="environment-grid"><div><span>Room Temp</span><b id="whTemp">—</b></div><div><span>Humidity</span><b>61%</b></div><div><span>Power</span><b class="ok">Online</b></div><div><span>Network</span><b class="ok">Online</b></div><div><span>Door</span><b class="ok">Closed</b></div><div><span>Enclosure</span><b>Dry</b></div><div><span>Pump</span><b id="whPump">—</b></div><div><span>Supply</span><b id="whVolt">—</b></div></div></article>
+  </div>
+  <div class="water-bottom-grid">
+    <article class="panel"><div class="panel-title blue">LEAK / FLOOD DETECTORS</div><div class="leaks rich" id="leaks"></div></article>
+    <article class="panel usage-card"><div class="panel-title purple">WATER USAGE TODAY</div><div class="usage-row"><span>Main House</span><div class="usage-bar"><i id="mainUsageBar"></i></div><b id="mainUsageText">—</b></div><div class="usage-row"><span>Rockhouse</span><div class="usage-bar greenbar"><i id="rockUsageBar"></i></div><b id="rockUsageText">—</b></div></article>
   </div>
 </section>
 
 <section class="screen" data-screen="power">
-  <div class="eyebrow">POWER • CLIMATE • ELECTRICAL</div><h2>Property Systems</h2>
-  <div class="card-grid powercards">
-    <article class="card"><div class="card-title-art"><h3>Main House climate</h3><img src="/static/art1/main-house.png" data-fallback="/static/242E7528-C848-41B1-972E-24E23B4DE69F.png" onerror="useFallback(this)" alt="Main House"></div><div class="split"><div><span>Upstairs</span><b id="upTemp">—</b></div><div><span>Downstairs</span><b id="downTemp">—</b></div></div></article>
-    <article class="card"><div class="card-title-art"><h3>Rockhouse climate</h3><img src="/static/art1/rockhouse.png" data-fallback="/static/38C388BD-A21A-4A6D-9EC6-14B5CC26F7C1.png" onerror="useFallback(this)" alt="Rockhouse"></div><div class="big" id="rhTemp">—</div><div class="muted" id="rhHum">—</div></article>
-    <article class="card"><h3>Main House electrical</h3><div class="split"><div><span>Voltage</span><b id="mVolt">—</b></div><div><span>Load</span><b id="mLoad">—</b></div></div></article>
-    <article class="card"><h3>Rockhouse electrical</h3><div class="split"><div><span>Voltage</span><b id="rVolt">—</b></div><div><span>Load</span><b id="rLoad">—</b></div></div></article>
-    <article class="card wide"><h3>Well system electrical</h3><div class="metric-row"><div><span>Supply</span><b id="wellVolt">—</b></div><div><span>Load</span><b id="wellLoad">—</b></div><div><span>Status</span><b class="ok">Ready</b></div></div></article>
+  <div class="screen-heading"><div><div class="eyebrow">POWER • CLIMATE • ELECTRICAL</div><h2>Property Systems</h2></div><div class="section-caption">Utility, climate, access and EV charging</div></div>
+  <div class="power-top-grid">
+    <article class="electrical-card panel purple-border"><div class="card-title-art"><div><div class="panel-title purple">MAIN HOUSE ELECTRICAL</div><small class="ok">● Utility Online</small></div><img src="/static/38C388BD-A21A-4A6D-9EC6-14B5CC26F7C1.png" alt="Main House"></div><div class="electrical-summary"><div><span>Voltage L1 / L2</span><b id="mVolt">—</b></div><div><span>Current Usage</span><b id="mLoad">—</b></div><div><span>Today</span><b>42.6 kWh</b></div><div><span>UPS</span><b class="ok">97%</b></div></div><div class="load-list"><div><span>Upstairs HVAC</span><i style="--w:78%"></i><b>1.9 kW</b></div><div><span>Downstairs HVAC</span><i style="--w:54%"></i><b>1.2 kW</b></div><div><span>Well Pump</span><i style="--w:0%"></i><b>0.0 kW</b></div><div><span>Network Rack</span><i style="--w:12%"></i><b>0.10 kW</b></div><div><span>Lighting / Other</span><i style="--w:32%"></i><b>0.64 kW</b></div></div></article>
+    <article class="electrical-card panel green-border"><div class="card-title-art"><div><div class="panel-title green">ROCKHOUSE ELECTRICAL</div><small class="ok">● Utility Online</small></div><img src="/static/242E7528-C848-41B1-972E-24E23B4DE69F.png" alt="Rockhouse"></div><div class="electrical-summary three"><div><span>Voltage</span><b id="rVolt">—</b></div><div><span>Current Usage</span><b id="rLoad">—</b></div><div><span>Today</span><b>9.4 kWh</b></div></div><div class="load-list"><div><span>Mini-split</span><i style="--w:58%"></i><b>0.55 kW</b></div><div><span>Well Pump</span><i style="--w:0%"></i><b>0.0 kW</b></div><div><span>Outlets / Lights</span><i style="--w:16%"></i><b>0.09 kW</b></div></div><div class="backup-line"><span>Battery Backup</span><b class="ok">Normal</b></div></article>
+    <article class="climate-card panel"><div class="panel-title purple">CLIMATE ZONES</div><div class="climate-zone"><span>Main House Upstairs</span><b id="upTemp">—</b><em>Cooling</em><small>Set to 72° • Humidity 50%</small></div><div class="climate-zone"><span>Main House Downstairs</span><b id="downTemp">—</b><em>Cooling</em><small>Set to 71° • Humidity 48%</small></div><div class="climate-zone rock-zone"><span>Rockhouse</span><b id="rhTemp">—</b><em>Auto</em><small id="rhHum">—</small></div></article>
+  </div>
+  <div class="power-bottom-grid">
+    <article class="gate-wide panel"><div><div class="panel-title gold">GATE & ACCESS</div><h3>North Drive Gate</h3><div class="gate-large" id="gateStatePower">—</div><small id="gateLastPower">—</small></div><div class="gate-stats"><div><span>Controller Power</span><b>14 W</b></div><div><span>Battery</span><b id="gateBatteryPower">—</b></div><div><span>Solar</span><b class="ok">Charging</b></div><div><span>Signal Strength</span><b class="ok">Strong</b></div><div><span>Cycles Today</span><b>3</b></div></div></article>
+    <article class="tesla-wide panel"><div><div class="panel-title rose">TESLA CHARGING</div><h3>Model Y Long Range</h3><div class="tesla-status-row"><div class="battery-number" id="teslaChargePower">—</div><div class="charge-bar"><span></span></div></div></div><div class="tesla-wide-stats"><div><span>Status</span><b class="ok">Plugged In</b></div><div><span>Charging Power</span><b>8.2 kW</b></div><div><span>Range</span><b id="teslaRangePower">—</b></div><div><span>Full By</span><b>5:35 AM</b></div></div></article>
   </div>
 </section>
 </main>
 
 <section class="ticker-shell"><div class="ticker-label">NEWS</div><div class="ticker-window"><div id="tickerTrack" class="ticker-track"><span class="ticker-item">Loading headlines…</span></div></div></section>
-<footer>Settings: <b>farmpi.local:8080/settings</b> <span id="demoFlag">• Home sensors: demo values until integrations are connected</span></footer>
+<footer>Settings: <b>farmpi.local:8080/settings</b> <span id="demoFlag">• Home systems currently use realistic demo values until integrations are connected</span></footer>
 
 <script>
-function useFallback(img){const f=img.dataset.fallback;if(f){img.onerror=null;img.src=f;}}
 const $=id=>document.getElementById(id), money=v=>v==null?'—':'$'+Number(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
 function fallbackAction(p,s){if(p==null)return'HOLD';let a=s.aggressive_buy??s.aggressive,st=s.strong_buy??s.strong;if(a!=null&&p<=a)return'AGGRESSIVE BUY';if(st!=null&&p<=st)return'STRONG BUY';if(s.buy!=null&&p<=s.buy)return'BUY';return'HOLD'}
 async function updateStocks(){let[qs,ss,cs]=await Promise.all([fetch('/api/quotes').then(r=>r.json()),fetch('/api/stocks').then(r=>r.json()),fetch('/api/cloud-status').then(r=>r.json())]);let rows=$('rows');rows.innerHTML='';for(let s of ss){let q=qs.quotes[s.symbol]||{},a=(s.action||fallbackAction(q.price,s)).toUpperCase(),d=document.createElement('div');d.className='stock';d.innerHTML=`<div class="symbol">${s.symbol}</div><div class="price">${money(q.price)}</div><div class="pct ${q.pct>0?'up':q.pct<0?'down':''}">${q.pct==null?'—':(q.pct>0?'+':'')+q.pct.toFixed(2)+'%'}</div><div class="zones">Buy ≤ ${money(s.buy)} • Strong ≤ ${money(s.strong_buy??s.strong)}<div class="subline">${s.note||''}</div></div><div class="badge ${a.includes('BUY')?'buy':''}">${a}</div>`;rows.appendChild(d)}$('status').textContent=(cs.ok?'Systems online':'Using cached market feed')+' • '+new Date().toLocaleTimeString()}
-async function updateHome(){let h=await fetch('/api/home').then(r=>r.json());$('wTemp').textContent=h.weather.temp+'°';$('wCond').textContent=h.weather.condition;$('wDetail').textContent=`High ${h.weather.high}° • Low ${h.weather.low}° • Rain ${h.weather.rain}% • Wind ${h.weather.wind} mph`;$('mainTemp').textContent=h.main.downstairs+'°F';$('mainClimate').textContent=`Upstairs ${h.main.upstairs}° • Humidity ${h.main.humidity}%`;$('rockTemp').textContent=h.rockhouse.temp+'°F';$('rockClimate').textContent=`Humidity ${h.rockhouse.humidity}% • ${h.rockhouse.power_kw} kW`;$('gateState').textContent=h.gate.state;$('gateDetail').textContent=`Battery ${h.gate.battery}V • ${h.gate.network} • ${h.gate.last_event}`;$('teslaCharge').textContent=h.tesla.charge+'%';$('teslaDetail').textContent=`${h.tesla.range} mi • ${h.tesla.charging} • ${h.tesla.location}`;let m=h.water.main,r=h.water.rockhouse;$('mwPressure').textContent=m.pressure+' psi';$('mwFlow').textContent=m.flow+' gpm';$('mwToday').textContent=m.today+' gal';$('mwQuality').textContent=m.quality;$('rwPressure').textContent=r.pressure+' psi';$('rwFlow').textContent=r.flow+' gpm';$('rwToday').textContent=r.today+' gal';$('rwQuality').textContent=r.quality;$('whTemp').textContent=h.wellhouse.temp+'°F';$('whPump').textContent=h.wellhouse.pump;$('whVolt').textContent=h.wellhouse.voltage+' V';$('leaks').innerHTML=Object.entries(h.water.leaks).map(([k,v])=>`<div><span>${k[0].toUpperCase()+k.slice(1)}</span><b class="ok">● ${v}</b></div>`).join('');$('upTemp').textContent=h.main.upstairs+'°F';$('downTemp').textContent=h.main.downstairs+'°F';$('rhTemp').textContent=h.rockhouse.temp+'°F';$('rhHum').textContent='Humidity '+h.rockhouse.humidity+'%';let e=h.electrical;$('mVolt').textContent=e.main_voltage+' V';$('mLoad').textContent=e.main_load_kw+' kW';$('rVolt').textContent=e.rockhouse_voltage+' V';$('rLoad').textContent=e.rockhouse_load_kw+' kW';$('wellVolt').textContent=e.well_voltage+' V';$('wellLoad').textContent=e.well_load_kw+' kW'}
+async function updateHome(){let h=await fetch('/api/home').then(r=>r.json());$('wTemp').textContent=h.weather.temp+'°F';$('wCond').textContent=h.weather.condition;$('wDetail').textContent=`High ${h.weather.high}° • Low ${h.weather.low}° • Rain ${h.weather.rain}% • Wind ${h.weather.wind} mph`;$('mainUp').textContent=h.main.upstairs+'°F';$('mainTemp').textContent=h.main.downstairs+'°F';$('mainClimate').textContent=`Humidity ${h.main.humidity}%`;$('rockTemp').textContent=h.rockhouse.temp+'°F';$('rockClimate').textContent=`Set to 71° • Humidity ${h.rockhouse.humidity}%`;$('gateState').textContent=h.gate.state;$('gateBattery').textContent=h.gate.battery+' V';$('gateLast').textContent=h.gate.last_event;$('teslaCharge').textContent=h.tesla.charge+'%';$('teslaRange').textContent=h.tesla.range+' mi';$('teslaCharging').textContent=h.tesla.charging;
+let m=h.water.main,r=h.water.rockhouse;$('mwPressure').textContent=m.pressure+' PSI';$('mwFlow').textContent=m.flow+' GPM';$('mwToday').textContent=m.today+' gal';$('mwQuality').textContent=m.quality;$('rwPressure').textContent=r.pressure+' PSI';$('rwFlow').textContent=r.flow+' GPM';$('rwToday').textContent=r.today+' gal';$('rwQuality').textContent=r.quality;$('whTemp').textContent=h.wellhouse.temp+'°F';$('whPump').textContent=h.wellhouse.pump;$('whVolt').textContent=h.wellhouse.voltage+' V';let leakNames={main:'Main House',rockhouse:'Rockhouse',wellhouse:'Wellhouse'};$('leaks').innerHTML=Object.entries(h.water.leaks).map(([k,v])=>`<div><span>${leakNames[k]||k}</span><b class="ok">● ${v}</b></div>`).join('')+`<div><span>Kitchen Sink</span><b class="ok">● Dry</b></div><div><span>Laundry</span><b class="ok">● Dry</b></div><div><span>Water Heater</span><b class="ok">● Dry</b></div><div><span>Upstairs Bath</span><b class="ok">● Dry</b></div>`;$('mainUsageText').textContent=m.today+' gal';$('rockUsageText').textContent=r.today+' gal';$('mainUsageBar').style.width=Math.min(100,m.today/1.5)+'%';$('rockUsageBar').style.width=Math.min(100,r.today/1.5)+'%';
+$('upTemp').textContent=h.main.upstairs+'°F';$('downTemp').textContent=h.main.downstairs+'°F';$('rhTemp').textContent=h.rockhouse.temp+'°F';$('rhHum').textContent='Set to 71° • Humidity '+h.rockhouse.humidity+'%';let e=h.electrical;$('mVolt').textContent=e.main_voltage+' / '+(e.main_voltage-.4).toFixed(1)+' V';$('mLoad').textContent=e.main_load_kw+' kW';$('rVolt').textContent=e.rockhouse_voltage+' V';$('rLoad').textContent=e.rockhouse_load_kw+' kW';$('gateStatePower').textContent=h.gate.state;$('gateLastPower').textContent=h.gate.last_event;$('gateBatteryPower').textContent=h.gate.battery+' V';$('teslaChargePower').textContent=h.tesla.charge+'%';$('teslaRangePower').textContent=h.tesla.range+' mi';document.querySelectorAll('.charge-bar span').forEach(x=>x.style.width=h.tesla.charge+'%')}
 async function updateNews(){let n=await fetch('/api/news').then(r=>r.json()),items=(n.news||[]).slice(0,30),html=items.map(i=>`<span class="ticker-item"><b>${i.category==='PORTFOLIO'?i.symbol:i.category}</b> ${i.title}</span>`).join('<span class="ticker-sep">◆</span>');$('tickerTrack').innerHTML=`<div class="ticker-group">${html}</div><div class="ticker-group">${html}</div>`}
 let cfg={rotation_enabled:true,rotation_seconds:18,screens:['stocks','home','water','power']},idx=0,timer;async function loadRotation(){cfg=await fetch('/api/dashboard-settings').then(r=>r.json());document.body.className=cfg.theme==='dark'?'farm-dark':'farm-light';buildDots();schedule()}function buildDots(){$('dots').innerHTML=cfg.screens.map((s,i)=>`<button class="dot ${i===idx?'active':''}" onclick="showScreen(${i})" aria-label="${s}"></button>`).join('')}function showScreen(i){idx=i%cfg.screens.length;document.querySelectorAll('.screen').forEach(x=>x.classList.toggle('active',x.dataset.screen===cfg.screens[idx]));$('screenName').textContent=({stocks:'Stocks',home:'Home Overview',water:'Water Systems',power:'Power / Climate / Electrical'})[cfg.screens[idx]];buildDots();schedule()}function schedule(){clearTimeout(timer);if(cfg.rotation_enabled)timer=setTimeout(()=>showScreen((idx+1)%cfg.screens.length),cfg.rotation_seconds*1000)}
 setInterval(()=>$('clock').textContent=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),1000);updateStocks();updateHome();updateNews();loadRotation();setInterval(updateStocks,5000);setInterval(updateHome,15000);setInterval(updateNews,300000);
