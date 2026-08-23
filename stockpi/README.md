@@ -1,4 +1,4 @@
-# StockPi Dashboard v2
+# FarmPi Dashboard
 
 This version uses your GitHub JSON as the cloud recommendation/thesis feed:
 
@@ -13,7 +13,7 @@ Supported actions:
 BUY, STRONG BUY, AGGRESSIVE BUY, HOLD, CONSIDER TRIM, THESIS WARNING, SELL/EXIT
 
 Phone settings:
-http://stockpi.local:8080/settings
+http://farmpi.local:8080/settings
 
 The phone page controls the local watchlist. Matching GitHub cloud fields override local fallback thresholds.
 
@@ -30,12 +30,12 @@ Fresh install:
 
 Quotes/news still use Yahoo Finance/yfinance for now. The cloud thesis layer is separate, so we can later replace quote data with Webull OpenAPI without changing the GitHub configuration system.
 
-## v3 scrolling news ticker
+## Scrolling news ticker
 
-The TV now has a continuously scrolling news ticker across the bottom.
+The TV has a continuously scrolling news ticker across the bottom.
 
 Headline priority:
-1. Stocks currently on your StockPi watchlist — including symbols added later from the phone settings page.
+1. Stocks currently on your FarmPi watchlist — including symbols added later from the phone settings page.
 2. AI chip / semiconductor / HBM / GPU / data-center chip headlines.
 3. Broader artificial-intelligence / generative-AI / AI-infrastructure headlines.
 
@@ -43,5 +43,11 @@ Portfolio headlines are sourced through yfinance/Yahoo Finance. AI-chip and gene
 
 The scrolling strip pauses when hovered with a mouse. Devices configured for reduced motion receive a static horizontally scrollable strip instead.
 
-## v4 HDMI-CEC TV control
-StockPi can now wake a compatible TV, switch to the Pi HDMI input, and put the TV into standby automatically. Defaults are 07:15 wake and 22:30 standby, editable from the phone settings page. Test buttons are included. HDMI-CEC must be enabled on the TV. The installer now installs `cec-utils`.
+## HDMI-CEC TV control
+FarmPi can wake a compatible TV, switch to the Pi HDMI input, and put the TV into standby automatically. Defaults are 07:15 wake and 22:30 standby, editable from the phone settings page. Test buttons are included. HDMI-CEC must be enabled on the TV. The installer installs `cec-utils`.
+
+Dashboard:
+http://farmpi.local:8080
+
+Settings:
+http://farmpi.local:8080/settings
