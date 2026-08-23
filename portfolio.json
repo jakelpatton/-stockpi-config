@@ -1,0 +1,28 @@
+{
+  "updated": "2026-08-23",
+  "stocks": [
+    {
+      "symbol": "LRCX",
+      "action": "HOLD",
+      "buy": 285,
+      "strong_buy": 260,
+      "thesis": "INTACT"
+    },
+    {
+      "symbol": "EXE",
+      "action": "BUY",
+      "buy": 100,
+      "strong_buy": 90,
+      "aggressive_buy": 85,
+      "thesis": "INTACT"
+    },
+    {
+      "symbol": "TER",
+      "action": "HOLD",
+      "buy": 340,
+      "strong_buy": 317.5,
+      "aggressive_buy": 292.5,
+      "thesis": "INTACT"
+    }
+  ]
+}
