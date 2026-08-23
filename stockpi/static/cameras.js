@@ -3,7 +3,7 @@
     {channel:1, name:'Front Porch', location:'Main House'},
     {channel:2, name:'Rockhouse Front', location:'Rockhouse'},
     {channel:3, name:'Rockhouse Back', location:'Rockhouse'},
-    {channel:4, name:'Not Assigned', location:'Available channel', disabled:true}
+    {channel:4, name:'Farm Backyard', location:'Wyze Floodlight Pro • 192.168.1.253', disabled:true, wyze:true}
   ];
   const REFRESH_MS = 1200;
   let timer=null;
@@ -20,10 +20,10 @@
     s.innerHTML=`
       <div class="camera-heading">
         <div><div class="eyebrow">SECURITY • LIVE VIEW</div><h2>Cameras</h2></div>
-        <div class="camera-system-status"><span class="camera-dot" id="cameraDot"></span><div><b>Amcrest NVR</b><small id="cameraSystemText">Connecting to 192.168.1.4</small></div></div>
+        <div class="camera-system-status"><span class="camera-dot" id="cameraDot"></span><div><b>Camera System</b><small id="cameraSystemText">Connecting to Amcrest NVR</small></div></div>
       </div>
       <div class="camera-grid" id="cameraGrid"></div>
-      <div class="camera-footer"><span>3 active cameras • 1 available channel</span><span>Channels 1–4</span><span id="cameraUpdated">Connecting…</span></div>`;
+      <div class="camera-footer"><span>3 Amcrest cameras • 1 Wyze camera</span><span>Farm security overview</span><span id="cameraUpdated">Connecting…</span></div>`;
     main.appendChild(s);
 
     const grid=document.getElementById('cameraGrid');
@@ -32,10 +32,10 @@
       if(c.disabled) tile.classList.add('camera-unused');
       tile.innerHTML=c.disabled ? `
         <div class="camera-placeholder" id="cameraPlaceholder${c.channel}">
-          <div class="camera-placeholder-icon">＋</div>
-          <div class="camera-placeholder-copy"><b>${c.name}</b><span>Channel ${c.channel} available for another camera</span></div>
+          <div class="camera-placeholder-icon">◉</div>
+          <div class="camera-placeholder-copy"><b>${c.name}</b><span>Wyze bridge connection pending</span></div>
         </div>
-        <div class="camera-overlay"><div><b>${c.name}</b><span>${c.location}</span></div><div class="live-pill idle">AVAILABLE</div></div>` : `
+        <div class="camera-overlay"><div><b>${c.name}</b><span>${c.location}</span></div><div class="live-pill idle">WYZE</div></div>` : `
         <div class="camera-placeholder" id="cameraPlaceholder${c.channel}">
           <div class="camera-placeholder-icon">◉</div>
           <div class="camera-placeholder-copy"><b>${c.name}</b><span>Connecting to NVR channel ${c.channel}</span></div>
@@ -61,8 +61,8 @@
       const s=await fetch('/api/cameras/status',{cache:'no-store'}).then(r=>r.json());
       const text=document.getElementById('cameraSystemText');
       const dot=document.getElementById('cameraDot');
-      if(s.configured){ text.textContent=`NVR ${s.nvr_ip} • channels 1–3 active`; dot?.classList.add('online'); }
-      else { text.textContent='Credentials needed on Pi'; dot?.classList.remove('online'); }
+      if(s.configured){ text.textContent=`Amcrest NVR ${s.nvr_ip} • channels 1–3`; dot?.classList.add('online'); }
+      else { text.textContent='Amcrest credentials needed on Pi'; dot?.classList.remove('online'); }
     }catch(e){}
   }
 
