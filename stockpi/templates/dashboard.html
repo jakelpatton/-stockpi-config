@@ -1,119 +1,19 @@
-<!doctype html>
-<html>
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FarmPi Dashboard</title>
-<link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
-<header>
-  <div>
-    <h1>FarmPi</h1>
-    <div id="status">Loading quotes…</div>
-    <div id="cloudStatus" class="cloud-status">Checking thesis feed…</div>
-  </div>
-  <div id="clock"></div>
-</header>
-
-<main class="dashboard-main">
-  <section class="watch">
-    <div class="section-title">PORTFOLIO / WATCHLIST</div>
-    <div id="rows"></div>
-  </section>
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Farm</title><link rel="stylesheet" href="/static/style.css"></head>
+<body class="farm-light"><header><div class="brand"><div class="brand-mark">⌂</div><div><h1>Farm</h1><div id="status">Loading systems…</div></div></div><div class="header-right"><div id="screenName">Stocks</div><div id="clock"></div></div></header>
+<div class="rotation-dots" id="dots"></div>
+<main class="screens">
+<section class="screen active" data-screen="stocks"><div class="eyebrow">MARKETS</div><h2>Stocks</h2><div id="rows"></div></section>
+<section class="screen" data-screen="home"><div class="eyebrow">TODAY AT THE FARM</div><div class="hero-row"><div><h2>Home Overview</h2><p class="lede">Main house, Rockhouse, gate, vehicle and property status at a glance.</p></div><div class="weather"><div class="weather-temp" id="wTemp">—</div><div><b id="wCond">—</b><br><span id="wDetail">—</span></div></div></div><div class="card-grid"><article class="card house"><div class="icon">⌂</div><h3>Main house</h3><div class="big" id="mainTemp">—</div><div class="muted" id="mainClimate">—</div></article><article class="card rock"><div class="icon">◇</div><h3>Rockhouse</h3><div class="big" id="rockTemp">—</div><div class="muted" id="rockClimate">—</div></article><article class="card gate"><div class="icon">↔</div><h3>Gate</h3><div class="big" id="gateState">—</div><div class="muted" id="gateDetail">—</div></article><article class="card tesla"><div class="icon">⚡</div><h3>Tesla</h3><div class="big" id="teslaCharge">—</div><div class="muted" id="teslaDetail">—</div></article></div><div class="bob-note">🐾 <b>Bob’s watch:</b> All monitored systems normal.</div></section>
+<section class="screen" data-screen="water"><div class="eyebrow">WATER & WELL SYSTEMS</div><h2>Water Systems</h2><div class="water-grid"><article class="card water-card"><h3>Main house well</h3><div class="metric-row"><div><span>Pressure</span><b id="mwPressure">—</b></div><div><span>Flow</span><b id="mwFlow">—</b></div><div><span>Today</span><b id="mwToday">—</b></div></div><div class="status-line"><span class="pill watch">RAIN WATCH</span><span id="mwQuality">—</span></div></article><article class="card water-card"><h3>Rockhouse well</h3><div class="metric-row"><div><span>Pressure</span><b id="rwPressure">—</b></div><div><span>Flow</span><b id="rwFlow">—</b></div><div><span>Today</span><b id="rwToday">—</b></div></div><div class="status-line"><span class="pill good">CLEAR</span><span id="rwQuality">—</span></div></article><article class="card well-card"><h3>Wellhouse</h3><div class="metric-row"><div><span>Temp</span><b id="whTemp">—</b></div><div><span>Pump</span><b id="whPump">—</b></div><div><span>Supply</span><b id="whVolt">—</b></div></div></article><article class="card leak-card"><h3>Leak / flood detectors</h3><div class="leaks" id="leaks"></div></article></div></section>
+<section class="screen" data-screen="power"><div class="eyebrow">POWER • CLIMATE • ELECTRICAL</div><h2>Property Systems</h2><div class="card-grid powercards"><article class="card"><h3>Main house climate</h3><div class="split"><div><span>Upstairs</span><b id="upTemp">—</b></div><div><span>Downstairs</span><b id="downTemp">—</b></div></div></article><article class="card"><h3>Rockhouse climate</h3><div class="big" id="rhTemp">—</div><div class="muted" id="rhHum">—</div></article><article class="card"><h3>Main house electrical</h3><div class="split"><div><span>Voltage</span><b id="mVolt">—</b></div><div><span>Load</span><b id="mLoad">—</b></div></div></article><article class="card"><h3>Rockhouse electrical</h3><div class="split"><div><span>Voltage</span><b id="rVolt">—</b></div><div><span>Load</span><b id="rLoad">—</b></div></div></article><article class="card wide"><h3>Well system electrical</h3><div class="metric-row"><div><span>Supply</span><b id="wellVolt">—</b></div><div><span>Load</span><b id="wellLoad">—</b></div><div><span>Status</span><b class="ok">Ready</b></div></div></article></div></section>
 </main>
-
-<section class="ticker-shell" aria-label="Latest portfolio, AI chip, and AI headlines">
-  <div class="ticker-label">NEWS</div>
-  <div class="ticker-window">
-    <div id="tickerTrack" class="ticker-track" aria-live="off">
-      <span class="ticker-item"><b>FarmPi</b> Loading latest headlines…</span>
-    </div>
-  </div>
-</section>
-
-<footer>Phone settings: <b>http://farmpi.local:8080/settings</b></footer>
-
+<section class="ticker-shell"><div class="ticker-label">NEWS</div><div class="ticker-window"><div id="tickerTrack" class="ticker-track"><span class="ticker-item">Loading headlines…</span></div></div></section><footer>Settings: <b>farmpi.local:8080/settings</b> <span id="demoFlag">• Home sensors: demo values until integrations are connected</span></footer>
 <script>
-function money(v){return v==null?"—":"$"+Number(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
-function fallbackAction(price,s){
-  if(price==null) return "HOLD";
-  const aggressive=s.aggressive_buy ?? s.aggressive;
-  const strong=s.strong_buy ?? s.strong;
-  if(aggressive!=null && price<=aggressive) return "AGGRESSIVE BUY";
-  if(strong!=null && price<=strong) return "STRONG BUY";
-  if(s.buy!=null && price<=s.buy) return "BUY";
-  return "HOLD";
-}
-function actionClass(a){
-  if(["AGGRESSIVE BUY","STRONG BUY","BUY"].includes(a)) return "buy-action";
-  if(a==="HOLD") return "hold-action";
-  if(a==="CONSIDER TRIM") return "trim-action";
-  if(a==="THESIS WARNING") return "warn-action";
-  if(["SELL","SELL/EXIT","EXIT"].includes(a)) return "sell-action";
-  return "";
-}
-async function update(){
-  const [qs,ss,cs]=await Promise.all([
-    fetch('/api/quotes').then(r=>r.json()),
-    fetch('/api/stocks').then(r=>r.json()),
-    fetch('/api/cloud-status').then(r=>r.json())
-  ]);
-  const rows=document.getElementById('rows'); rows.innerHTML="";
-  for(const s of ss){
-    const q=qs.quotes[s.symbol]||{};
-    const pctcls=q.pct>0?'up':(q.pct<0?'down':'');
-    const strong=s.strong_buy ?? s.strong;
-    const aggressive=s.aggressive_buy ?? s.aggressive;
-    const action=(s.action || fallbackAction(q.price,s)).toUpperCase();
-    const cls=actionClass(action);
-    const d=document.createElement('div');
-    d.className='stock '+cls;
-    d.innerHTML=`
-      <div class="symbol">${s.symbol}</div>
-      <div class="price">${money(q.price)}</div>
-      <div class="pct ${pctcls}">${q.pct==null?'—':(q.pct>0?'+':'')+q.pct.toFixed(2)+'%'}</div>
-      <div class="zones">
-        Buy ≤ ${money(s.buy)}
-        ${strong!=null?' • Strong ≤ '+money(strong):''}
-        ${aggressive!=null?' • Agg ≤ '+money(aggressive):''}
-        ${s.consider_trim!=null?' • Trim ≥ '+money(s.consider_trim):''}
-        ${s.sell_exit!=null?' • Exit ≥ '+money(s.sell_exit):''}
-        <div class="subline">Thesis: <b>${(s.thesis||'—').toUpperCase()}</b>${s.last_reviewed?' • Reviewed '+s.last_reviewed:''}${s.note?' • '+s.note:''}</div>
-      </div>
-      <div class="badge">${action}</div>`;
-    rows.appendChild(d);
-  }
-  document.getElementById('status').textContent='Quotes auto-refresh • '+new Date().toLocaleTimeString();
-  const c=document.getElementById('cloudStatus');
-  c.textContent=cs.ok ? `Thesis feed online${cs.updated?' • '+cs.updated:''}` : `Using cached thesis feed${cs.updated?' • '+cs.updated:''}`;
-  c.className='cloud-status '+(cs.ok?'cloud-ok':'cloud-warn');
-}
-function esc(s){
-  return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
-}
-async function updateNews(){
-  const n=await fetch('/api/news').then(r=>r.json());
-  const track=document.getElementById('tickerTrack');
-  const items=(n.news||[]).slice(0,36);
-  if(!items.length){
-    track.innerHTML='<span class="ticker-item"><b>NEWS</b> No headlines available right now.</span>';
-    return;
-  }
-  const html=items.map(item=>{
-    const tag=item.category==="PORTFOLIO" ? item.symbol : item.category;
-    const content=`<span class="ticker-tag ${item.category==='PORTFOLIO'?'portfolio-tag':item.category==='AI CHIPS'?'chip-tag':'ai-tag'}">${esc(tag)}</span><span>${esc(item.title)}</span>`;
-    return item.url
-      ? `<a class="ticker-item" href="${esc(item.url)}" target="_blank" rel="noopener">${content}</a>`
-      : `<span class="ticker-item">${content}</span>`;
-  }).join('<span class="ticker-sep">◆</span>');
-
-  track.innerHTML=`<div class="ticker-group">${html}</div><div class="ticker-group" aria-hidden="true">${html}</div>`;
-}
-setInterval(()=>document.getElementById('clock').textContent=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),1000);
-update(); updateNews();
-setInterval(update,5000);
-setInterval(updateNews,300000);
-</script>
-</body>
-</html>
+const $=id=>document.getElementById(id), money=v=>v==null?'—':'$'+Number(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+function fallbackAction(p,s){if(p==null)return'HOLD';let a=s.aggressive_buy??s.aggressive,st=s.strong_buy??s.strong;if(a!=null&&p<=a)return'AGGRESSIVE BUY';if(st!=null&&p<=st)return'STRONG BUY';if(s.buy!=null&&p<=s.buy)return'BUY';return'HOLD'}
+async function updateStocks(){let[qs,ss,cs]=await Promise.all([fetch('/api/quotes').then(r=>r.json()),fetch('/api/stocks').then(r=>r.json()),fetch('/api/cloud-status').then(r=>r.json())]);let rows=$('rows');rows.innerHTML='';for(let s of ss){let q=qs.quotes[s.symbol]||{},a=(s.action||fallbackAction(q.price,s)).toUpperCase(),d=document.createElement('div');d.className='stock';d.innerHTML=`<div class="symbol">${s.symbol}</div><div class="price">${money(q.price)}</div><div class="pct ${q.pct>0?'up':q.pct<0?'down':''}">${q.pct==null?'—':(q.pct>0?'+':'')+q.pct.toFixed(2)+'%'}</div><div class="zones">Buy ≤ ${money(s.buy)} • Strong ≤ ${money(s.strong_buy??s.strong)}<div class="subline">${s.note||''}</div></div><div class="badge ${a.includes('BUY')?'buy':''}">${a}</div>`;rows.appendChild(d)}$('status').textContent=(cs.ok?'Systems online':'Using cached market feed')+' • '+new Date().toLocaleTimeString()}
+async function updateHome(){let h=await fetch('/api/home').then(r=>r.json());$('wTemp').textContent=h.weather.temp+'°';$('wCond').textContent=h.weather.condition;$('wDetail').textContent=`High ${h.weather.high}° • Low ${h.weather.low}° • Rain ${h.weather.rain}% • Wind ${h.weather.wind} mph`;$('mainTemp').textContent=h.main.downstairs+'°F';$('mainClimate').textContent=`Upstairs ${h.main.upstairs}° • Humidity ${h.main.humidity}%`;$('rockTemp').textContent=h.rockhouse.temp+'°F';$('rockClimate').textContent=`Humidity ${h.rockhouse.humidity}% • ${h.rockhouse.power_kw} kW`;$('gateState').textContent=h.gate.state;$('gateDetail').textContent=`Battery ${h.gate.battery}V • ${h.gate.network} • ${h.gate.last_event}`;$('teslaCharge').textContent=h.tesla.charge+'%';$('teslaDetail').textContent=`${h.tesla.range} mi • ${h.tesla.charging} • ${h.tesla.location}`;let m=h.water.main,r=h.water.rockhouse;$('mwPressure').textContent=m.pressure+' psi';$('mwFlow').textContent=m.flow+' gpm';$('mwToday').textContent=m.today+' gal';$('mwQuality').textContent=m.quality;$('rwPressure').textContent=r.pressure+' psi';$('rwFlow').textContent=r.flow+' gpm';$('rwToday').textContent=r.today+' gal';$('rwQuality').textContent=r.quality;$('whTemp').textContent=h.wellhouse.temp+'°F';$('whPump').textContent=h.wellhouse.pump;$('whVolt').textContent=h.wellhouse.voltage+' V';$('leaks').innerHTML=Object.entries(h.water.leaks).map(([k,v])=>`<div><span>${k[0].toUpperCase()+k.slice(1)}</span><b class="ok">● ${v}</b></div>`).join('');$('upTemp').textContent=h.main.upstairs+'°F';$('downTemp').textContent=h.main.downstairs+'°F';$('rhTemp').textContent=h.rockhouse.temp+'°F';$('rhHum').textContent='Humidity '+h.rockhouse.humidity+'%';let e=h.electrical;$('mVolt').textContent=e.main_voltage+' V';$('mLoad').textContent=e.main_load_kw+' kW';$('rVolt').textContent=e.rockhouse_voltage+' V';$('rLoad').textContent=e.rockhouse_load_kw+' kW';$('wellVolt').textContent=e.well_voltage+' V';$('wellLoad').textContent=e.well_load_kw+' kW'}
+async function updateNews(){let n=await fetch('/api/news').then(r=>r.json()),items=(n.news||[]).slice(0,30),html=items.map(i=>`<span class="ticker-item"><b>${i.category==='PORTFOLIO'?i.symbol:i.category}</b> ${i.title}</span>`).join('<span class="ticker-sep">◆</span>');$('tickerTrack').innerHTML=`<div class="ticker-group">${html}</div><div class="ticker-group">${html}</div>`}
+let cfg={rotation_enabled:true,rotation_seconds:18,screens:['stocks','home','water','power']},idx=0,timer;async function loadRotation(){cfg=await fetch('/api/dashboard-settings').then(r=>r.json());document.body.className=cfg.theme==='dark'?'farm-dark':'farm-light';buildDots();schedule()}function buildDots(){$('dots').innerHTML=cfg.screens.map((s,i)=>`<button class="dot ${i===idx?'active':''}" onclick="showScreen(${i})" aria-label="${s}"></button>`).join('')}function showScreen(i){idx=i%cfg.screens.length;document.querySelectorAll('.screen').forEach(x=>x.classList.toggle('active',x.dataset.screen===cfg.screens[idx]));$('screenName').textContent=({stocks:'Stocks',home:'Home Overview',water:'Water Systems',power:'Power / Climate / Electrical'})[cfg.screens[idx]];buildDots();schedule()}function schedule(){clearTimeout(timer);if(cfg.rotation_enabled)timer=setTimeout(()=>showScreen((idx+1)%cfg.screens.length),cfg.rotation_seconds*1000)}
+setInterval(()=>$('clock').textContent=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),1000);updateStocks();updateHome();updateNews();loadRotation();setInterval(updateStocks,5000);setInterval(updateHome,15000);setInterval(updateNews,300000);
+</script></body></html>
