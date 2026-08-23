@@ -2,5 +2,5 @@
   "rotation_enabled": true,
   "rotation_seconds": 18,
   "theme": "light",
-  "screens": ["stocks", "home", "water", "power"]
+  "screens": ["stocks", "home", "water", "power", "cameras"]
 }
