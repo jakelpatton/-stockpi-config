@@ -71,6 +71,14 @@
     document.getElementById('propaneAlert').textContent=`${p.low_alert_pct ?? PLACEHOLDER.low_alert_pct}%`;
   }
 
-  function boot(){makeCard();updatePropane();setInterval(updatePropane,15000)}
+  function loadCameraModule(){
+    if(document.querySelector('script[src="/static/cameras.js"]')) return;
+    const s=document.createElement('script');
+    s.src='/static/cameras.js';
+    s.defer=true;
+    document.body.appendChild(s);
+  }
+
+  function boot(){makeCard();updatePropane();loadCameraModule();setInterval(updatePropane,15000)}
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
 })();
