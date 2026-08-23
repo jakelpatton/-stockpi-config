@@ -1,14 +1,88 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Farm</title><link rel="stylesheet" href="/static/style.css"></head>
-<body class="farm-light"><header><div class="brand"><div class="brand-mark">⌂</div><div><h1>Farm</h1><div id="status">Loading systems…</div></div></div><div class="header-right"><div id="screenName">Stocks</div><div id="clock"></div></div></header>
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Farm</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="farm-light">
+<header>
+  <div class="brand">
+    <div class="brand-mark">
+      <img src="/static/art1/main-house.png" data-fallback="/static/242E7528-C848-41B1-972E-24E23B4DE69F.png" onerror="useFallback(this)" alt="Main House">
+    </div>
+    <div><h1>Farm</h1><div id="status">Loading systems…</div></div>
+  </div>
+  <div class="header-right-wrap">
+    <div class="bob-status">
+      <img src="/static/art1/bob.png" data-fallback="/static/0CDB6933-4ACC-42AC-9089-600D0BDC904E.png" onerror="useFallback(this)" alt="Bob">
+      <div><b>Bob</b><span>in charge</span></div>
+    </div>
+    <div class="header-right"><div id="screenName">Stocks</div><div id="clock"></div></div>
+  </div>
+</header>
+
 <div class="rotation-dots" id="dots"></div>
+
 <main class="screens">
-<section class="screen active" data-screen="stocks"><div class="eyebrow">MARKETS</div><h2>Stocks</h2><div id="rows"></div></section>
-<section class="screen" data-screen="home"><div class="eyebrow">TODAY AT THE FARM</div><div class="hero-row"><div><h2>Home Overview</h2><p class="lede">Main house, Rockhouse, gate, vehicle and property status at a glance.</p></div><div class="weather"><div class="weather-temp" id="wTemp">—</div><div><b id="wCond">—</b><br><span id="wDetail">—</span></div></div></div><div class="card-grid"><article class="card house"><div class="icon">⌂</div><h3>Main house</h3><div class="big" id="mainTemp">—</div><div class="muted" id="mainClimate">—</div></article><article class="card rock"><div class="icon">◇</div><h3>Rockhouse</h3><div class="big" id="rockTemp">—</div><div class="muted" id="rockClimate">—</div></article><article class="card gate"><div class="icon">↔</div><h3>Gate</h3><div class="big" id="gateState">—</div><div class="muted" id="gateDetail">—</div></article><article class="card tesla"><div class="icon">⚡</div><h3>Tesla</h3><div class="big" id="teslaCharge">—</div><div class="muted" id="teslaDetail">—</div></article></div><div class="bob-note">🐾 <b>Bob’s watch:</b> All monitored systems normal.</div></section>
-<section class="screen" data-screen="water"><div class="eyebrow">WATER & WELL SYSTEMS</div><h2>Water Systems</h2><div class="water-grid"><article class="card water-card"><h3>Main house well</h3><div class="metric-row"><div><span>Pressure</span><b id="mwPressure">—</b></div><div><span>Flow</span><b id="mwFlow">—</b></div><div><span>Today</span><b id="mwToday">—</b></div></div><div class="status-line"><span class="pill watch">RAIN WATCH</span><span id="mwQuality">—</span></div></article><article class="card water-card"><h3>Rockhouse well</h3><div class="metric-row"><div><span>Pressure</span><b id="rwPressure">—</b></div><div><span>Flow</span><b id="rwFlow">—</b></div><div><span>Today</span><b id="rwToday">—</b></div></div><div class="status-line"><span class="pill good">CLEAR</span><span id="rwQuality">—</span></div></article><article class="card well-card"><h3>Wellhouse</h3><div class="metric-row"><div><span>Temp</span><b id="whTemp">—</b></div><div><span>Pump</span><b id="whPump">—</b></div><div><span>Supply</span><b id="whVolt">—</b></div></div></article><article class="card leak-card"><h3>Leak / flood detectors</h3><div class="leaks" id="leaks"></div></article></div></section>
-<section class="screen" data-screen="power"><div class="eyebrow">POWER • CLIMATE • ELECTRICAL</div><h2>Property Systems</h2><div class="card-grid powercards"><article class="card"><h3>Main house climate</h3><div class="split"><div><span>Upstairs</span><b id="upTemp">—</b></div><div><span>Downstairs</span><b id="downTemp">—</b></div></div></article><article class="card"><h3>Rockhouse climate</h3><div class="big" id="rhTemp">—</div><div class="muted" id="rhHum">—</div></article><article class="card"><h3>Main house electrical</h3><div class="split"><div><span>Voltage</span><b id="mVolt">—</b></div><div><span>Load</span><b id="mLoad">—</b></div></div></article><article class="card"><h3>Rockhouse electrical</h3><div class="split"><div><span>Voltage</span><b id="rVolt">—</b></div><div><span>Load</span><b id="rLoad">—</b></div></div></article><article class="card wide"><h3>Well system electrical</h3><div class="metric-row"><div><span>Supply</span><b id="wellVolt">—</b></div><div><span>Load</span><b id="wellLoad">—</b></div><div><span>Status</span><b class="ok">Ready</b></div></div></article></div></section>
+<section class="screen active" data-screen="stocks">
+  <div class="eyebrow">MARKETS</div><h2>Stocks</h2><div id="rows"></div>
+</section>
+
+<section class="screen" data-screen="home">
+  <div class="eyebrow">TODAY AT THE FARM</div>
+  <div class="hero-row"><div><h2>Home Overview</h2><p class="lede">Main House, Rockhouse, gate, vehicle and property status at a glance.</p></div><div class="weather"><div class="weather-temp" id="wTemp">—</div><div><b id="wCond">—</b><br><span id="wDetail">—</span></div></div></div>
+  <div class="card-grid">
+    <article class="card house art-card">
+      <img class="card-art" src="/static/art1/main-house.png" data-fallback="/static/242E7528-C848-41B1-972E-24E23B4DE69F.png" onerror="useFallback(this)" alt="Main House">
+      <h3>Main House</h3><div class="big" id="mainTemp">—</div><div class="muted" id="mainClimate">—</div>
+    </article>
+    <article class="card rock art-card">
+      <img class="card-art" src="/static/art1/rockhouse.png" data-fallback="/static/38C388BD-A21A-4A6D-9EC6-14B5CC26F7C1.png" onerror="useFallback(this)" alt="Rockhouse">
+      <h3>Rockhouse</h3><div class="big" id="rockTemp">—</div><div class="muted" id="rockClimate">—</div>
+    </article>
+    <article class="card gate"><div class="icon">↔</div><h3>Gate</h3><div class="big" id="gateState">—</div><div class="muted" id="gateDetail">—</div></article>
+    <article class="card tesla"><div class="icon">⚡</div><h3>Tesla</h3><div class="big" id="teslaCharge">—</div><div class="muted" id="teslaDetail">—</div></article>
+  </div>
+  <div class="bob-note"><img src="/static/art1/bob.png" data-fallback="/static/0CDB6933-4ACC-42AC-9089-600D0BDC904E.png" onerror="useFallback(this)" alt="Bob"><div><b>Bob’s watch</b><span>All monitored systems normal.</span></div></div>
+</section>
+
+<section class="screen" data-screen="water">
+  <div class="eyebrow">WATER & WELL SYSTEMS</div><h2>Water Systems</h2>
+  <div class="water-grid">
+    <article class="card water-card">
+      <div class="card-title-art"><h3>Main House well</h3><img src="/static/art1/main-house.png" data-fallback="/static/242E7528-C848-41B1-972E-24E23B4DE69F.png" onerror="useFallback(this)" alt="Main House"></div>
+      <div class="metric-row"><div><span>Pressure</span><b id="mwPressure">—</b></div><div><span>Flow</span><b id="mwFlow">—</b></div><div><span>Today</span><b id="mwToday">—</b></div></div>
+      <div class="status-line"><span class="pill watch">RAIN WATCH</span><span id="mwQuality">—</span></div>
+    </article>
+    <article class="card water-card">
+      <div class="card-title-art"><h3>Rockhouse well</h3><img src="/static/art1/rockhouse.png" data-fallback="/static/38C388BD-A21A-4A6D-9EC6-14B5CC26F7C1.png" onerror="useFallback(this)" alt="Rockhouse"></div>
+      <div class="metric-row"><div><span>Pressure</span><b id="rwPressure">—</b></div><div><span>Flow</span><b id="rwFlow">—</b></div><div><span>Today</span><b id="rwToday">—</b></div></div>
+      <div class="status-line"><span class="pill good">CLEAR</span><span id="rwQuality">—</span></div>
+    </article>
+    <article class="card well-card"><h3>Wellhouse</h3><div class="metric-row"><div><span>Temp</span><b id="whTemp">—</b></div><div><span>Pump</span><b id="whPump">—</b></div><div><span>Supply</span><b id="whVolt">—</b></div></div></article>
+    <article class="card leak-card"><h3>Leak / flood detectors</h3><div class="leaks" id="leaks"></div></article>
+  </div>
+</section>
+
+<section class="screen" data-screen="power">
+  <div class="eyebrow">POWER • CLIMATE • ELECTRICAL</div><h2>Property Systems</h2>
+  <div class="card-grid powercards">
+    <article class="card"><div class="card-title-art"><h3>Main House climate</h3><img src="/static/art1/main-house.png" data-fallback="/static/242E7528-C848-41B1-972E-24E23B4DE69F.png" onerror="useFallback(this)" alt="Main House"></div><div class="split"><div><span>Upstairs</span><b id="upTemp">—</b></div><div><span>Downstairs</span><b id="downTemp">—</b></div></div></article>
+    <article class="card"><div class="card-title-art"><h3>Rockhouse climate</h3><img src="/static/art1/rockhouse.png" data-fallback="/static/38C388BD-A21A-4A6D-9EC6-14B5CC26F7C1.png" onerror="useFallback(this)" alt="Rockhouse"></div><div class="big" id="rhTemp">—</div><div class="muted" id="rhHum">—</div></article>
+    <article class="card"><h3>Main House electrical</h3><div class="split"><div><span>Voltage</span><b id="mVolt">—</b></div><div><span>Load</span><b id="mLoad">—</b></div></div></article>
+    <article class="card"><h3>Rockhouse electrical</h3><div class="split"><div><span>Voltage</span><b id="rVolt">—</b></div><div><span>Load</span><b id="rLoad">—</b></div></div></article>
+    <article class="card wide"><h3>Well system electrical</h3><div class="metric-row"><div><span>Supply</span><b id="wellVolt">—</b></div><div><span>Load</span><b id="wellLoad">—</b></div><div><span>Status</span><b class="ok">Ready</b></div></div></article>
+  </div>
+</section>
 </main>
-<section class="ticker-shell"><div class="ticker-label">NEWS</div><div class="ticker-window"><div id="tickerTrack" class="ticker-track"><span class="ticker-item">Loading headlines…</span></div></div></section><footer>Settings: <b>farmpi.local:8080/settings</b> <span id="demoFlag">• Home sensors: demo values until integrations are connected</span></footer>
+
+<section class="ticker-shell"><div class="ticker-label">NEWS</div><div class="ticker-window"><div id="tickerTrack" class="ticker-track"><span class="ticker-item">Loading headlines…</span></div></div></section>
+<footer>Settings: <b>farmpi.local:8080/settings</b> <span id="demoFlag">• Home sensors: demo values until integrations are connected</span></footer>
+
 <script>
+function useFallback(img){const f=img.dataset.fallback;if(f){img.onerror=null;img.src=f;}}
 const $=id=>document.getElementById(id), money=v=>v==null?'—':'$'+Number(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
 function fallbackAction(p,s){if(p==null)return'HOLD';let a=s.aggressive_buy??s.aggressive,st=s.strong_buy??s.strong;if(a!=null&&p<=a)return'AGGRESSIVE BUY';if(st!=null&&p<=st)return'STRONG BUY';if(s.buy!=null&&p<=s.buy)return'BUY';return'HOLD'}
 async function updateStocks(){let[qs,ss,cs]=await Promise.all([fetch('/api/quotes').then(r=>r.json()),fetch('/api/stocks').then(r=>r.json()),fetch('/api/cloud-status').then(r=>r.json())]);let rows=$('rows');rows.innerHTML='';for(let s of ss){let q=qs.quotes[s.symbol]||{},a=(s.action||fallbackAction(q.price,s)).toUpperCase(),d=document.createElement('div');d.className='stock';d.innerHTML=`<div class="symbol">${s.symbol}</div><div class="price">${money(q.price)}</div><div class="pct ${q.pct>0?'up':q.pct<0?'down':''}">${q.pct==null?'—':(q.pct>0?'+':'')+q.pct.toFixed(2)+'%'}</div><div class="zones">Buy ≤ ${money(s.buy)} • Strong ≤ ${money(s.strong_buy??s.strong)}<div class="subline">${s.note||''}</div></div><div class="badge ${a.includes('BUY')?'buy':''}">${a}</div>`;rows.appendChild(d)}$('status').textContent=(cs.ok?'Systems online':'Using cached market feed')+' • '+new Date().toLocaleTimeString()}
@@ -16,4 +90,6 @@ async function updateHome(){let h=await fetch('/api/home').then(r=>r.json());$('
 async function updateNews(){let n=await fetch('/api/news').then(r=>r.json()),items=(n.news||[]).slice(0,30),html=items.map(i=>`<span class="ticker-item"><b>${i.category==='PORTFOLIO'?i.symbol:i.category}</b> ${i.title}</span>`).join('<span class="ticker-sep">◆</span>');$('tickerTrack').innerHTML=`<div class="ticker-group">${html}</div><div class="ticker-group">${html}</div>`}
 let cfg={rotation_enabled:true,rotation_seconds:18,screens:['stocks','home','water','power']},idx=0,timer;async function loadRotation(){cfg=await fetch('/api/dashboard-settings').then(r=>r.json());document.body.className=cfg.theme==='dark'?'farm-dark':'farm-light';buildDots();schedule()}function buildDots(){$('dots').innerHTML=cfg.screens.map((s,i)=>`<button class="dot ${i===idx?'active':''}" onclick="showScreen(${i})" aria-label="${s}"></button>`).join('')}function showScreen(i){idx=i%cfg.screens.length;document.querySelectorAll('.screen').forEach(x=>x.classList.toggle('active',x.dataset.screen===cfg.screens[idx]));$('screenName').textContent=({stocks:'Stocks',home:'Home Overview',water:'Water Systems',power:'Power / Climate / Electrical'})[cfg.screens[idx]];buildDots();schedule()}function schedule(){clearTimeout(timer);if(cfg.rotation_enabled)timer=setTimeout(()=>showScreen((idx+1)%cfg.screens.length),cfg.rotation_seconds*1000)}
 setInterval(()=>$('clock').textContent=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),1000);updateStocks();updateHome();updateNews();loadRotation();setInterval(updateStocks,5000);setInterval(updateHome,15000);setInterval(updateNews,300000);
-</script></body></html>
+</script>
+</body>
+</html>
