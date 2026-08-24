@@ -9,8 +9,9 @@
   let timer=null;
 
   function ensureStyles(){
-    if(document.querySelector('link[href="/static/cameras.css"]')) return;
-    const l=document.createElement('link'); l.rel='stylesheet'; l.href='/static/cameras.css'; document.head.appendChild(l);
+    if(!document.querySelector('link[href="/static/cameras.css"]')){const l=document.createElement('link');l.rel='stylesheet';l.href='/static/cameras.css';document.head.appendChild(l)}
+    if(!document.querySelector('link[href="/static/thesis.css"]')){const l=document.createElement('link');l.rel='stylesheet';l.href='/static/thesis.css';document.head.appendChild(l)}
+    if(!document.querySelector('script[src="/static/thesis.js"]')){const s=document.createElement('script');s.src='/static/thesis.js';s.defer=true;document.body.appendChild(s)}
   }
 
   function makeScreen(){
@@ -78,7 +79,7 @@
   }
 
   function patchScreenName(){
-    const map={stocks:'Stocks',home:'Home Overview',water:'Water Systems',power:'Power / Climate / Electrical',cameras:'Cameras'};
+    const map={stocks:'Stocks',thesis:'Investment Thesis',home:'Home Overview',water:'Water Systems',power:'Power / Climate / Electrical',cameras:'Cameras'};
     const obs=new MutationObserver(()=>{
       const active=document.querySelector('.screen.active'); const el=document.getElementById('screenName');
       if(active && el && map[active.dataset.screen]) el.textContent=map[active.dataset.screen];
