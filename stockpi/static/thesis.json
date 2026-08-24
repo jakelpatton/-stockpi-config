@@ -1,23 +1,38 @@
 {
   "review_date": "2026-08-23",
-  "title": "Sunday Investment Thesis",
-  "summary": "Fundamentals remain strong across the group, while valuation is now the main differentiator. The semiconductor names continue to show evidence of AI, HBM and advanced-packaging investment. EXE offers the most attractive current entry, while KLAC is the semiconductor name closest to its buy zone.",
+  "title": "Sunday thesis validation — Aug. 23, 2026",
   "status_line": "1 BUY • 6 HOLD • 0 THESIS WARNINGS",
-  "new_money_ranking": ["EXE", "KLAC", "LRCX", "TER", "ALAB", "AMAT", "ASML"],
+  "summary_paragraphs": [
+    "This is a fundamentally strong group, but valuation is now the main differentiator. I do not see evidence that any of the seven underlying theses has broken. The strongest fundamental confirmations since the last review are at Lam Research, KLA Corporation, Astera Labs and Teradyne. The most attractive current entry remains Expand Energy.",
+    "I am not changing the existing core thresholds merely because prices have fallen. I have added aggressive-buy reference levels to the five names that didn't previously have one; those are valuation guardrails rather than a change in the underlying thesis."
+  ],
+  "new_money_ranking": [
+    "EXE",
+    "KLAC",
+    "LRCX",
+    "TER",
+    "ALAB",
+    "AMAT",
+    "ASML"
+  ],
   "stocks": [
     {
       "symbol": "LRCX",
       "company": "Lam Research",
-      "close": 314.00,
+      "close": 314.0,
       "action": "HOLD",
       "thesis_status": "INTACT",
       "buy": 285,
       "strong": 260,
       "aggressive": 240,
-      "headline": "Thesis intact; operating momentum remains excellent.",
-      "body": "The latest quarter substantially validates the thesis. June-quarter revenue reached $6.72B, up 15.1% sequentially, non-GAAP gross margin reached 52%, and EPS was $1.82. September-quarter guidance increased to $8.1B ± $400M and $2.15 ± $0.15 EPS. Lam's exposure to etch and deposition, advanced memory structures and increasingly complex AI/HBM manufacturing remains exactly where we want it. At $314, however, the fundamental improvement does not warrant chasing the stock above our $285 entry. The main risks remain elevated semiconductor-equipment expectations, China exposure, export controls and eventual normalization of the memory/WFE investment cycle.",
+      "headline": "LRCX — HOLD, thesis intact",
+      "paragraphs": [
+        "The latest quarter substantially validates the thesis. June-quarter revenue reached $6.72B, +15.1% sequentially, non-GAAP gross margin reached 52%, and EPS was $1.82. More importantly, September-quarter guidance jumped to $8.1B ± $400M and $2.15 ± $0.15 EPS. Lam's exposure to etch/deposition, advanced memory structures and increasingly complex AI/HBM manufacturing remains exactly where we want it.",
+        "At $314, however, I don't think the fundamental improvement warrants chasing the stock above our $285 entry. The principal risks remain the extraordinary expectations embedded in semiconductor-equipment valuations, China exposure — China represented 26% of June-quarter revenue — export controls, and eventual normalization of the current memory/WFE investment cycle."
+      ],
+      "verdict": "HOLD. Buy ≤$285; strong ≤$260; aggressive ≈$240. No thesis warning.",
       "catalyst": "AI/HBM-driven etch and deposition intensity",
-      "risk": "Valuation, China exposure and WFE cycle normalization"
+      "risk": "Valuation, China exposure, export controls and eventual WFE cycle normalization"
     },
     {
       "symbol": "AMAT",
@@ -28,8 +43,12 @@
       "buy": 450,
       "strong": 410,
       "aggressive": 375,
-      "headline": "Record results confirm the thesis, but valuation still demands patience.",
-      "body": "Applied Materials reported record $9.12B quarterly revenue, up 25% year over year, with record non-GAAP EPS of $3.50. Management's Q4 outlook is approximately $10.25B revenue and $4.02 adjusted EPS. Especially important to our thesis, AMAT now expects advanced-packaging revenue to grow more than 70% in 2026 and says customer visibility is extending toward 2030. That is excellent fundamental confirmation. The problem remains price: even after the correction to $492.32, the shares remain above our $450 entry. Expectations became extremely elevated after the semiconductor-equipment rally, which is why strong execution alone is not enough to justify chasing the stock.",
+      "headline": "AMAT — HOLD, thesis intact",
+      "paragraphs": [
+        "Applied Materials just reported record $9.12B quarterly revenue, +25% YoY, with record non-GAAP EPS of $3.50. Management's Q4 outlook is approximately $10.25B revenue and $4.02 adjusted EPS, both above consensus. Particularly important for our thesis, AMAT now expects advanced-packaging revenue to grow more than 70% in 2026, up from its previous 50% expectation, and says customer visibility is extending toward 2030.",
+        "That's excellent fundamental confirmation. The problem is price: even after the correction to $492.32, the shares remain well above our $450 entry. Expectations became extremely elevated after the semiconductor-equipment rally, which explains why an objectively strong beat-and-raise quarter still produced a negative stock reaction."
+      ],
+      "verdict": "HOLD. Buy ≤$450; strong ≤$410; aggressive ≈$375. I'd consider trimming only if valuation again becomes extreme without a corresponding increase in earnings expectations — roughly >$650–700 under the present earnings trajectory.",
       "catalyst": "Advanced packaging growth and long customer visibility",
       "risk": "Premium valuation and elevated expectations"
     },
@@ -42,9 +61,15 @@
       "buy": 170,
       "strong": 155,
       "aggressive": 140,
-      "headline": "The thesis has strengthened and the valuation is becoming much more interesting.",
-      "body": "KLA reported $3.66B quarterly revenue above the guidance midpoint and guided the September quarter to $4.0B ± $200M with approximately 62.5% non-GAAP gross margin. Management explicitly says AI infrastructure is increasing process-control demand in leading-edge logic, memory and advanced packaging, with momentum accelerating through the second half of 2026 and into 2027. That is almost a textbook confirmation of our KLA thesis. The stock has simultaneously fallen sharply from its June high. I would preserve the $170 entry rather than chase it upward. At $170 with this guidance intact, I would want to buy.",
-      "catalyst": "AI-driven process-control intensity across logic, memory and packaging",
+      "headline": "KLAC — HOLD / very close to BUY, thesis strengthened",
+      "paragraphs": [
+        "This is becoming much more interesting.",
+        "KLA reported $3.66B Q4 revenue, above guidance midpoint, and guided the September quarter to $4.0B ± $200M with approximately 62.5% non-GAAP gross margin. Management explicitly says AI infrastructure is increasing process-control demand in leading-edge logic, memory and advanced packaging, with momentum accelerating through the second half of 2026 and into 2027.",
+        "That is almost a textbook confirmation of our KLA thesis.",
+        "The stock has simultaneously fallen to $183.99, about 40% below its June high. The valuation premium hasn't disappeared, though: recent analysis still showed KLAC trading around 14.9× forward sales, well above the semiconductor sector."
+      ],
+      "verdict": "HOLD, but this is now the name closest to moving into the BUY bucket. I would preserve $170 / $155 / $140 rather than chasing it upward. At $170 with this guidance intact, I'd want to buy.",
+      "catalyst": "AI-driven process-control intensity across logic, memory and advanced packaging",
       "risk": "Still-premium valuation despite the pullback"
     },
     {
@@ -56,9 +81,14 @@
       "buy": 1600,
       "strong": 1450,
       "aggressive": 1325,
-      "headline": "The highest-quality monopoly-like asset in the group remains fundamentally strong.",
-      "body": "ASML's latest quarter reinforced the long-term thesis. Sales reached €9.33B, net income €2.92B and gross margin 54%, while management raised 2026 revenue guidance to €43–45B. AI adoption remains a major semiconductor-industry driver, increasing critical lithography exposures in advanced logic and memory, and High-NA EUV continues to advance toward production readiness. The ADR has corrected meaningfully from its peak, but at $1,763.76 it is still not cheap enough to move our entry. The core competitive thesis remains intact.",
-      "catalyst": "EUV/High-NA intensity as AI chips become more complex",
+      "headline": "ASML — HOLD, thesis intact",
+      "paragraphs": [
+        "ASML remains the highest-quality monopoly-like asset in the group. Q2 sales reached €9.33B, net income €2.92B and gross margin 54%. Management raised 2026 revenue guidance to €43–45B, with Q3 expected at €11–12B and 55–57% gross margin.",
+        "Management specifically says AI adoption remains a major semiconductor-industry driver and expects more critical lithography exposures in both advanced logic and memory. High-NA EUV also reached another production-readiness milestone.",
+        "The ADR closed at $1,763.76 Friday. That's substantially better than the ~$2,000 peak but still not cheap enough for me to move our entry."
+      ],
+      "verdict": "HOLD. Buy ≤$1,600; strong ≤$1,450; aggressive ≈$1,325. Main thesis risk remains geopolitical/export restrictions rather than competitive displacement.",
+      "catalyst": "EUV and High-NA intensity as advanced logic and memory become more complex",
       "risk": "Geopolitical and export restrictions"
     },
     {
@@ -70,10 +100,16 @@
       "buy": 250,
       "strong": 220,
       "aggressive": 190,
-      "headline": "Operational performance is exceptional, but the stock remains valuation-sensitive.",
-      "body": "Astera Labs produced one of the strongest operating updates in the group. Revenue reached a record $392.4M, up 27% sequentially and 104% year over year, with 73.7% non-GAAP gross margin. Management expects Q3 revenue of $540–560M, roughly another 40% sequential increase at midpoint, as Scorpio switches become the company's largest product family one quarter earlier than expected. This materially strengthens the AI-fabric and connectivity thesis. Astera is broadening from retimers into a rack-scale AI connectivity platform, but customer concentration, hyperscaler spending cycles and Scorpio execution make valuation discipline important.",
+      "headline": "ALAB — HOLD, thesis very strong but valuation-sensitive",
+      "paragraphs": [
+        "Astera's operational performance is arguably the strongest of the seven.",
+        "Q2 revenue was a record $392.4M, +27% QoQ and +104% YoY, with 73.7% non-GAAP gross margin. Management expects Q3 revenue of $540–560M — roughly another 40% sequential increase at midpoint — as Scorpio switches become the company's largest product family one quarter earlier than expected.",
+        "That materially strengthens the AI-fabric/connectivity thesis. Astera is moving beyond retimers into a broader rack-scale AI connectivity platform, with additional optical and custom opportunities for 2027.",
+        "But ALAB still trades at $284.97 after having fallen substantially from its $499.48 June high. Rapid growth warrants a premium, but customer concentration, hyperscaler spending cycles and execution on Scorpio make paying an unlimited multiple dangerous."
+      ],
+      "verdict": "HOLD. Buy ≤$250; strong ≤$220; aggressive ≈$190. I would not raise those thresholds despite the spectacular quarter.",
       "catalyst": "Scorpio scale-up and broader rack-scale AI connectivity",
-      "risk": "Customer concentration and execution at a premium multiple"
+      "risk": "Customer concentration, hyperscaler spending cycles and execution at a premium valuation"
     },
     {
       "symbol": "EXE",
@@ -84,10 +120,17 @@
       "buy": 100,
       "strong": 90,
       "aggressive": 85,
-      "headline": "The best current valuation/risk-reward setup in the group.",
-      "body": "Expand Energy remains my favorite current entry. The company produced 7.48 Bcfe/day, reaffirmed 2026 production of 7.4–7.6 Bcfe/day, generated $1.096B operating cash flow and reduced total debt by roughly $1.3B from year-end. Net debt is about $3.1B and leverage approximately 0.5×. The Twin Eagle acquisition expands EXE into gas marketing and logistics, giving it better positioning to connect production directly with LNG, utilities and eventually data-center and power demand. Near-term natural-gas pricing remains the key counterargument, but at $96.09 the stock is already inside our buy zone.",
+      "headline": "EXE — BUY, thesis intact",
+      "paragraphs": [
+        "This remains my favorite current valuation/risk-reward setup.",
+        "Expand produced 7.48 Bcfe/day, reaffirmed 2026 production of 7.4–7.6 Bcfe/day, generated $1.096B operating cash flow and reduced total debt by roughly $1.3B from year-end. Net debt is only $3.1B and leverage approximately 0.5×.",
+        "The Twin Eagle acquisition is strategically important rather than just empire building: the $1.25B deal expands EXE into gas marketing/logistics, with the combined operation expected to market roughly 14 Bcf/day and reach about 90% of U.S./Canadian gas markets. This gives EXE much better positioning to connect production directly with LNG, utilities and eventually data-center/power demand.",
+        "The near-term counterargument is commodity pricing. Henry Hub finished Friday around $2.77/MMBtu; inventories remain 185 Bcf above the five-year average, and production remains strong even though recent storage injections have been relatively small.",
+        "That's exactly why I don't want to raise the threshold. EXE closed at $96.09, putting it inside our existing buy zone."
+      ],
+      "verdict": "BUY at current levels. ≤$100 buy; ≤$90 strong buy; ≤$85 aggressive buy. Thesis intact. Twin Eagle integration and any debt increase associated with the transaction are now key monitoring items.",
       "catalyst": "LNG, power/data-center demand and Twin Eagle integration",
-      "risk": "Natural-gas prices and acquisition integration"
+      "risk": "Natural-gas prices, acquisition integration and any resulting debt increase"
     },
     {
       "symbol": "TER",
@@ -98,10 +141,21 @@
       "buy": 340,
       "strong": 317.5,
       "aggressive": 292.5,
-      "headline": "The HBM and semiconductor-test thesis has strengthened considerably.",
-      "body": "Teradyne's latest results strongly validate the reason we added it. Quarterly revenue hit a record $1.329B, up 104% year over year, including $1.122B of Semiconductor Test revenue. Memory revenue exceeded $200M for the third consecutive quarter, driven by HBM/DRAM plus renewed NAND final-test demand, while Semiconductor Test revenue grew 128% year over year. Q3 guidance remains strong and management says AI demand is robust. The only thing preventing a buy is valuation: at $375.74, the shares still command a substantial multiple for a historically cyclical test-equipment business.",
-      "catalyst": "HBM/DRAM and AI-driven semiconductor test demand",
+      "headline": "TER — HOLD, thesis strengthened considerably",
+      "paragraphs": [
+        "Teradyne's numbers strongly validate the reason we added it.",
+        "Q2 revenue hit a record $1.329B, +104% YoY, including $1.122B Semiconductor Test. Memory revenue exceeded $200M for the third consecutive quarter, driven by HBM/DRAM plus renewed NAND final-test demand. Semiconductor Test revenue grew 128% YoY.",
+        "Q3 guidance is another $1.2–1.3B revenue and $1.85–2.15 adjusted EPS, while management says AI demand remains robust and rising WFE investment should support growth into 2027.",
+        "The only thing preventing a BUY is valuation. TER closed Friday around $375.74 and still trades at roughly 38× forward earnings despite the recent pullback. That's a substantial multiple for a historically cyclical test-equipment business."
+      ],
+      "verdict": "HOLD. Keep ≤$340 buy / ≤$317.50 strong / ≤$292.50 aggressive. I would consider trimming above roughly $450–475 unless forward estimates rise enough to justify it.",
+      "catalyst": "HBM/DRAM and AI-driven semiconductor-test demand",
       "risk": "High multiple in a historically cyclical business"
     }
+  ],
+  "portfolio_conclusion": [
+    "There is an important distinction this week: prices have weakened much more than the fundamental AI semiconductor thesis has. Lam, AMAT, KLA, ASML, Astera and Teradyne are all reporting evidence consistent with accelerating, not deteriorating, AI/HBM/advanced-packaging investment. The weakness therefore improves prospective entry points, but I don't want to mechanically move our thresholds upward and surrender our valuation discipline.",
+    "My ranking for new money today is approximately EXE → KLAC → LRCX → TER → ALAB → AMAT → ASML, primarily because of where each stock sits relative to its valuation-based entry zone, not because I think ASML or AMAT are inferior companies.",
+    "Material action today: EXE remains BUY. KLAC is the closest semiconductor name to triggering BUY at $170. No THESIS WARNING or SELL/EXIT on any of the seven. All seven theses are INTACT as of Aug. 23, 2026."
   ]
 }
