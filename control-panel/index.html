@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Patton Farm Control</title>
+  <link rel="stylesheet" href="victorian.css">
+</head>
+<body>
+  <div class="frame">
+    <header class="masthead">
+      <button class="seal" aria-label="Home" data-nav="home">PF</button>
+      <div class="identity">
+        <div class="ornament"><span></span><i>◆</i><span></span></div>
+        <h1>Patton Farm</h1>
+        <p>EST. 1838</p>
+      </div>
+      <div class="clockblock"><strong id="clock">--:--</strong><span id="date">---</span></div>
+    </header>
+
+    <nav class="ribbon" aria-label="Control sections">
+      <button class="active" data-nav="home">Home</button>
+      <button data-nav="lights">Lighting</button>
+      <button data-nav="climate">Climate</button>
+      <button data-nav="water">Water</button>
+      <button data-nav="cameras">Cameras</button>
+      <button data-nav="access">Access</button>
+      <button data-nav="systems">Systems</button>
+    </nav>
+
+    <main>
+      <section class="view active" data-view="home">
+        <div class="page-heading"><div><small>HOUSE CONTROL</small><h2>Home</h2></div><span class="status-good">Systems Normal</span></div>
+        <div class="hero-grid">
+          <article class="feature-card climate-feature" data-nav="climate">
+            <div class="card-label">UPSTAIRS THERMOSTAT</div>
+            <div class="temperature"><strong id="homeTemp">73°</strong><span>Current</span></div>
+            <div class="feature-meta"><span>Set point <b id="homeSetpoint">72°</b></span><span id="homeHvac">Comfort</span></div>
+          </article>
+          <article class="feature-card water-feature" data-nav="water">
+            <div class="card-label">MAIN HOUSE WATER</div>
+            <div class="water-status"><span class="drop">◒</span><strong id="homeWaterState">NORMAL</strong></div>
+            <div class="feature-meta"><span><b id="homePressure">48</b> PSI</span><span id="homeLeaks">No leaks</span></div>
+          </article>
+          <article class="feature-card access-feature" data-nav="access">
+            <div class="card-label">NORTH DRIVE GATE</div>
+            <div class="gate-mark">⌑</div>
+            <div class="feature-meta"><span id="homeGate">Closed</span><span id="homeGateNetwork">Online</span></div>
+          </article>
+        </div>
+
+        <div class="control-grid">
+          <button class="control-tile" data-nav="lights"><span class="icon">♜</span><b>Lights</b><small>House & exterior</small></button>
+          <button class="control-tile" data-nav="climate"><span class="icon">♨</span><b>Temperature</b><small>Upstairs climate</small></button>
+          <button class="control-tile" data-nav="cameras"><span class="icon">◉</span><b>Cameras</b><small>Property views</small></button>
+          <button class="control-tile" data-nav="water"><span class="icon">◒</span><b>Water</b><small>Pressure & shutoff</small></button>
+          <button class="control-tile" data-nav="access"><span class="icon">⌑</span><b>Gate</b><small>North drive</small></button>
+          <button class="control-tile scene" data-action="goodnight"><span class="icon">☾</span><b>Goodnight</b><small>House scene</small></button>
+        </div>
+      </section>
+
+      <section class="view" data-view="lights">
+        <div class="page-heading"><div><small>CASETA / HOME ASSISTANT</small><h2>Lighting</h2></div><span id="lightingSummary">Ready to map</span></div>
+        <div class="room-grid">
+          <button class="device-card" data-action="light-main-exterior"><div><small>MAIN HOUSE</small><b>Exterior Lights</b></div><span class="switch">OFF</span></button>
+          <button class="device-card" data-action="light-front-porch"><div><small>MAIN HOUSE</small><b>Front Porch</b></div><span class="switch">OFF</span></button>
+          <button class="device-card" data-action="light-rockhouse"><div><small>ROCKHOUSE</small><b>Exterior Lights</b></div><span class="switch">OFF</span></button>
+          <button class="device-card" data-action="light-all-off"><div><small>SCENE</small><b>All Property Lights</b></div><span class="switch">OFF</span></button>
+        </div>
+      </section>
+
+      <section class="view" data-view="climate">
+        <div class="page-heading"><div><small>MAIN HOUSE</small><h2>Upstairs Thermostat</h2></div><span id="climateMode">Comfort</span></div>
+        <article class="thermostat panel-detail">
+          <div class="thermo-reading"><small>CURRENT</small><strong id="climateCurrent">73°</strong></div>
+          <div class="thermo-controls">
+            <button data-action="temp-down" aria-label="Lower temperature">−</button>
+            <div><small>SET TO</small><strong id="climateSetpoint">72°</strong></div>
+            <button data-action="temp-up" aria-label="Raise temperature">+</button>
+          </div>
+          <div class="mode-row"><button data-action="mode-heat">Heat</button><button data-action="mode-cool">Cool</button><button data-action="mode-off">Off</button></div>
+        </article>
+      </section>
+
+      <section class="view" data-view="water">
+        <div class="page-heading"><div><small>PROPERTY WATER</small><h2>Water</h2></div><span class="status-good" id="waterHeadline">Normal</span></div>
+        <div class="metric-grid">
+          <article><small>MAIN HOUSE PRESSURE</small><strong><span id="waterPressure">48</span> PSI</strong></article>
+          <article><small>CURRENT FLOW</small><strong><span id="waterFlow">2.1</span> GPM</strong></article>
+          <article><small>TODAY</small><strong><span id="waterToday">126</span> GAL</strong></article>
+          <article><small>LEAK SENSORS</small><strong id="waterLeaks">DRY</strong></article>
+        </div>
+        <div class="emergency-card"><div><small>EMERGENCY CONTROL</small><h3>Main Water Shutoff</h3><p>Close immediately if a leak or broken line is suspected.</p></div><button class="danger" data-action="water-off">SHUT WATER OFF</button></div>
+      </section>
+
+      <section class="view" data-view="cameras">
+        <div class="page-heading"><div><small>PROPERTY SECURITY</small><h2>Cameras</h2></div><span>Amcrest + Wyze</span></div>
+        <div class="camera-grid">
+          <article><img src="/api/cameras/snapshot/1" alt="Front Porch"><b>Front Porch</b><small>Main House</small></article>
+          <article><img src="/api/cameras/snapshot/2" alt="Rockhouse Front"><b>Rockhouse Front</b><small>Rockhouse</small></article>
+          <article><img src="/api/cameras/snapshot/3" alt="Rockhouse Back"><b>Rockhouse Back</b><small>Rockhouse</small></article>
+          <article class="camera-pending"><div>◉</div><b>Farm Backyard</b><small>Wyze Floodlight Pro</small></article>
+        </div>
+      </section>
+
+      <section class="view" data-view="access">
+        <div class="page-heading"><div><small>NORTH DRIVE</small><h2>Gate & Access</h2></div><span id="gateState">Closed</span></div>
+        <article class="gate-panel panel-detail"><div class="gate-illustration">⌑</div><div><small>GATE STATUS</small><h3 id="gateLargeState">Closed</h3><p id="gateLast">Last event available from Farm</p></div><div class="gate-actions"><button data-action="gate-open">Open Gate</button><button data-action="gate-close">Close Gate</button></div></article>
+      </section>
+
+      <section class="view" data-view="systems">
+        <div class="page-heading"><div><small>FARM SYSTEMS</small><h2>Systems</h2></div><span>At a glance</span></div>
+        <div class="metric-grid system-grid">
+          <article><small>PROPANE</small><strong id="sysPropane">67%</strong><span id="sysPropaneGallons">335 gal</span></article>
+          <article><small>MAIN HOUSE</small><strong id="sysPower">2.4 kW</strong><span>Electrical load</span></article>
+          <article><small>WELLHOUSE</small><strong id="sysWell">Ready</strong><span id="sysWellVoltage">241 V</span></article>
+          <article><small>ROCKHOUSE</small><strong id="sysRockTemp">72.4°</strong><span>Climate</span></article>
+        </div>
+      </section>
+    </main>
+
+    <footer><span id="connection">Farm data • connecting</span><span class="footer-ornament">— ◆ —</span><span>Touch Control</span></footer>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+  <script src="control-panel.js"></script>
+</body>
+</html>
