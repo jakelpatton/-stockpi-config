@@ -1,11 +1,13 @@
 (() => {
   let thesisData=null, raf=null, lastTs=0, y=0, maxY=0, active=false, pauseUntil=0;
-  const SPEED=18; // pixels per second: deliberately slow for TV reading
+  const SPEED=18;
   const TOP_PAUSE=4500;
   const SECTION_PAUSE=1800;
   const END_PAUSE=5000;
   let sectionStops=[];
 
+  const HOUSE='/static/38C388BD-A21A-4A6D-9EC6-14B5CC26F7C1.png';
+  const BOB='/static/0CDB6933-4ACC-42AC-9089-600D0BDC904E.png';
   const money=v=>v==null?'—':'$'+Number(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const pctDistance=(close,buy)=>buy?((close-buy)/buy)*100:null;
@@ -17,8 +19,8 @@
     s.className='screen thesis-screen';
     s.dataset.screen='thesis';
     s.innerHTML=`<div class="thesis-shell thesis-paused" id="thesisShell">
-      <div class="thesis-sticky"><div class="title" id="thesisStickyTitle">SUNDAY THESIS</div><div class="status" id="thesisStickyStatus">Loading latest review…</div></div>
-      <div class="thesis-viewport" id="thesisViewport"><div class="thesis-track" id="thesisTrack"><div class="thesis-hero"><div class="thesis-kicker">INVESTMENT RESEARCH</div><h2>Loading latest thesis…</h2></div></div></div>
+      <div class="thesis-sticky"><div class="thesis-sticky-left"><img src="${HOUSE}" alt="Main House"><div class="title" id="thesisStickyTitle">SUNDAY THESIS</div></div><div class="status" id="thesisStickyStatus">Loading latest review…</div></div>
+      <div class="thesis-viewport" id="thesisViewport"><div class="thesis-track" id="thesisTrack"><div class="thesis-hero"><div class="thesis-hero-copy"><div class="thesis-kicker">INVESTMENT RESEARCH</div><h2>Loading latest thesis…</h2></div></div></div></div>
       <div class="thesis-progress"><i id="thesisProgress"></i></div>
     </div>`;
     const stocks=document.querySelector('[data-screen="stocks"]');
@@ -62,17 +64,20 @@
     const track=document.getElementById('thesisTrack');
     track.innerHTML=`
       <section class="thesis-hero" data-thesis-stop>
-        <div class="thesis-kicker">INVESTMENT RESEARCH • WEEKLY VALIDATION</div>
-        <h2>${esc(d.title||'Sunday Investment Thesis')}</h2>
-        <div class="thesis-date">${esc(date)}</div>
-        <div class="thesis-summary">${esc(d.summary)}</div>
+        <div class="thesis-hero-copy">
+          <div class="thesis-kicker">FARM • INVESTMENT RESEARCH • WEEKLY VALIDATION</div>
+          <h2>${esc(d.title||'Sunday Investment Thesis')}</h2>
+          <div class="thesis-date">${esc(date)}</div>
+          <div class="thesis-summary">${esc(d.summary)}</div>
+        </div>
+        <div class="thesis-hero-art"><img src="${HOUSE}" alt="Main House"><div class="thesis-bob-chip"><img src="${BOB}" alt="Bob"><span>Bob's market watch</span></div></div>
       </section>
       <div class="thesis-overview-grid" data-thesis-stop>
         <article class="thesis-card"><h3>New money ranking</h3><div class="ranking">${(d.new_money_ranking||[]).map((x,i)=>`<span class="rank-pill">${i+1}. ${esc(x)}</span>`).join('')}</div></article>
         <article class="thesis-card"><h3>Distance from starter buy</h3><div class="distance-chart">${overviewChart(d.stocks||[])}</div></article>
       </div>
       ${(d.stocks||[]).map(stockCard).join('')}
-      <section class="thesis-end" data-thesis-stop><div class="thesis-kicker">PORTFOLIO CONCLUSION</div><h3>${esc(d.status_line||'Review complete')}</h3><p>Next weekly validation will replace this presentation automatically when the thesis data is updated.</p></section>`;
+      <section class="thesis-end" data-thesis-stop><img src="${BOB}" alt="Bob"><div class="thesis-kicker">FARM PORTFOLIO CONCLUSION</div><h3>${esc(d.status_line||'Review complete')}</h3><p>Latest thesis loaded from the Farm research feed.</p></section>`;
     recalc();
   }
 
@@ -109,7 +114,6 @@
     const crossed=sectionStops.find(stop=>stop>prev+2 && stop<=y+2);
     if(crossed!=null){ setY(crossed); pauseUntil=ts+SECTION_PAUSE; }
     if(y>=maxY-1){
-      pauseUntil=ts+END_PAUSE;
       shell?.classList.add('thesis-paused');
       setTimeout(()=>{
         if(!active) return;
@@ -135,7 +139,7 @@
 
   async function load(){
     try{ const d=await fetch('/static/thesis.json?t='+Date.now(),{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error(r.status);return r.json()}); render(d); }
-    catch(e){ const t=document.getElementById('thesisTrack'); if(t)t.innerHTML='<div class="thesis-hero"><div class="thesis-kicker">INVESTMENT RESEARCH</div><h2>Latest thesis unavailable</h2><div class="thesis-summary">The dashboard will retry automatically.</div></div>'; }
+    catch(e){ const t=document.getElementById('thesisTrack'); if(t)t.innerHTML='<div class="thesis-hero"><div class="thesis-hero-copy"><div class="thesis-kicker">FARM • INVESTMENT RESEARCH</div><h2>Latest thesis unavailable</h2><div class="thesis-summary">The dashboard will retry automatically.</div></div></div>'; }
   }
 
   function boot(){makeScreen();watchScreen();load();setInterval(load,300000);window.addEventListener('resize',recalc)}
