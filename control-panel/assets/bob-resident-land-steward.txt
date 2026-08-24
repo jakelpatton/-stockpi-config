@@ -1,0 +1,1 @@
+The touch UI expects assets/bob-resident-land-steward.jpg. The approved portrait should be placed at that path; if it is absent the server falls back to the existing Bob asset in stockpi/static.
