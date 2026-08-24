@@ -8,6 +8,7 @@
 
   const HOUSE='/static/38C388BD-A21A-4A6D-9EC6-14B5CC26F7C1.png';
   const BOB='/static/0CDB6933-4ACC-42AC-9089-600D0BDC904E.png';
+  const LIVE_THESIS='https://raw.githubusercontent.com/jakelpatton/-stockpi-config/main/stockpi/static/thesis.json';
   const money=v=>v==null?'—':'$'+Number(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const pctDistance=(close,buy)=>buy?((close-buy)/buy)*100:null;
@@ -137,9 +138,18 @@
     handle();
   }
 
+  async function getJson(url){
+    const r=await fetch(url+(url.includes('?')?'&':'?')+'t='+Date.now(),{cache:'no-store'});
+    if(!r.ok) throw new Error(r.status);
+    return r.json();
+  }
+
   async function load(){
-    try{ const d=await fetch('/static/thesis.json?t='+Date.now(),{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error(r.status);return r.json()}); render(d); }
-    catch(e){ const t=document.getElementById('thesisTrack'); if(t)t.innerHTML='<div class="thesis-hero"><div class="thesis-hero-copy"><div class="thesis-kicker">FARM • INVESTMENT RESEARCH</div><h2>Latest thesis unavailable</h2><div class="thesis-summary">The dashboard will retry automatically.</div></div></div>'; }
+    try{ render(await getJson(LIVE_THESIS)); }
+    catch(e){
+      try{ render(await getJson('/static/thesis.json')); }
+      catch(e2){ const t=document.getElementById('thesisTrack'); if(t)t.innerHTML='<div class="thesis-hero"><div class="thesis-hero-copy"><div class="thesis-kicker">FARM • INVESTMENT RESEARCH</div><h2>Latest thesis unavailable</h2><div class="thesis-summary">The dashboard will retry automatically.</div></div></div>'; }
+    }
   }
 
   function boot(){makeScreen();watchScreen();load();setInterval(load,300000);window.addEventListener('resize',recalc)}
