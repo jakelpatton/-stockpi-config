@@ -12,6 +12,7 @@
   const money=v=>v==null?'—':'$'+Number(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const pctDistance=(close,buy)=>buy?((close-buy)/buy)*100:null;
+  const paraHtml=v=>(Array.isArray(v)?v:[v]).filter(Boolean).map(p=>`<p>${esc(p)}</p>`).join('');
 
   function makeScreen(){
     if(document.querySelector('[data-screen="thesis"]')) return;
@@ -52,7 +53,8 @@
         <div class="thesis-metric"><span>Strong buy</span><b>≤ ${money(s.strong)}</b></div>
         <div class="thesis-metric"><span>Aggressive</span><b>≤ ${money(s.aggressive)}</b></div>
       </div>
-      <div class="thesis-body">${esc(s.body)}</div>
+      <div class="thesis-body">${paraHtml(s.paragraphs||s.body)}</div>
+      ${s.verdict?`<div class="thesis-verdict"><span>Verdict</span><b>${esc(s.verdict)}</b></div>`:''}
       <div class="thesis-two-col"><div class="thesis-note"><span>Key catalyst</span><b>${esc(s.catalyst)}</b></div><div class="thesis-note risk"><span>Primary risk</span><b>${esc(s.risk)}</b></div></div>
     </article>`;
   }
@@ -69,16 +71,18 @@
           <div class="thesis-kicker">FARM • INVESTMENT RESEARCH • WEEKLY VALIDATION</div>
           <h2>${esc(d.title||'Sunday Investment Thesis')}</h2>
           <div class="thesis-date">${esc(date)}</div>
-          <div class="thesis-summary">${esc(d.summary)}</div>
+          <div class="thesis-summary">${paraHtml(d.summary_paragraphs||d.summary)}</div>
         </div>
-        <div class="thesis-hero-art"><img src="${HOUSE}" alt="Main House"><div class="thesis-bob-chip"><img src="${BOB}" alt="Bob"><span>Bob's market watch</span></div></div>
+        <div class="thesis-hero-art"><img src="${HOUSE}" alt="Main House"><div class="thesis-bob-chip"><img src="${BOB}" alt="Bob"></div></div>
       </section>
+      ${d.intro_paragraphs?.length?`<section class="thesis-prose-block" data-thesis-stop><div class="thesis-body">${paraHtml(d.intro_paragraphs)}</div></section>`:''}
       <div class="thesis-overview-grid" data-thesis-stop>
         <article class="thesis-card"><h3>New money ranking</h3><div class="ranking">${(d.new_money_ranking||[]).map((x,i)=>`<span class="rank-pill">${i+1}. ${esc(x)}</span>`).join('')}</div></article>
         <article class="thesis-card"><h3>Distance from starter buy</h3><div class="distance-chart">${overviewChart(d.stocks||[])}</div></article>
       </div>
       ${(d.stocks||[]).map(stockCard).join('')}
-      <section class="thesis-end" data-thesis-stop><img src="${BOB}" alt="Bob"><div class="thesis-kicker">FARM PORTFOLIO CONCLUSION</div><h3>${esc(d.status_line||'Review complete')}</h3><p>Latest thesis loaded from the Farm research feed.</p></section>`;
+      ${d.portfolio_conclusion?.length?`<section class="thesis-conclusion" data-thesis-stop><div class="thesis-kicker">PORTFOLIO CONCLUSION</div><div class="thesis-body">${paraHtml(d.portfolio_conclusion)}</div></section>`:''}
+      <section class="thesis-end" data-thesis-stop><img src="${BOB}" alt="Bob"><h3>${esc(d.status_line||'Review complete')}</h3></section>`;
     recalc();
   }
 
