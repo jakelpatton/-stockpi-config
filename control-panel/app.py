@@ -5,6 +5,7 @@ import json, os, requests, time
 
 BASE = Path(__file__).resolve().parent
 ASSETS = BASE / "assets"
+FALLBACK_BOB = BASE.parent / "stockpi" / "static" / "0CDB6933-4ACC-42AC-9089-600D0BDC904E.png"
 CONFIG_PATH = BASE / "control-panel.json"
 ENV_PATH = BASE / ".env"
 
@@ -116,7 +117,11 @@ def css(): return send_from_directory(BASE,"victorian.css")
 @app.get("/control-panel.js")
 def js(): return send_from_directory(BASE,"control-panel.js")
 @app.get("/assets/<path:name>")
-def assets(name): return send_from_directory(ASSETS,name)
+def assets(name):
+    target = ASSETS / name
+    if target.exists(): return send_from_directory(ASSETS,name)
+    if name == "bob-resident-land-steward.jpg" and FALLBACK_BOB.exists(): return send_from_directory(FALLBACK_BOB.parent,FALLBACK_BOB.name)
+    return "",404
 
 @app.get("/api/home")
 def api_home():
