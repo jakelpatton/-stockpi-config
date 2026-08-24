@@ -14,6 +14,10 @@
   const pctDistance=(close,buy)=>buy?((close-buy)/buy)*100:null;
   const paraHtml=v=>(Array.isArray(v)?v:[v]).filter(Boolean).map(p=>`<p>${esc(p)}</p>`).join('');
 
+  function holdRotation(){
+    try{ clearTimeout(timer); }catch(e){}
+  }
+
   function makeScreen(){
     if(document.querySelector('[data-screen="thesis"]')) return;
     const main=document.querySelector('main.screens'); if(!main) return;
@@ -100,10 +104,11 @@
   }
 
   function start(){
-    if(active) return; active=true; lastTs=0; setY(0); recalc();
+    if(active) return;
+    active=true; lastTs=0; setY(0); recalc();
     pauseUntil=performance.now()+TOP_PAUSE;
     document.getElementById('thesisShell')?.classList.add('thesis-paused');
-    try{ clearTimeout(timer); }catch(e){}
+    holdRotation();
     raf=requestAnimationFrame(tick);
   }
 
@@ -111,6 +116,7 @@
 
   function tick(ts){
     if(!active) return;
+    holdRotation();
     if(!lastTs) lastTs=ts;
     const shell=document.getElementById('thesisShell');
     if(ts<pauseUntil){ shell?.classList.add('thesis-paused'); lastTs=ts; raf=requestAnimationFrame(tick); return; }
@@ -119,7 +125,9 @@
     const crossed=sectionStops.find(stop=>stop>prev+2 && stop<=y+2);
     if(crossed!=null){ setY(crossed); pauseUntil=ts+SECTION_PAUSE; }
     if(y>=maxY-1){
+      setY(maxY);
       shell?.classList.add('thesis-paused');
+      holdRotation();
       setTimeout(()=>{
         if(!active) return;
         stop();
@@ -135,8 +143,12 @@
     const handle=()=>{
       const isActive=document.querySelector('.screen.active')?.dataset.screen==='thesis';
       const label=document.getElementById('screenName');
-      if(isActive){ if(label)label.textContent='Investment Thesis'; start(); }
-      else if(active) stop();
+      if(isActive){
+        if(label) label.textContent='Investment Thesis';
+        holdRotation();
+        start();
+        holdRotation();
+      } else if(active) stop();
     };
     new MutationObserver(handle).observe(main,{attributes:true,subtree:true,attributeFilter:['class']});
     handle();
