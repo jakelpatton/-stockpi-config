@@ -7,7 +7,7 @@
   let sectionStops=[];
 
   const HOUSE='/static/38C388BD-A21A-4A6D-9EC6-14B5CC26F7C1.png';
-  const BOB='/static/0CDB6933-4ACC-42AC-9089-600D0BDC904E.png';
+  const BOB='/static/art1/bob.png';
   const LIVE_THESIS='https://raw.githubusercontent.com/jakelpatton/-stockpi-config/main/stockpi/static/thesis.json';
   const money=v=>v==null?'—':'$'+Number(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
