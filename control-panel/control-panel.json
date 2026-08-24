@@ -1,0 +1,13 @@
+{
+  "entities": {
+    "climate_upstairs": null,
+    "light_main_exterior": null,
+    "light_front_porch": null,
+    "light_rockhouse": null,
+    "water_shutoff": null,
+    "gate": null,
+    "scene_goodnight": null,
+    "scene_away": null,
+    "scene_morning": null
+  }
+}
