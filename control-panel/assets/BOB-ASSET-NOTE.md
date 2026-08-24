@@ -1,0 +1,1 @@
+The approved UI uses the cropped oval Bob portrait from the design conversation. The runtime will fall back to the existing stockpi Bob PNG until the JPEG is committed as `bob-resident-land-steward.jpg`.
