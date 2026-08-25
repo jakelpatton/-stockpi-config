@@ -4,7 +4,7 @@ APPDIR="$HOME/farmpi"
 ENVFILE="$APPDIR/cameras.env"
 
 sudo apt update
-sudo apt install -y python3-venv avahi-daemon chromium cec-utils wtype
+sudo apt install -y python3-venv avahi-daemon chromium cec-utils wtype curl
 sudo hostnamectl set-hostname farmpi
 
 # Keep sudo/local hostname resolution clean after renaming the Pi.
@@ -17,6 +17,7 @@ fi
 sudo systemctl enable --now avahi-daemon
 mkdir -p "$APPDIR"
 cp -r ./* "$APPDIR/"
+chmod +x "$APPDIR/start-kiosk.sh"
 python3 -m venv "$APPDIR/venv"
 "$APPDIR/venv/bin/pip" install --upgrade pip
 "$APPDIR/venv/bin/pip" install -r "$APPDIR/requirements.txt"
@@ -55,17 +56,18 @@ EOF
 sudo systemctl daemon-reload
 sudo systemctl enable --now farm-dashboard.service
 
-# Current Raspberry Pi OS desktop uses labwc. Launch Chromium only after the graphical session is ready.
-# --password-store=basic keeps this dedicated kiosk from requesting the desktop keyring at boot.
+# Current Raspberry Pi OS desktop uses labwc. The kiosk launcher waits until
+# the Flask dashboard responds before opening Chromium, avoiding a blank page
+# on slower boots. --password-store=basic prevents the desktop keyring prompt.
 mkdir -p "$HOME/.config/labwc"
 AUTOSTART="$HOME/.config/labwc/autostart"
 touch "$AUTOSTART"
 if grep -q "# Farm dashboard kiosk" "$AUTOSTART"; then
-  sed -i '/# Farm dashboard kiosk/{n;s#.*#(sleep 10; chromium http://localhost:8080 --kiosk --noerrdialogs --disable-infobars --no-first-run --start-maximized --password-store=basic --enable-features=OverlayScrollbar) \&#;}' "$AUTOSTART"
+  sed -i '/# Farm dashboard kiosk/{n;s#.*#'$APPDIR'/start-kiosk.sh \&#;}' "$AUTOSTART"
 else
-cat >> "$AUTOSTART" <<'EOF'
+cat >> "$AUTOSTART" <<EOF
 # Farm dashboard kiosk
-(sleep 10; chromium http://localhost:8080 --kiosk --noerrdialogs --disable-infobars --no-first-run --start-maximized --password-store=basic --enable-features=OverlayScrollbar) &
+$APPDIR/start-kiosk.sh &
 EOF
 fi
 
