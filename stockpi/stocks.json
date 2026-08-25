@@ -1,6 +1,7 @@
 [
   {"symbol":"EXE","buy":90,"strong":85,"aggressive":80},
-  {"symbol":"TEL","buy":205,"strong":190,"aggressive":175},
+  {"symbol":"TEL","buy":190,"strong":175,"aggressive":165},
+  {"symbol":"CMI","buy":550,"strong":520,"aggressive":495},
   {"symbol":"AMAT","buy":450,"strong":415,"aggressive":380},
   {"symbol":"ASML","buy":1600,"strong":1450,"aggressive":1325},
   {"symbol":"LRCX","buy":285,"strong":260,"aggressive":235},
