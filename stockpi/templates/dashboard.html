@@ -85,6 +85,7 @@
 <section class="ticker-shell"><div class="ticker-label">NEWS</div><div class="ticker-window"><div id="tickerTrack" class="ticker-track"><span class="ticker-item">Loading headlines…</span></div></div></section>
 <footer>Settings: <b>farmpi.local:8080/settings</b> <span id="demoFlag">• Home systems currently use realistic demo values until integrations are connected</span></footer>
 
+<script src="/static/cameras.js"></script>
 <script>
 const $=id=>document.getElementById(id), money=v=>v==null?'—':'$'+Number(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
 function fallbackAction(p,s){if(p==null)return'HOLD';let a=s.aggressive_buy??s.aggressive,st=s.strong_buy??s.strong;if(a!=null&&p<=a)return'AGGRESSIVE BUY';if(st!=null&&p<=st)return'STRONG BUY';if(s.buy!=null&&p<=s.buy)return'BUY';return'HOLD'}
