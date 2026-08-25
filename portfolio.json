@@ -14,13 +14,29 @@
     },
     {
       "symbol": "TEL",
-      "buy": 205,
-      "strong_buy": 190,
-      "aggressive_buy": 175,
+      "buy": 190,
+      "strong_buy": 175,
+      "aggressive_buy": 165,
       "thesis": "INTACT",
       "last_reviewed": "2026-08-25",
-      "position_usd": 0,
-      "note": "Highest-priority new AI infrastructure name • interconnect + power • strong FCF/value"
+      "position_usd": 400,
+      "owned": true,
+      "average_cost": 200.73,
+      "shares_estimate": 1.9927,
+      "note": "OWNED • $400 invested @ $200.73 • AI interconnect + power • next add ≤ $190"
+    },
+    {
+      "symbol": "CMI",
+      "buy": 550,
+      "strong_buy": 520,
+      "aggressive_buy": 495,
+      "thesis": "INTACT",
+      "last_reviewed": "2026-08-25",
+      "position_usd": 200,
+      "owned": true,
+      "average_cost": 570.54,
+      "shares_estimate": 0.3505,
+      "note": "OWNED • $200 invested @ $570.54 • data-center power + diversified industrial exposure; next add ≤ $550"
     },
     {
       "symbol": "AMAT",
