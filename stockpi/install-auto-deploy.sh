@@ -9,6 +9,7 @@ if [[ "$EUID" -eq 0 && -z "${SUDO_USER:-}" ]]; then
 fi
 
 TARGET_USER="${SUDO_USER:-${USER:-$(id -un)}}"
+TARGET_GROUP="$(id -gn "$TARGET_USER")"
 TARGET_HOME="$(getent passwd "$TARGET_USER" | cut -d: -f6)"
 APPDIR="$TARGET_HOME/farmpi"
 
@@ -24,7 +25,7 @@ sudo apt-get install -y -qq git rsync curl util-linux >/dev/null
 TMPFILE="$(mktemp)"
 trap 'rm -f "$TMPFILE"' EXIT
 curl -fsSL "$REPO_RAW/auto-deploy.sh" -o "$TMPFILE"
-sudo install -o "$TARGET_USER" -g "$TARGET_USER" -m 0755 "$TMPFILE" "$APPDIR/auto-deploy.sh"
+sudo install -o "$TARGET_USER" -g "$TARGET_GROUP" -m 0755 "$TMPFILE" "$APPDIR/auto-deploy.sh"
 
 sudo tee /etc/systemd/system/farmpi-auto-deploy.service >/dev/null <<EOF
 [Unit]
