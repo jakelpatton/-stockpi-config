@@ -53,6 +53,33 @@ sudo reboot
 
 The installer creates the `farm-dashboard.service`, installs Chromium/CEC support, sets the hostname to `farmpi`, and launches Chromium automatically in full-screen kiosk mode after the graphical desktop starts.
 
+## Automatic GitHub deployment
+
+For an already-installed Pi, enable automatic deployments once by running this as the normal Pi user:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/jakelpatton/-stockpi-config/main/stockpi/install-auto-deploy.sh | bash
+```
+
+This installs a `farmpi-auto-deploy.timer` that checks the repository `main` branch about every three minutes. When a new commit is found it:
+
+- validates Python and JSON files before deployment
+- snapshots the current working dashboard
+- syncs the new `stockpi` application files into `~/farmpi`
+- preserves `cameras.env`, the Python virtual environment, `dashboard_config.json`, and `power_schedule.json`
+- installs changed Python requirements
+- restarts `farm-dashboard.service`
+- verifies that `http://127.0.0.1:8080/` responds
+- automatically rolls back if the post-deploy health check fails
+
+Useful commands:
+
+```bash
+sudo systemctl start farmpi-auto-deploy.service
+systemctl status farmpi-auto-deploy.timer --no-pager
+journalctl -u farmpi-auto-deploy.service -n 50 --no-pager
+```
+
 ## Addresses
 
 Dashboard: `http://farmpi.local:8080`
