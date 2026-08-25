@@ -24,8 +24,7 @@ sudo apt-get install -y -qq git rsync curl util-linux >/dev/null
 TMPFILE="$(mktemp)"
 trap 'rm -f "$TMPFILE"' EXIT
 curl -fsSL "$REPO_RAW/auto-deploy.sh" -o "$TMPFILE"
-install -m 0755 "$TMPFILE" "$APPDIR/auto-deploy.sh"
-chown "$TARGET_USER":"$TARGET_USER" "$APPDIR/auto-deploy.sh"
+sudo install -o "$TARGET_USER" -g "$TARGET_USER" -m 0755 "$TMPFILE" "$APPDIR/auto-deploy.sh"
 
 sudo tee /etc/systemd/system/farmpi-auto-deploy.service >/dev/null <<EOF
 [Unit]
