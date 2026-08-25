@@ -20,3 +20,22 @@
 @media(max-width:1450px){.overview-grid.has-propane{grid-template-columns:1fr 1fr 1fr}.propane-card{min-height:210px}}
 @media(max-width:900px){.overview-grid.has-propane{grid-template-columns:1fr 1fr}.propane-card{min-height:200px}}
 @media(max-width:600px){.overview-grid.has-propane{grid-template-columns:1fr}}
+
+/* Stocks portfolio summary */
+.portfolio-panel{margin:-3px 0 10px}
+.portfolio-top{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:7px}
+.portfolio-title{font-size:10px;letter-spacing:.15em;font-weight:900;color:var(--blue)}
+.portfolio-totals{display:flex;gap:18px;align-items:center;font-size:11px;color:var(--muted)}
+.portfolio-totals b{font-size:13px;color:var(--ink)}
+.portfolio-totals .portfolio-positive{color:#3d9a61}.portfolio-totals .portfolio-negative{color:#c45252}
+.portfolio-holdings{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.portfolio-position-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:9px 12px;display:grid;grid-template-columns:66px 1fr 94px;gap:10px;align-items:center;box-shadow:var(--shadow)}
+.portfolio-symbol{font-size:20px;font-weight:900}
+.portfolio-details{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.portfolio-metric span{display:block;font-size:8px;letter-spacing:.10em;color:var(--muted);font-weight:800}
+.portfolio-metric b{display:block;font-size:12px;margin-top:2px;white-space:nowrap}
+.portfolio-pl{text-align:right;font-size:12px;font-weight:900;min-width:90px}.portfolio-pl small{display:block;font-size:9px;font-weight:700;color:var(--muted);margin-top:2px}
+.portfolio-positive{color:#3d9a61}.portfolio-negative{color:#c45252}.portfolio-pending{color:var(--gold)}
+.portfolio-watch-label{font-size:9px;letter-spacing:.15em;font-weight:900;color:var(--muted);margin:9px 2px 6px;padding-top:7px;border-top:1px solid var(--line)}
+.screen[data-screen="stocks"] .stock{padding:8px 14px}.screen[data-screen="stocks"] .stock-list{gap:6px}
+@media(max-width:1100px){.portfolio-holdings{grid-template-columns:1fr}.portfolio-position-card{grid-template-columns:65px 1fr 90px}.portfolio-details{grid-template-columns:repeat(3,1fr)}}
