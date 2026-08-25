@@ -1,0 +1,68 @@
+/* Full-screen TV layout tuning for the passive Farm kiosk.
+   Keeps the Sunday thesis styling untouched while making the operational
+   screens use the full vertical canvas instead of leaving a large empty band. */
+@media (min-width:1100px) and (min-height:700px){
+  .screens{padding:16px 34px 10px}
+
+  /* Stocks: distribute the watchlist rows through the available height. */
+  .screen[data-screen="stocks"].active{display:grid;grid-template-rows:auto 1fr;gap:12px;min-height:0}
+  .screen[data-screen="stocks"] .screen-heading{margin:0}
+  .screen[data-screen="stocks"] .stock-list{display:grid;grid-auto-rows:1fr;gap:9px;min-height:0}
+  .screen[data-screen="stocks"] .stock{min-height:0;height:100%;padding:12px 18px}
+
+  /* Home: make weather, property overview and status strip occupy the canvas. */
+  .screen[data-screen="home"].active{display:grid;grid-template-rows:minmax(220px,.82fr) minmax(310px,1.18fr) minmax(62px,.22fr);gap:14px;min-height:0}
+  .screen[data-screen="home"] .home-weather-grid,
+  .screen[data-screen="home"] .overview-grid,
+  .screen[data-screen="home"] .status-strip{height:100%;min-height:0;margin:0}
+  .screen[data-screen="home"] .weather-hero,
+  .screen[data-screen="home"] .forecast,
+  .screen[data-screen="home"] .today,
+  .screen[data-screen="home"] .property-card,
+  .screen[data-screen="home"] .gate-card,
+  .screen[data-screen="home"] .tesla-card{height:100%;min-height:0}
+  .screen[data-screen="home"] .weather-hero{align-content:center}
+  .screen[data-screen="home"] .forecast{display:flex;flex-direction:column;justify-content:center}
+  .screen[data-screen="home"] .forecast-row{margin-top:26px}
+  .screen[data-screen="home"] .property-art{height:128px;width:52%;top:10px}
+  .screen[data-screen="home"] .single-temp{margin-top:62px}
+  .screen[data-screen="home"] .status-strip>div{padding:12px 14px}
+
+  /* Water: stretch both card rows rather than ending halfway down the screen. */
+  .screen[data-screen="water"].active{display:grid;grid-template-rows:auto minmax(0,1.48fr) minmax(190px,.72fr);gap:14px;min-height:0}
+  .screen[data-screen="water"] .screen-heading{margin:0}
+  .screen[data-screen="water"] .water-top-grid,
+  .screen[data-screen="water"] .water-bottom-grid{height:100%;min-height:0;margin:0}
+  .screen[data-screen="water"] .well-panel,
+  .screen[data-screen="water"] .environment-panel,
+  .screen[data-screen="water"] .water-bottom-grid>.panel{height:100%;min-height:0}
+  .screen[data-screen="water"] .well-panel,
+  .screen[data-screen="water"] .environment-panel{padding:20px}
+  .screen[data-screen="water"] .three-metrics{margin:28px 0}
+  .screen[data-screen="water"] .environment-grid{margin-top:34px;row-gap:22px}
+  .screen[data-screen="water"] .leaks.rich>div{padding:11px 0}
+  .screen[data-screen="water"] .usage-row{margin-top:28px}
+
+  /* Power/climate: same full-height treatment as Water. */
+  .screen[data-screen="power"].active{display:grid;grid-template-rows:auto minmax(0,1.38fr) minmax(190px,.72fr);gap:14px;min-height:0}
+  .screen[data-screen="power"] .screen-heading{margin:0}
+  .screen[data-screen="power"] .power-top-grid,
+  .screen[data-screen="power"] .power-bottom-grid{height:100%;min-height:0;margin:0}
+  .screen[data-screen="power"] .electrical-card,
+  .screen[data-screen="power"] .climate-card,
+  .screen[data-screen="power"] .gate-wide,
+  .screen[data-screen="power"] .tesla-wide{height:100%;min-height:0}
+  .screen[data-screen="power"] .electrical-card,
+  .screen[data-screen="power"] .climate-card{padding:20px}
+  .screen[data-screen="power"] .electrical-summary{margin:26px 0}
+  .screen[data-screen="power"] .load-list{gap:13px}
+  .screen[data-screen="power"] .climate-zone{padding:20px 0}
+  .screen[data-screen="power"] .gate-wide,
+  .screen[data-screen="power"] .tesla-wide{padding:20px 22px}
+
+  /* Cameras already has a 2x2 full-height grid; make its heading/footer math exact. */
+  .screen[data-screen="cameras"].active{display:flex;flex-direction:column;min-height:0}
+  .screen[data-screen="cameras"] .camera-heading{flex:0 0 auto}
+  .screen[data-screen="cameras"] .camera-grid{height:auto;flex:1 1 auto;min-height:0}
+  .screen[data-screen="cameras"] .camera-footer{flex:0 0 32px}
+}
