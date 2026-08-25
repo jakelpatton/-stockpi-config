@@ -21,6 +21,10 @@ if [[ ! -d "$APPDIR" ]]; then
   log "Application directory $APPDIR does not exist; refusing to deploy."
   exit 1
 fi
+if [[ ! -x "$APPDIR/venv/bin/python" ]]; then
+  log "Python virtual environment is missing at $APPDIR/venv; refusing to deploy."
+  exit 1
+fi
 
 if [[ ! -d "$SOURCE/.git" ]]; then
   log "Creating deployment checkout."
@@ -40,9 +44,14 @@ if [[ "$NEW_COMMIT" == "$LAST_COMMIT" ]]; then
   exit 0
 fi
 
-log "New main commit detected: ${NEW_COMMIT:0:12} (previous ${LAST_COMMIT:0:12:-none})."
+if [[ -n "$LAST_COMMIT" ]]; then
+  PREVIOUS_LABEL="${LAST_COMMIT:0:12}"
+else
+  PREVIOUS_LABEL="none"
+fi
+log "New main commit detected: ${NEW_COMMIT:0:12} (previous $PREVIOUS_LABEL)."
 
-# Validate the files that can be checked without importing app dependencies.
+# Validate files that can be checked without importing app dependencies.
 python3 -m py_compile "$SOURCE/stockpi/app.py"
 for json_file in dashboard_config.json power_schedule.json stocks.json; do
   if [[ -f "$SOURCE/stockpi/$json_file" ]]; then
@@ -53,7 +62,7 @@ if [[ -f "$SOURCE/portfolio.json" ]]; then
   python3 -m json.tool "$SOURCE/portfolio.json" >/dev/null
 fi
 
-# Snapshot the currently deployed application so a failed health check can roll back.
+# Snapshot the current deployment so a failed health check can roll back.
 rm -rf "$BACKUP"
 as_user mkdir -p "$BACKUP"
 as_user rsync -a --delete \
