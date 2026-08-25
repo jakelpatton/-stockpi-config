@@ -1,9 +1,9 @@
 (() => {
   let thesisData=null, raf=null, lastTs=0, y=0, maxY=0, active=false, pauseUntil=0;
-  const SPEED=18;
-  const TOP_PAUSE=4500;
-  const SECTION_PAUSE=1800;
-  const END_PAUSE=5000;
+  const SPEED=38;
+  const TOP_PAUSE=2500;
+  const SECTION_PAUSE=700;
+  const END_PAUSE=2500;
   let sectionStops=[];
 
   const HOUSE='/static/38C388BD-A21A-4A6D-9EC6-14B5CC26F7C1.png';
@@ -11,7 +11,6 @@
   const LIVE_THESIS='https://raw.githubusercontent.com/jakelpatton/-stockpi-config/main/stockpi/static/thesis.json';
   const money=v=>v==null?'—':'$'+Number(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const pctDistance=(close,buy)=>buy?((close-buy)/buy)*100:null;
   const paraHtml=v=>(Array.isArray(v)?v:[v]).filter(Boolean).map(p=>`<p>${esc(p)}</p>`).join('');
 
   function holdRotation(){
@@ -25,76 +24,72 @@
     s.className='screen thesis-screen';
     s.dataset.screen='thesis';
     s.innerHTML=`<div class="thesis-shell thesis-paused" id="thesisShell">
-      <div class="thesis-sticky"><div class="thesis-sticky-left"><img src="${HOUSE}" alt="Main House"><div class="title" id="thesisStickyTitle">SUNDAY THESIS</div></div><div class="status" id="thesisStickyStatus">Loading latest review…</div></div>
-      <div class="thesis-viewport" id="thesisViewport"><div class="thesis-track" id="thesisTrack"><div class="thesis-hero"><div class="thesis-hero-copy"><div class="thesis-kicker">INVESTMENT RESEARCH</div><h2>Loading latest thesis…</h2></div></div></div></div>
+      <div class="thesis-sticky"><div class="thesis-sticky-left"><img src="${HOUSE}" alt="Main House"><div class="title" id="thesisStickyTitle">MARKET POSITION REVIEW</div></div><div class="status" id="thesisStickyStatus">Loading latest review…</div></div>
+      <div class="thesis-viewport" id="thesisViewport"><div class="thesis-track" id="thesisTrack"><div class="thesis-hero"><div class="thesis-hero-copy"><div class="thesis-kicker">INVESTMENT RESEARCH</div><h2>Loading market review…</h2></div></div></div></div>
       <div class="thesis-progress"><i id="thesisProgress"></i></div>
     </div>`;
     const stocks=document.querySelector('[data-screen="stocks"]');
     if(stocks?.nextSibling) main.insertBefore(s,stocks.nextSibling); else main.appendChild(s);
   }
 
-  function overviewChart(stocks){
-    const vals=stocks.map(s=>({symbol:s.symbol,d:pctDistance(s.close,s.buy)})).filter(x=>x.d!=null);
-    const max=Math.max(1,...vals.map(x=>Math.abs(x.d)));
-    return vals.map(x=>{
-      const inZone=x.d<=0, width=Math.max(5,Math.min(100,Math.abs(x.d)/max*100));
-      return `<div class="distance-row ${inZone?'in-zone':''}"><b>${esc(x.symbol)}</b><div class="distance-bar"><i style="--w:${width.toFixed(1)}%"></i></div><span>${x.d>0?'+':''}${x.d.toFixed(1)}%</span></div>`;
-    }).join('');
-  }
-
-  function stockCard(s){
+  function compactStockRow(s){
     const action=(s.action||'HOLD').toUpperCase();
     const actionClass=action.includes('BUY')?'buy':action.includes('WARNING')||action.includes('SELL')?'warn':'';
-    return `<article class="thesis-stock" data-thesis-stop>
-      <div class="thesis-stock-head">
-        <div class="thesis-symbol-wrap"><div><div class="thesis-symbol">${esc(s.symbol)}</div><div class="thesis-company">${esc(s.company)}</div></div></div>
-        <div class="thesis-badges"><span class="thesis-badge ${actionClass}">${esc(action)}</span><span class="thesis-badge intact">THESIS ${esc(s.thesis_status||'INTACT')}</span></div>
-      </div>
-      <div class="thesis-headline">${esc(s.headline)}</div>
-      <div class="thesis-metrics">
-        <div class="thesis-metric"><span>Review close</span><b>${money(s.close)}</b></div>
-        <div class="thesis-metric"><span>Buy</span><b>≤ ${money(s.buy)}</b></div>
-        <div class="thesis-metric"><span>Strong buy</span><b>≤ ${money(s.strong)}</b></div>
-        <div class="thesis-metric"><span>Aggressive</span><b>≤ ${money(s.aggressive)}</b></div>
-      </div>
-      <div class="thesis-body">${paraHtml(s.paragraphs||s.body)}</div>
-      ${s.verdict?`<div class="thesis-verdict"><span>Verdict</span><b>${esc(s.verdict)}</b></div>`:''}
-      <div class="thesis-two-col"><div class="thesis-note"><span>Key catalyst</span><b>${esc(s.catalyst)}</b></div><div class="thesis-note risk"><span>Primary risk</span><b>${esc(s.risk)}</b></div></div>
+    return `<article class="thesis-stock thesis-stock-compact">
+      <div class="compact-symbol"><div class="thesis-symbol">${esc(s.symbol)}</div><div class="thesis-company">${esc(s.company)}</div></div>
+      <div class="compact-action"><span class="thesis-badge ${actionClass}">${esc(action)}</span><span class="thesis-badge intact">${esc(s.thesis_status||'INTACT')}</span></div>
+      <div class="compact-price"><span>Close</span><b>${money(s.close)}</b></div>
+      <div class="compact-price"><span>Buy</span><b>≤ ${money(s.buy)}</b></div>
+      <div class="compact-price"><span>Strong</span><b>≤ ${money(s.strong)}</b></div>
+      <div class="compact-headline">${esc(s.headline||'')}</div>
     </article>`;
   }
 
   function render(d){
     thesisData=d;
+    const stocks=d.stocks||[];
     const date=new Date(d.review_date+'T12:00:00').toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});
-    document.getElementById('thesisStickyTitle').textContent=`SUNDAY THESIS • ${d.review_date}`;
+    const buys=stocks.filter(s=>(s.action||'').toUpperCase().includes('BUY'));
+    const near=stocks.filter(s=>(s.action||'').toUpperCase().includes('APPROACHING'));
+    const warnings=stocks.filter(s=>(s.thesis_status||'INTACT').toUpperCase()!=='INTACT');
+    const leadSummary=(d.summary_paragraphs||d.summary||[]);
+    const summary=Array.isArray(leadSummary)?leadSummary.slice(0,1):[leadSummary];
+
+    document.getElementById('thesisStickyTitle').textContent=`MARKET POSITION REVIEW • ${d.review_date}`;
     document.getElementById('thesisStickyStatus').textContent=d.status_line||'';
     const track=document.getElementById('thesisTrack');
     track.innerHTML=`
-      <section class="thesis-hero" data-thesis-stop>
+      <section class="thesis-hero thesis-hero-compact" data-thesis-stop>
         <div class="thesis-hero-copy">
-          <div class="thesis-kicker">FARM • INVESTMENT RESEARCH • WEEKLY VALIDATION</div>
-          <h2>${esc(d.title||'Sunday Investment Thesis')}</h2>
+          <div class="thesis-kicker">FARM • INVESTMENT RESEARCH • WEEKLY SUMMARY</div>
+          <h2>Market Position Review</h2>
           <div class="thesis-date">${esc(date)}</div>
-          <div class="thesis-summary">${paraHtml(d.summary_paragraphs||d.summary)}</div>
+          <div class="thesis-summary">${paraHtml(summary)}</div>
         </div>
         <div class="thesis-hero-art"><img src="${HOUSE}" alt="Main House"><div class="thesis-bob-chip"><img src="${BOB}" alt="Bob"></div></div>
       </section>
-      ${d.intro_paragraphs?.length?`<section class="thesis-prose-block" data-thesis-stop><div class="thesis-body">${paraHtml(d.intro_paragraphs)}</div></section>`:''}
-      <div class="thesis-overview-grid" data-thesis-stop>
-        <article class="thesis-card"><h3>New money ranking</h3><div class="ranking">${(d.new_money_ranking||[]).map((x,i)=>`<span class="rank-pill">${i+1}. ${esc(x)}</span>`).join('')}</div></article>
-        <article class="thesis-card"><h3>Distance from starter buy</h3><div class="distance-chart">${overviewChart(d.stocks||[])}</div></article>
-      </div>
-      ${(d.stocks||[]).map(stockCard).join('')}
-      ${d.portfolio_conclusion?.length?`<section class="thesis-conclusion" data-thesis-stop><div class="thesis-kicker">PORTFOLIO CONCLUSION</div><div class="thesis-body">${paraHtml(d.portfolio_conclusion)}</div></section>`:''}
-      <section class="thesis-end" data-thesis-stop><img src="${BOB}" alt="Bob"><h3>${esc(d.status_line||'Review complete')}</h3></section>`;
+
+      <section class="market-summary-grid" data-thesis-stop>
+        <article class="thesis-card market-summary-card"><span>BUY NOW</span><b>${buys.length?buys.map(x=>esc(x.symbol)).join(' • '):'None'}</b></article>
+        <article class="thesis-card market-summary-card"><span>NEAREST BUY</span><b>${near.length?near.map(x=>esc(x.symbol)).join(' • '):(d.new_money_ranking?.[0]?esc(d.new_money_ranking[0]):'—')}</b></article>
+        <article class="thesis-card market-summary-card"><span>THESIS WARNINGS</span><b>${warnings.length?warnings.map(x=>esc(x.symbol)).join(' • '):'None'}</b></article>
+        <article class="thesis-card market-summary-card"><span>NEW MONEY RANKING</span><b>${(d.new_money_ranking||[]).slice(0,4).map(esc).join(' → ')||'—'}</b></article>
+      </section>
+
+      <section class="compact-position-list" data-thesis-stop>
+        <div class="compact-list-title"><span>POSITION SUMMARY</span><small>Current close vs. existing entry zones</small></div>
+        ${stocks.map(compactStockRow).join('')}
+      </section>
+
+      <section class="thesis-end thesis-end-compact" data-thesis-stop><img src="${BOB}" alt="Bob"><h3>${esc(d.status_line||'Review complete')}</h3></section>`;
     recalc();
   }
 
   function recalc(){
     const vp=document.getElementById('thesisViewport'), track=document.getElementById('thesisTrack');
     if(!vp||!track) return;
-    maxY=Math.max(0,track.scrollHeight-vp.clientHeight+36);
-    sectionStops=[...track.querySelectorAll('[data-thesis-stop]')].map(el=>Math.max(0,el.offsetTop-90));
+    maxY=Math.max(0,track.scrollHeight-vp.clientHeight+24);
+    sectionStops=[...track.querySelectorAll('[data-thesis-stop]')].map(el=>Math.max(0,el.offsetTop-86));
   }
 
   function setY(v){
@@ -109,6 +104,14 @@
     pauseUntil=performance.now()+TOP_PAUSE;
     document.getElementById('thesisShell')?.classList.add('thesis-paused');
     holdRotation();
+    if(maxY<=1){
+      setTimeout(()=>{
+        if(!active) return;
+        stop();
+        try{ showScreen((idx+1)%cfg.screens.length); }catch(e){}
+      },7000);
+      return;
+    }
     raf=requestAnimationFrame(tick);
   }
 
@@ -144,7 +147,7 @@
       const isActive=document.querySelector('.screen.active')?.dataset.screen==='thesis';
       const label=document.getElementById('screenName');
       if(isActive){
-        if(label) label.textContent='Investment Thesis';
+        if(label) label.textContent='Market Position Review';
         holdRotation();
         start();
         holdRotation();
@@ -164,7 +167,7 @@
     try{ render(await getJson(LIVE_THESIS)); }
     catch(e){
       try{ render(await getJson('/static/thesis.json')); }
-      catch(e2){ const t=document.getElementById('thesisTrack'); if(t)t.innerHTML='<div class="thesis-hero"><div class="thesis-hero-copy"><div class="thesis-kicker">FARM • INVESTMENT RESEARCH</div><h2>Latest thesis unavailable</h2><div class="thesis-summary">The dashboard will retry automatically.</div></div></div>'; }
+      catch(e2){ const t=document.getElementById('thesisTrack'); if(t)t.innerHTML='<div class="thesis-hero"><div class="thesis-hero-copy"><div class="thesis-kicker">FARM • INVESTMENT RESEARCH</div><h2>Latest review unavailable</h2><div class="thesis-summary">The dashboard will retry automatically.</div></div></div>'; }
     }
   }
 
