@@ -11,6 +11,7 @@
   function ensureStyles(){
     if(!document.querySelector('link[href="/static/cameras.css"]')){const l=document.createElement('link');l.rel='stylesheet';l.href='/static/cameras.css';document.head.appendChild(l)}
     if(!document.querySelector('link[href="/static/thesis.css"]')){const l=document.createElement('link');l.rel='stylesheet';l.href='/static/thesis.css';document.head.appendChild(l)}
+    if(!document.querySelector('link[href="/static/tv-fit.css"]')){const l=document.createElement('link');l.rel='stylesheet';l.href='/static/tv-fit.css';document.head.appendChild(l)}
     if(!document.querySelector('script[src="/static/thesis.js"]')){const s=document.createElement('script');s.src='/static/thesis.js';s.defer=true;document.body.appendChild(s)}
   }
 
