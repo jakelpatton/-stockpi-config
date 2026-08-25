@@ -1,9 +1,13 @@
 [
-  {"symbol":"LRCX","buy":285,"strong":260,"aggressive":null},
-  {"symbol":"KLAC","buy":170,"strong":155,"aggressive":null},
-  {"symbol":"AMAT","buy":450,"strong":410,"aggressive":null},
-  {"symbol":"ASML","buy":1600,"strong":1450,"aggressive":null},
-  {"symbol":"ALAB","buy":250,"strong":220,"aggressive":null},
-  {"symbol":"EXE","buy":100,"strong":90,"aggressive":85},
-  {"symbol":"TER","buy":340,"strong":317.5,"aggressive":292.5}
+  {"symbol":"EXE","buy":90,"strong":85,"aggressive":80},
+  {"symbol":"TEL","buy":205,"strong":190,"aggressive":175},
+  {"symbol":"AMAT","buy":450,"strong":415,"aggressive":380},
+  {"symbol":"ASML","buy":1600,"strong":1450,"aggressive":1325},
+  {"symbol":"LRCX","buy":285,"strong":260,"aggressive":235},
+  {"symbol":"ADI","buy":355,"strong":330,"aggressive":305},
+  {"symbol":"GNRC","buy":200,"strong":180,"aggressive":160},
+  {"symbol":"KLAC","buy":165,"strong":150,"aggressive":135},
+  {"symbol":"POWL","buy":175,"strong":155,"aggressive":140},
+  {"symbol":"AEIS","buy":260,"strong":240,"aggressive":220},
+  {"symbol":"TER","buy":325,"strong":295,"aggressive":270}
 ]
