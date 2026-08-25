@@ -13,6 +13,11 @@
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const paraHtml=v=>(Array.isArray(v)?v:[v]).filter(Boolean).map(p=>`<p>${esc(p)}</p>`).join('');
 
+  function ensureSummaryStyles(){
+    if(document.querySelector('link[href="/static/thesis-summary.css"]')) return;
+    const l=document.createElement('link'); l.rel='stylesheet'; l.href='/static/thesis-summary.css'; document.head.appendChild(l);
+  }
+
   function holdRotation(){
     try{ clearTimeout(timer); }catch(e){}
   }
@@ -171,6 +176,6 @@
     }
   }
 
-  function boot(){makeScreen();watchScreen();load();setInterval(load,300000);window.addEventListener('resize',recalc)}
+  function boot(){ensureSummaryStyles();makeScreen();watchScreen();load();setInterval(load,300000);window.addEventListener('resize',recalc)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
