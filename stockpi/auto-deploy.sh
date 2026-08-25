@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euo pipefail
+set -Eeuo pipefail
 
 REPO_URL="https://github.com/jakelpatton/-stockpi-config.git"
 BRANCH="main"
@@ -10,12 +10,42 @@ SOURCE="$DEPLOY_HOME/.farmpi-deploy"
 BACKUP="$DEPLOY_HOME/.farmpi-backup"
 STAMP="$APPDIR/.deployed-commit"
 LOCK="/run/farmpi-auto-deploy.lock"
+DEPLOY_STARTED=0
+LAST_COMMIT=""
 
 exec 9>"$LOCK"
 flock -n 9 || exit 0
 
 log(){ echo "[farmpi-deploy] $*"; logger -t farmpi-deploy -- "$*" 2>/dev/null || true; }
 as_user(){ runuser -u "$DEPLOY_USER" -- env HOME="$DEPLOY_HOME" "$@"; }
+
+restore_previous(){
+  local status="${1:-1}"
+  set +e
+  if [[ "$DEPLOY_STARTED" -eq 1 && -d "$BACKUP" ]]; then
+    log "Deployment failed; restoring previous working files."
+    as_user rsync -a --delete \
+      --exclude 'venv/' \
+      --exclude 'cameras.env' \
+      --exclude 'dashboard_config.json' \
+      --exclude 'power_schedule.json' \
+      --exclude '.deployed-commit' \
+      --exclude '__pycache__/' \
+      --exclude '*.pyc' \
+      "$BACKUP/" "$APPDIR/"
+
+    if [[ -n "$LAST_COMMIT" ]]; then
+      echo "$LAST_COMMIT" > "$STAMP"
+      chown "$DEPLOY_USER" "$STAMP"
+    else
+      rm -f "$STAMP"
+    fi
+    systemctl restart farm-dashboard.service
+    log "Rollback completed."
+  fi
+  exit "$status"
+}
+trap 'restore_previous $?' ERR
 
 if [[ ! -d "$APPDIR" ]]; then
   log "Application directory $APPDIR does not exist; refusing to deploy."
@@ -62,7 +92,12 @@ if [[ -f "$SOURCE/portfolio.json" ]]; then
   python3 -m json.tool "$SOURCE/portfolio.json" >/dev/null
 fi
 
-# Snapshot the current deployment so a failed health check can roll back.
+# Resolve/install dependency changes before touching the running application.
+if [[ -x "$APPDIR/venv/bin/pip" && -f "$SOURCE/stockpi/requirements.txt" ]]; then
+  as_user "$APPDIR/venv/bin/pip" install --quiet -r "$SOURCE/stockpi/requirements.txt"
+fi
+
+# Snapshot the current deployment so any later failure can roll back.
 rm -rf "$BACKUP"
 as_user mkdir -p "$BACKUP"
 as_user rsync -a --delete \
@@ -74,6 +109,7 @@ as_user rsync -a --delete \
   --exclude '__pycache__/' \
   --exclude '*.pyc' \
   "$APPDIR/" "$BACKUP/"
+DEPLOY_STARTED=1
 
 # Sync repository app files while preserving private/runtime-local state.
 # auto-deploy.sh is replaced atomically after the main sync so the currently
@@ -95,13 +131,9 @@ if [[ -f "$SOURCE/stockpi/auto-deploy.sh" ]]; then
   as_user mv "$APPDIR/.auto-deploy.sh.new" "$APPDIR/auto-deploy.sh"
 fi
 
-if [[ -x "$APPDIR/venv/bin/pip" && -f "$APPDIR/requirements.txt" ]]; then
-  as_user "$APPDIR/venv/bin/pip" install --quiet -r "$APPDIR/requirements.txt"
-fi
-
 as_user "$APPDIR/venv/bin/python" -m py_compile "$APPDIR/app.py"
 echo "$NEW_COMMIT" > "$STAMP"
-chown "$DEPLOY_USER":"$DEPLOY_USER" "$STAMP"
+chown "$DEPLOY_USER" "$STAMP"
 
 systemctl restart farm-dashboard.service
 
@@ -114,28 +146,11 @@ for _ in $(seq 1 20); do
   sleep 1
 done
 
-if [[ "$healthy" -eq 1 ]]; then
-  log "Deployment ${NEW_COMMIT:0:12} is healthy."
-  exit 0
+if [[ "$healthy" -ne 1 ]]; then
+  log "Post-deploy health check failed."
+  restore_previous 1
 fi
 
-log "Health check failed; rolling back to previous deployment."
-as_user rsync -a --delete \
-  --exclude 'venv/' \
-  --exclude 'cameras.env' \
-  --exclude 'dashboard_config.json' \
-  --exclude 'power_schedule.json' \
-  --exclude '.deployed-commit' \
-  --exclude '__pycache__/' \
-  --exclude '*.pyc' \
-  "$BACKUP/" "$APPDIR/"
-
-if [[ -n "$LAST_COMMIT" ]]; then
-  echo "$LAST_COMMIT" > "$STAMP"
-else
-  rm -f "$STAMP"
-fi
-chown -R "$DEPLOY_USER":"$DEPLOY_USER" "$APPDIR" "$BACKUP" "$SOURCE"
-systemctl restart farm-dashboard.service
-log "Rollback completed."
-exit 1
+DEPLOY_STARTED=0
+log "Deployment ${NEW_COMMIT:0:12} is healthy."
+exit 0
