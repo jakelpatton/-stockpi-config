@@ -7,6 +7,7 @@ import yfinance as yf
 import xml.etree.ElementTree as ET
 from urllib.parse import quote_plus
 from datetime import datetime
+from webull_readonly import WebullReadOnly
 
 app = Flask(__name__)
 BASE = Path(__file__).resolve().parent
@@ -15,6 +16,7 @@ CLOUD_CACHE = BASE / "cloud_portfolio_cache.json"
 POWER_CONFIG = BASE / "power_schedule.json"
 DASH_CONFIG = BASE / "dashboard_config.json"
 CLOUD_CONFIG_URL = os.environ.get("STOCKPI_CLOUD_CONFIG_URL", "https://raw.githubusercontent.com/jakelpatton/-stockpi-config/main/portfolio.json")
+WEBULL = WebullReadOnly(BASE)
 
 # Amcrest NVR settings. Password is intentionally NOT stored in GitHub.
 AMCREST_NVR_IP = os.environ.get("AMCREST_NVR_IP", "192.168.1.4")
@@ -82,6 +84,55 @@ def merged_stocks():
     return out
 
 
+def stocks_with_webull():
+    """Overlay live Webull positions/watchlists without changing thesis thresholds."""
+    base = [dict(s) for s in merged_stocks()]
+    by_symbol = {s.get("symbol", "").upper(): s for s in base if s.get("symbol")}
+    try:
+        summary = WEBULL.summary()
+    except Exception:
+        return base
+    if not summary.get("connected"):
+        return base
+
+    for p in summary.get("positions", []):
+        sym = str(p.get("symbol") or "").upper()
+        if not sym:
+            continue
+        item = by_symbol.get(sym)
+        if item is None:
+            item = {"symbol": sym}
+            base.append(item); by_symbol[sym] = item
+        qty = p.get("quantity"); avg = p.get("average_cost")
+        item.update({
+            "owned": True,
+            "webull": True,
+            "shares_estimate": qty,
+            "average_cost": avg,
+            "position_usd": p.get("cost_basis"),
+            "webull_market_value": p.get("market_value"),
+            "webull_unrealized_pl": p.get("unrealized_pl"),
+            "webull_unrealized_pct": p.get("unrealized_pct"),
+            "webull_last_price": p.get("last_price"),
+        })
+
+    for watch in summary.get("watchlists", []):
+        name = watch.get("name") or "Webull Watchlist"
+        for instrument in watch.get("instruments", []):
+            sym = str(instrument.get("symbol") or "").upper()
+            if not sym:
+                continue
+            item = by_symbol.get(sym)
+            if item is None:
+                item = {"symbol": sym}
+                base.append(item); by_symbol[sym] = item
+            item["webull_watchlist"] = True
+            names = item.setdefault("watchlist_names", [])
+            if name not in names:
+                names.append(name)
+    return base
+
+
 def quote_for(symbol):
     try:
         fi = yf.Ticker(symbol).fast_info
@@ -92,7 +143,7 @@ def quote_for(symbol):
         pct = (change / prev) * 100 if prev and change is not None else None
         return {"symbol": symbol, "price": round(float(last), 4), "prev_close": round(float(prev), 4) if prev else None,
                 "change": round(float(change), 4) if change is not None else None,
-                "pct": round(float(pct), 3) if pct is not None else None}
+                "pct": round(float(pct), 3) if pct is not None else None, "source": "public"}
     except Exception:
         return None
 
@@ -102,11 +153,41 @@ def refresh_quotes(force=False):
     with lock:
         if not force and now - cache["quote_ts"] < 20:
             return
+    stocks = stocks_with_webull()
+    symbols = [s["symbol"] for s in stocks if s.get("symbol")]
     data = {}
-    for s in merged_stocks():
-        q = quote_for(s["symbol"])
+    for sym in symbols:
+        q = quote_for(sym)
         if q:
-            data[s["symbol"]] = q
+            data[sym] = q
+
+    # Prefer official Webull snapshots when the OpenAPI market-data permission/
+    # subscription is available. If it is not, WebullReadOnly backs off and the
+    # existing public quote feed remains untouched.
+    try:
+        webull_quotes = WEBULL.market_quotes(symbols)
+    except Exception:
+        webull_quotes = {}
+    for sym, wq in webull_quotes.items():
+        current = data.get(sym, {"symbol": sym})
+        for key in ("price", "prev_close", "change", "pct"):
+            if wq.get(key) is not None:
+                current[key] = wq[key]
+        current["source"] = "webull"
+        data[sym] = current
+
+    # Account-position last price is still useful even when a separate Webull
+    # real-time market-data subscription is not enabled.
+    try:
+        for sym, price in WEBULL.position_prices().items():
+            if price is not None:
+                q = data.get(sym, {"symbol": sym})
+                q["price"] = price
+                q.setdefault("source", "webull-position")
+                data[sym] = q
+    except Exception:
+        pass
+
     with lock:
         cache["quotes"], cache["quote_ts"] = data, now
 
@@ -180,7 +261,6 @@ def cec_command(command):
 
 
 _power_last_action = {"wake": None, "sleep": None}
-
 def power_scheduler_loop():
     while True:
         try:
@@ -256,7 +336,32 @@ def api_news():
     with lock: return jsonify({"ts": cache["news_ts"], "news": cache["news"]})
 
 @app.route("/api/stocks")
-def api_stocks(): return jsonify(merged_stocks())
+def api_stocks(): return jsonify(stocks_with_webull())
+
+@app.route("/api/webull/summary")
+def api_webull_summary():
+    """LAN dashboard-safe Webull data. Credentials/account IDs are never exposed."""
+    s = WEBULL.summary()
+    public = {
+        "configured": bool(s.get("configured")),
+        "connected": bool(s.get("connected")),
+        "read_only": True,
+        "environment": s.get("environment"),
+        "needs_account_selection": bool(s.get("needs_account_selection")),
+        "balance": s.get("balance", {}),
+        "positions": s.get("positions", []),
+        "watchlists": [
+            {"name": w.get("name"), "instruments": w.get("instruments", []), "error": w.get("error")}
+            for w in s.get("watchlists", [])
+        ],
+        "market_data_enabled": bool(s.get("market_data_enabled")),
+        "updated": s.get("updated"),
+        "error": s.get("error"),
+    }
+    account = s.get("account") or {}
+    if account:
+        public["account"] = {"account_type": account.get("account_type"), "account_name": account.get("account_name")}
+    return jsonify(public)
 
 @app.route("/api/cloud-status")
 def api_cloud_status():
