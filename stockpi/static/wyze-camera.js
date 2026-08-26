@@ -1,6 +1,7 @@
 (() => {
-  const STREAM_NAME='farm-backyard-cam';
-  const HLS_PAGE=`http://farmpi.local:8888/${STREAM_NAME}`;
+  const STREAM_NAME='farm_backyard_cam';
+  const PLAYER_PAGE=`http://farmpi.local:5080/camera/${STREAM_NAME}`;
+  const HLS_URL=`http://farmpi.local:5080/hls/${STREAM_NAME}.m3u8`;
 
   function install(){
     const placeholder=document.getElementById('cameraPlaceholder4');
@@ -8,14 +9,15 @@
     const tile=placeholder.closest('.camera-tile');
     if(tile)tile.classList.remove('camera-unused');
     placeholder.dataset.wyzeInstalled='1';
+    placeholder.dataset.hlsUrl=HLS_URL;
     placeholder.style.display='block';
     placeholder.style.padding='0';
     placeholder.style.background='#000';
-    placeholder.innerHTML=`<iframe id="wyzeFarmBackyard" src="${HLS_PAGE}" title="Farm Backyard Wyze Camera" allow="autoplay; fullscreen; picture-in-picture" loading="eager" style="width:100%;height:100%;border:0;background:#000;display:block" referrerpolicy="no-referrer"></iframe>`;
+    placeholder.innerHTML=`<iframe id="wyzeFarmBackyard" src="${PLAYER_PAGE}" title="Farm Backyard Wyze Camera" allow="autoplay; fullscreen; picture-in-picture" loading="eager" style="width:100%;height:100%;border:0;background:#000;display:block" referrerpolicy="no-referrer"></iframe>`;
     const badge=tile?.querySelector('.live-pill');
     if(badge){badge.classList.remove('idle');badge.innerHTML='<i></i> WYZE LIVE';}
     const copy=tile?.querySelector('.camera-overlay div span');
-    if(copy)copy.textContent='Wyze Floodlight Pro • local HLS bridge';
+    if(copy)copy.textContent='Wyze Floodlight Pro • local WebRTC bridge';
     return true;
   }
 
