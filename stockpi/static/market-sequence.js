@@ -12,6 +12,7 @@
   const signedPct = v => { v=Number(v); return Number.isFinite(v) ? `${v>=0?'+':''}${v.toFixed(2)}%` : '—'; };
   const cls = v => { v=Number(v); return !Number.isFinite(v)?'market-flat':v>0?'market-up':v<0?'market-down':'market-flat'; };
   const shares = v => { v=Number(v); return Number.isFinite(v) ? `${v.toFixed(v<10?4:2)} sh` : '—'; };
+  const fmtDataTime=value=>{if(!value)return '—';const n=Number(value);const d=Number.isFinite(n)?new Date(n>1e12?n:n*1000):new Date(value);return Number.isNaN(d.getTime())?'—':d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit',second:'2-digit'})};
   const dateLabel = value => {
     if(!value) return 'Recommendation timestamp not recorded';
     const d = new Date(value.length===10 ? value+'T12:00:00' : value);
@@ -30,19 +31,32 @@
     }
   }
 
-  function removeGenerated(){ document.querySelectorAll('.market-sequence-screen').forEach(x=>x.remove()); }
+  // Reuse existing sections instead of deleting/recreating the active page every
+  // 20 seconds. Replacing active DOM nodes was the main cause of rotation stalls.
   function mkScreen(name,title,eyebrow,caption){
-    const s=document.createElement('section');
-    s.className='screen market-sequence-screen'; s.dataset.screen=name; s.dataset.marketTitle=title;
-    s.innerHTML=`<div class="market-heading"><div><div class="eyebrow">${eyebrow}</div><h2>${title}</h2></div><div class="market-caption">${caption}</div></div><div class="market-body"></div>`;
-    document.querySelector('main.screens').appendChild(s); return s.querySelector('.market-body');
+    let s=document.querySelector(`.market-sequence-screen[data-screen="${CSS.escape(name)}"]`);
+    if(!s){
+      s=document.createElement('section');
+      s.className='screen market-sequence-screen';
+      s.dataset.screen=name;
+      s.innerHTML='<div class="market-heading"><div><div class="eyebrow"></div><h2></h2></div><div class="market-caption"></div></div><div class="market-body"></div>';
+      document.querySelector('main.screens').appendChild(s);
+    }
+    s.dataset.marketTitle=title;
+    const e=s.querySelector('.market-heading .eyebrow'),h=s.querySelector('.market-heading h2'),c=s.querySelector('.market-caption'),body=s.querySelector('.market-body');
+    if(e)e.textContent=eyebrow;if(h)h.textContent=title;if(c)c.textContent=caption;if(body)body.innerHTML='';
+    return body;
+  }
+
+  function pruneGenerated(keep){
+    document.querySelectorAll('.market-sequence-screen').forEach(s=>{if(!keep.has(s.dataset.screen))s.remove()});
   }
 
   function latestActivity(symbol,activity){
     const open=(activity.open_orders||[]).filter(o=>o.symbol===symbol);
     if(open.length){ const o=open[0]; return {main:`OPEN ${o.side||''} ${o.order_type||''} • ${shares(o.quantity)}${Number.isFinite(num(o.limit_price))?' @ '+money(o.limit_price):''}`,sub:`${o.status||''} • ${o.time_in_force||''} • placed ${fmtOrderTime(o.place_time)}`}; }
     const rows=[...(activity.today_orders||[]),...(activity.history||[])].filter(o=>o.symbol===symbol);
-    if(!rows.length)return {main:'No recent order activity',sub:'Webull order history connected'};
+    if(!rows.length)return {main:'No recent order activity',sub:activity.stale?'Webull activity data is stale':'Webull order history connected'};
     rows.sort((a,b)=>String(b.place_time||b.filled_time||'').localeCompare(String(a.place_time||a.filled_time||'')));
     const o=rows[0], qty=num(o.filled_quantity,o.quantity), px=num(o.filled_price,o.limit_price,o.stop_price);
     const verb=o.status==='FILLED'?(o.side==='BUY'?'BOUGHT':'SOLD'):`${o.side||''} ${o.status||''}`;
@@ -51,7 +65,8 @@
 
   function renderPortfolio(webull,activity){
     const b=webull.balance||{}, ps=webull.positions||[];
-    const body=mkScreen('portfolio','Portfolio','WEBULL • ACCOUNT OVERVIEW','Large-format account summary • read only');
+    const freshness=webull.stale?`STALE • last good ${fmtDataTime(webull.updated)}`:`Updated ${fmtDataTime(webull.updated)}`;
+    const body=mkScreen('portfolio','Portfolio','WEBULL • ACCOUNT OVERVIEW',`Large-format account summary • read only • ${freshness}`);
     const openCount=(activity.open_orders||[]).length;
     body.innerHTML=`
       <div class="portfolio-summary-grid">
@@ -77,8 +92,8 @@
           <div class="detail-pair"><span>Available Withdrawal</span><b>${money(b.available_withdrawal)}</b></div>
           <div class="detail-pair"><span>Held Amount</span><b>${money(b.held_amount)}</b></div>
           <div class="detail-pair"><span>Margin Calls</span><b>${Array.isArray(b.open_margin_calls)?b.open_margin_calls.length:'—'}</b></div>
-          <div class="detail-pair"><span>Data Source</span><b>Webull account</b></div>
-          <div class="detail-pair"><span>Market Quotes</span><b>Public fallback</b></div>
+          <div class="detail-pair"><span>Data Source</span><b>${webull.stale?'Last good Webull account':'Webull account'}</b></div>
+          <div class="detail-pair"><span>Market Quotes</span><b>Webull when entitled • public fallback</b></div>
         </div>
       </div>`;
   }
@@ -90,10 +105,11 @@
     const act=latestActivity(symbol,activity);
     const recBuy=num(stock?.buy), recStrong=num(stock?.strong_buy,stock?.strong), recAgg=num(stock?.aggressive_buy,stock?.aggressive);
     const action=Number.isFinite(price)&&Number.isFinite(recAgg)&&price<=recAgg?'AGGRESSIVE BUY':Number.isFinite(price)&&Number.isFinite(recStrong)&&price<=recStrong?'STRONG BUY':Number.isFinite(price)&&Number.isFinite(recBuy)&&price<=recBuy?'BUY':'HOLD / WAIT';
+    const quoteSource=quote.source==='webull'?'WEBULL MARKET QUOTE':quote.source==='webull-position'?'WEBULL POSITION PRICE':quote.stale?'STALE PUBLIC QUOTE':'PUBLIC MARKET QUOTE';
     body.innerHTML=`<div class="owned-hero">
       <div class="owned-primary market-panel">
         <div class="owned-symbol-line"><div><div class="owned-ticker">${symbol}</div><div class="owned-company">${stock?.name||stock?.note||p.instrument_type||'Equity position'}</div></div><div class="owned-weight"><b>${Number.isFinite(num(p.proportion_pct))?num(p.proportion_pct).toFixed(2)+'%':'—'}</b><span>OF INVESTED PORTFOLIO</span></div></div>
-        <div class="owned-price-row"><div class="owned-price">${money(price)}</div><div class="owned-day ${cls(change)}">${signedMoney(change)} • ${signedPct(pct)}<br><span class="market-kicker">PUBLIC MARKET QUOTE</span></div></div>
+        <div class="owned-price-row"><div class="owned-price">${money(price)}</div><div class="owned-day ${cls(change)}">${signedMoney(change)} • ${signedPct(pct)}<br><span class="market-kicker">${quoteSource}${quote.updated?' • '+fmtDataTime(quote.updated):''}</span></div></div>
         <div class="owned-metric-grid">
           <div class="owned-metric"><span>Shares</span><b>${shares(p.quantity)}</b></div>
           <div class="owned-metric"><span>Market Value</span><b>${money(p.market_value)}</b></div>
@@ -112,15 +128,15 @@
           <div class="rec-note">${stock?.note||'Recommendation thesis note not recorded.'}</div>
         </div>
         <div class="activity-box market-panel"><span class="market-kicker">Latest Webull Activity</span><div class="activity-main">${act.main}</div><div class="activity-sub">${act.sub}</div></div>
-        <div class="activity-box market-panel"><span class="market-kicker">Data Provenance</span><div class="activity-main">Shares, cost, value & P/L • Webull account</div><div class="activity-sub">Price movement • public market feed until Webull STOCK QUOTES is subscribed</div></div>
+        <div class="activity-box market-panel"><span class="market-kicker">Data Provenance</span><div class="activity-main">Shares, cost, value & P/L • Webull account</div><div class="activity-sub">Market movement • best current cached source</div></div>
       </div>
     </div>`;
   }
 
   function renderLimits(activity){
-    const body=mkScreen('limits','Open Limit Orders','WEBULL • ORDERS','Open limit orders immediately after owned positions');
+    const body=mkScreen('limits','Open Limit Orders','WEBULL • ORDERS',activity.stale?'Last good order state • refresh retrying':'Open limit orders immediately after owned positions');
     const orders=(activity.open_orders||[]).filter(o=>String(o.order_type||'').toUpperCase().includes('LIMIT'));
-    if(!orders.length){ body.innerHTML=`<div class="limit-empty market-panel"><b>No open limit orders</b><span>Webull order monitor is connected • this page will populate automatically when a limit order is open.</span></div>`; return; }
+    if(!orders.length){ body.innerHTML=`<div class="limit-empty market-panel"><b>No open limit orders</b><span>${activity.stale?'Last good Webull activity data is being shown.':'Webull order monitor is connected • this page will populate automatically when a limit order is open.'}</span></div>`; return; }
     body.innerHTML=`<div class="limit-list">${orders.map(o=>`<div class="limit-order market-panel"><div class="ticker">${o.symbol||'—'}</div><div><span>Side</span><b>${o.side||'—'}</b></div><div><span>Quantity</span><b>${shares(o.quantity)}</b></div><div><span>Limit Price</span><b>${money(o.limit_price)}</b></div><div><span>Filled</span><b>${shares(o.filled_quantity)}</b></div><div><span>Status</span><b>${o.status||'—'}</b></div><div><span>Placed / TIF</span><b>${fmtOrderTime(o.place_time)} • ${o.time_in_force||'—'}</b></div></div>`).join('')}</div>`;
   }
 
@@ -133,47 +149,45 @@
       if(!items.length){body.innerHTML='<div class="limit-empty market-panel"><b>No non-owned watchlist stocks</b><span>Owned names are shown on their own pages.</span></div>';return;}
       body.innerHTML=`<div class="watchlist-grid">${items.map(i=>{
         const s=stocks.find(x=>x.symbol===i.symbol)||{}, q=quotes[i.symbol]||{}, price=num(q.price), buy=num(s.buy), strong=num(s.strong_buy,s.strong), agg=num(s.aggressive_buy,s.aggressive), reviewed=s.recommendation_timestamp||s.last_reviewed;
-        return `<div class="watch-row market-panel"><div class="ticker">${i.symbol}</div><div class="company">${i.name||s.note||'Watchlist stock'}<small>${i.exchange||''}</small></div><div><span>Price</span><b>${money(price)}</b></div><div><span>Buy</span><b>${money(buy)}</b></div><div><span>Strong Buy</span><b>${money(strong)}</b></div><div><span>Aggressive</span><b>${money(agg)}</b></div><div>${Number.isFinite(buy)?`<span>Recommendation</span><b>${dateLabel(reviewed)}</b>`:`<div class="rec-missing">NOT YET REVIEWED<br>No entry levels stored</div>`}</div></div>`;
+        return `<div class="watch-row market-panel"><div class="ticker">${i.symbol}</div><div class="company">${i.name||s.note||'Watchlist stock'}<small>${i.exchange||''}${q.stale?' • STALE':''}</small></div><div><span>Price</span><b>${money(price)}</b></div><div><span>Buy</span><b>${money(buy)}</b></div><div><span>Strong Buy</span><b>${money(strong)}</b></div><div><span>Aggressive</span><b>${money(agg)}</b></div><div>${Number.isFinite(buy)?`<span>Recommendation</span><b>${dateLabel(reviewed)}</b>`:`<div class="rec-missing">NOT YET REVIEWED<br>No entry levels stored</div>`}</div></div>`;
       }).join('')}</div>`;
     });
     return pages.length;
+  }
+
+  function desiredRotation(dynamicScreens){
+    if(typeof cfg==='undefined'||!Array.isArray(cfg.screens))return dynamicScreens;
+    const marketNames=new Set(['stocks','activity','portfolio','limits',...dynamicScreens]);
+    const rest=cfg.screens.filter(s=>!marketNames.has(s)&&!String(s).startsWith('owned-')&&!String(s).startsWith('watchlist-'));
+    const generatedNoWatch=dynamicScreens.filter(s=>!String(s).startsWith('watchlist-'));
+    const watch=dynamicScreens.filter(s=>String(s).startsWith('watchlist-'));
+    // Keep the overview screen visible, then detailed portfolio/owned/limits,
+    // activity, watchlist pages, and finally estate screens.
+    return ['stocks',...generatedNoWatch,'activity',...watch,...rest];
   }
 
   function updateRotation(dynamicScreens, initial=false){
     try{
       if(typeof cfg==='undefined'||!Array.isArray(cfg.screens)) return;
       const active=document.querySelector('.screen.active')?.dataset.screen||'';
-      const rest=cfg.screens.filter(s=>!['stocks','activity','portfolio','limits'].includes(s)&&!String(s).startsWith('owned-')&&!String(s).startsWith('watchlist-'));
-      cfg.screens=[...dynamicScreens,...rest];
+      cfg.screens=desiredRotation(dynamicScreens);
       if(typeof idx!=='undefined'){
         const keep=active?cfg.screens.indexOf(active):-1;
         idx=keep>=0?keep:Math.min(Number(idx)||0,Math.max(0,cfg.screens.length-1));
       }
       if(typeof buildDots==='function') buildDots();
-      if(initial && typeof showScreen==='function') showScreen(0);
+      if(initial&&typeof schedule==='function')schedule();
     }catch(e){console.error('market sequence rotation',e)}
-  }
-
-  function restoreActiveScreen(name){
-    if(!name)return;
-    const target=document.querySelector(`.screen[data-screen="${CSS.escape(name)}"]`);
-    if(!target)return;
-    document.querySelectorAll('.screen').forEach(x=>x.classList.toggle('active',x===target));
-    if(typeof idx!=='undefined'&&typeof cfg!=='undefined'&&Array.isArray(cfg.screens)){
-      const i=cfg.screens.indexOf(name); if(i>=0)idx=i;
-    }
-    if(typeof buildDots==='function')buildDots();
   }
 
   async function build(){
     ensureAssets();
-    const activeBefore=document.querySelector('.screen.active')?.dataset.screen||'';
     const [stocks,quotesResult,webull,activity]=await Promise.all([
       getJSON('/api/stocks',[]), getJSON('/api/quotes',{quotes:{}}), getJSON('/api/webull/summary',{positions:[],watchlists:[],balance:{}}), getJSON('/static/webull-activity.json',{open_orders:[],today_orders:[],history:[]})
     ]);
-    if(!webull.connected) return;
-    removeGenerated();
-    const quotes=quotesResult.quotes||{}, positions=webull.positions||[], stockMap=new Map(stocks.map(s=>[s.symbol,s]));
+    if(!webull.connected)return;
+
+    const quotes=quotesResult.quotes||{},positions=webull.positions||[],stockMap=new Map(stocks.map(s=>[s.symbol,s]));
     renderPortfolio(webull,activity);
     positions.forEach(p=>renderOwned(stockMap.get(p.symbol)||{},p,quotes[p.symbol]||{},activity));
     renderLimits(activity);
@@ -181,10 +195,10 @@
     const ownedSymbols=new Set(positions.map(p=>p.symbol));
     const watchPages=renderWatchlist(watch,stocks,quotes,ownedSymbols);
     const dynamic=['portfolio',...positions.map(p=>`owned-${p.symbol}`),'limits',...Array.from({length:watchPages},(_,i)=>`watchlist-${i+1}`)];
-    const sig=dynamic.join('|');
-    if(!installed){ updateRotation(dynamic,true); installed=true; rotationSignature=sig; return; }
-    if(sig!==rotationSignature){ updateRotation(dynamic,false); rotationSignature=sig; }
-    restoreActiveScreen(activeBefore);
+    pruneGenerated(new Set(dynamic));
+
+    const sig=desiredRotation(dynamic).join('|');
+    if(!installed||sig!==rotationSignature){updateRotation(dynamic,!installed);rotationSignature=sig;installed=true}
   }
 
   function labelObserver(){
@@ -193,6 +207,6 @@
     new MutationObserver(update).observe(main,{attributes:true,subtree:true,attributeFilter:['class']}); update();
   }
 
-  function boot(){ ensureAssets(); labelObserver(); setTimeout(build,800); setInterval(build,REFRESH_MS); }
+  function boot(){ensureAssets();labelObserver();setTimeout(build,800);setInterval(build,REFRESH_MS)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
