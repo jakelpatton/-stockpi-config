@@ -1,0 +1,28 @@
+/* Enhanced Webull portfolio panel — read/query-only dashboard presentation. */
+#portfolioPanel.portfolio-enhanced{padding:13px 15px 14px}
+#portfolioPanel .portfolio-account-grid.enhanced{grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}
+#portfolioPanel .portfolio-account-grid.enhanced>div{min-width:0}
+#portfolioPanel .portfolio-account-grid.enhanced b{font-size:16px}
+#portfolioPanel .portfolio-grid.enhanced{grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+#portfolioPanel .portfolio-position.enhanced-card{padding:10px 11px;display:flex;flex-direction:column;gap:6px;min-height:0}
+#portfolioPanel .enhanced-symbol-row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+#portfolioPanel .enhanced-symbol-row .ticker{font:700 20px/1 var(--estate-serif,Georgia,serif)}
+#portfolioPanel .enhanced-symbol-row .shares{font:800 10px/1.25 var(--estate-sans,Arial,sans-serif);letter-spacing:.05em;color:var(--estate-muted,#64748b);text-align:right}
+#portfolioPanel .enhanced-price-row{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding-bottom:5px;border-bottom:1px solid var(--estate-line,rgba(148,163,184,.2))}
+#portfolioPanel .enhanced-price-row .price{font:600 21px/1 var(--estate-serif,Georgia,serif)}
+#portfolioPanel .enhanced-price-row .day{font:800 11px/1.2 var(--estate-sans,Arial,sans-serif)}
+#portfolioPanel .enhanced-metrics{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px}
+#portfolioPanel .enhanced-metric span,#portfolioPanel .enhanced-market span,#portfolioPanel .enhanced-activity span{display:block;font:800 8px/1.2 var(--estate-sans,Arial,sans-serif);letter-spacing:.08em;text-transform:uppercase;color:var(--estate-muted,#64748b)}
+#portfolioPanel .enhanced-metric b{display:block;margin-top:2px;font:600 12px/1.2 var(--estate-serif,Georgia,serif)}
+#portfolioPanel .enhanced-market{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding-top:5px;border-top:1px solid var(--estate-line,rgba(148,163,184,.18))}
+#portfolioPanel .enhanced-market b{display:block;margin-top:2px;font:700 10px/1.15 var(--estate-sans,Arial,sans-serif);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#portfolioPanel .enhanced-levels{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+#portfolioPanel .enhanced-levels>div{padding:4px 5px;border:1px solid var(--estate-line,rgba(148,163,184,.18));background:rgba(255,255,255,.035)}
+#portfolioPanel .enhanced-levels span{display:block;font:800 7px/1.1 var(--estate-sans,Arial,sans-serif);letter-spacing:.07em;text-transform:uppercase;color:var(--estate-muted,#64748b)}
+#portfolioPanel .enhanced-levels b{display:block;margin-top:2px;font:600 10px/1.1 var(--estate-serif,Georgia,serif)}
+#portfolioPanel .enhanced-activity{margin-top:auto;padding-top:5px;border-top:1px solid var(--estate-line,rgba(148,163,184,.18))}
+#portfolioPanel .enhanced-activity b{display:block;margin-top:2px;font:700 9px/1.25 var(--estate-sans,Arial,sans-serif);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#portfolioPanel .enhanced-session{font:800 8px/1.2 var(--estate-sans,Arial,sans-serif);letter-spacing:.06em;color:var(--estate-muted,#64748b)}
+#portfolioPanel .enhanced-source-note{font:700 8px/1.2 var(--estate-sans,Arial,sans-serif);color:var(--estate-muted,#64748b);margin-top:5px}
+@media(max-width:1100px){#portfolioPanel .portfolio-account-grid.enhanced{grid-template-columns:repeat(3,1fr)}#portfolioPanel .portfolio-grid.enhanced{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:800px){#portfolioPanel .portfolio-account-grid.enhanced{grid-template-columns:1fr 1fr}#portfolioPanel .portfolio-grid.enhanced{grid-template-columns:1fr}}
