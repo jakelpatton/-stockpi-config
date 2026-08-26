@@ -1,12 +1,12 @@
 (() => {
   const POLL_MS = 400;
   const MAX_VIEW_MS = 10000;
-  const SNAPSHOT_MS = 500;
   const MOTION_API = `${location.protocol}//${location.hostname}:8091/api/motion`;
+  const AMCREST_PLAYER = name => `${location.protocol}//${location.hostname}:1985/stream.html?src=${encodeURIComponent(name)}&mode=webrtc,webrtc/tcp,mse`;
   const CAMERAS = {
-    1: {name:'Front Porch', kind:'amcrest', snapshot:'/api/cameras/snapshot/1'},
-    2: {name:'Rockhouse Front', kind:'amcrest', snapshot:'/api/cameras/snapshot/2'},
-    3: {name:'Rockhouse Back', kind:'amcrest', snapshot:'/api/cameras/snapshot/3'},
+    1: {name:'Front Porch', kind:'amcrest', player:AMCREST_PLAYER('front_porch')},
+    2: {name:'Rockhouse Front', kind:'amcrest', player:AMCREST_PLAYER('rockhouse_front')},
+    3: {name:'Rockhouse Back', kind:'amcrest', player:AMCREST_PLAYER('rockhouse_back')},
     4: {name:'Farm Backyard', kind:'wyze', player:`${location.protocol}//${location.hostname}:5080/camera/farm_backyard_cam`}
   };
 
@@ -15,7 +15,6 @@
   let currentChannel=null;
   let eventStarted=0;
   let restoreScreen=null;
-  let snapshotTimer=null;
   let countdownTimer=null;
   let pollBusy=false;
 
@@ -33,10 +32,6 @@
       </div>`;
     document.body.appendChild(overlay);
     return overlay;
-  }
-
-  function stopSnapshotRefresh(){
-    if(snapshotTimer){clearInterval(snapshotTimer);snapshotTimer=null;}
   }
 
   function freezeRotation(){
@@ -70,28 +65,16 @@
     const stage=document.getElementById('cameraMotionStage');
     const title=document.getElementById('cameraMotionTitle');
     if(!cam||!stage)return;
-    stopSnapshotRefresh();
     stage.innerHTML='';
     if(title)title.textContent=cam.name;
 
-    if(cam.kind==='wyze'){
-      const frame=document.createElement('iframe');
-      frame.className='camera-motion-frame';
-      frame.src=cam.player;
-      frame.title=`${cam.name} live camera`;
-      frame.allow='autoplay; fullscreen; picture-in-picture';
-      frame.referrerPolicy='no-referrer';
-      stage.appendChild(frame);
-      return;
-    }
-
-    const img=document.createElement('img');
-    img.className='camera-motion-image';
-    img.alt=`${cam.name} live camera`;
-    const refresh=()=>{img.src=`${cam.snapshot}?motion=${Date.now()}`;};
-    stage.appendChild(img);
-    refresh();
-    snapshotTimer=setInterval(refresh,SNAPSHOT_MS);
+    const frame=document.createElement('iframe');
+    frame.className='camera-motion-frame';
+    frame.src=cam.player;
+    frame.title=`${cam.name} live camera`;
+    frame.allow='autoplay; fullscreen; picture-in-picture';
+    frame.referrerPolicy='no-referrer';
+    stage.appendChild(frame);
   }
 
   function showEvent(event){
@@ -111,7 +94,6 @@
   function hideEvent(){
     if(!overlay?.classList.contains('visible'))return;
     overlay.classList.remove('visible');
-    stopSnapshotRefresh();
     if(countdownTimer){clearInterval(countdownTimer);countdownTimer=null;}
     const stage=document.getElementById('cameraMotionStage');
     if(stage)stage.innerHTML='';
@@ -126,16 +108,11 @@
 
   function processMotion(data){
     const latest=data?.latest;
-
-    // A newly-started event always wins. If a second camera detects motion
-    // while one is already full-screen, switch immediately to the newer one.
     if(latest && Number(latest.event_id)>currentEventId){
       showEvent(latest);
       return;
     }
-
     if(!overlay?.classList.contains('visible')||!currentChannel)return;
-
     const state=cameraState(data,currentChannel);
     const timedOut=eventStarted && Date.now()-eventStarted>=MAX_VIEW_MS;
     const motionStopped=state && state.motion===false;
