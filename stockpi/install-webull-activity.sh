@@ -17,6 +17,7 @@ mkdir -p "$APPDIR/static"
 install -m 700 "$SOURCE_DIR/webull_activity_service.py" "$APPDIR/webull_activity_service.py"
 install -m 644 "$SOURCE_DIR/static/webull-activity.js" "$APPDIR/static/webull-activity.js"
 install -m 644 "$SOURCE_DIR/static/webull-activity.css" "$APPDIR/static/webull-activity.css"
+install -m 644 "$SOURCE_DIR/static/webull-history.html" "$APPDIR/static/webull-history.html"
 install -m 644 "$SOURCE_DIR/static/estate-tv.js" "$APPDIR/static/estate-tv.js"
 install -m 644 "$SOURCE_DIR/dashboard_config.json" "$APPDIR/dashboard_config.json"
 
@@ -52,6 +53,7 @@ echo
 echo "Webull activity monitor installed."
 echo "It uses query/subscription methods only; no order-changing calls are implemented."
 echo "Service: $SERVICE"
-echo "Dashboard data: $APPDIR/static/webull-activity.json"
+echo "TV activity data: $APPDIR/static/webull-activity.json"
+echo "Complete history: http://farmpi.local:8080/static/webull-history.html"
 echo
 sudo systemctl --no-pager --full status "$SERVICE" | sed -n '1,12p' || true
