@@ -28,7 +28,7 @@
     addScriptOnce('/static/market-alerts.js');
     addScriptOnce('/static/market-watchlist-sync.js');
     addScriptOnce('/static/ticker-prices.js');
-    addScriptOnce('/static/wyze-camera.js');
+    if(window.FARM_CAMERAS_ENABLED!==false)addScriptOnce('/static/wyze-camera.js');
     addScriptOnce('/static/dashboard-watchdog.js');
   }
 
