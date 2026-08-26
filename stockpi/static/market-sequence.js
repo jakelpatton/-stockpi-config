@@ -3,6 +3,7 @@
   const WATCHLIST_NAME = 'My Watchlist';
   const WATCH_ROWS_PER_PAGE = 4;
   let installed = false;
+  let rotationSignature = '';
 
   const $ = id => document.getElementById(id);
   const num = (...vals) => { for (const v of vals) { const n = Number(v); if (Number.isFinite(n)) return n; } return NaN; };
@@ -138,19 +139,35 @@
     return pages.length;
   }
 
-  function updateRotation(dynamicScreens){
+  function updateRotation(dynamicScreens, initial=false){
     try{
       if(typeof cfg==='undefined'||!Array.isArray(cfg.screens)) return;
+      const active=document.querySelector('.screen.active')?.dataset.screen||'';
       const rest=cfg.screens.filter(s=>!['stocks','activity','portfolio','limits'].includes(s)&&!String(s).startsWith('owned-')&&!String(s).startsWith('watchlist-'));
       cfg.screens=[...dynamicScreens,...rest];
-      if(typeof idx!=='undefined') idx=0;
+      if(typeof idx!=='undefined'){
+        const keep=active?cfg.screens.indexOf(active):-1;
+        idx=keep>=0?keep:Math.min(Number(idx)||0,Math.max(0,cfg.screens.length-1));
+      }
       if(typeof buildDots==='function') buildDots();
-      if(typeof showScreen==='function') showScreen(0);
+      if(initial && typeof showScreen==='function') showScreen(0);
     }catch(e){console.error('market sequence rotation',e)}
+  }
+
+  function restoreActiveScreen(name){
+    if(!name)return;
+    const target=document.querySelector(`.screen[data-screen="${CSS.escape(name)}"]`);
+    if(!target)return;
+    document.querySelectorAll('.screen').forEach(x=>x.classList.toggle('active',x===target));
+    if(typeof idx!=='undefined'&&typeof cfg!=='undefined'&&Array.isArray(cfg.screens)){
+      const i=cfg.screens.indexOf(name); if(i>=0)idx=i;
+    }
+    if(typeof buildDots==='function')buildDots();
   }
 
   async function build(){
     ensureAssets();
+    const activeBefore=document.querySelector('.screen.active')?.dataset.screen||'';
     const [stocks,quotesResult,webull,activity]=await Promise.all([
       getJSON('/api/stocks',[]), getJSON('/api/quotes',{quotes:{}}), getJSON('/api/webull/summary',{positions:[],watchlists:[],balance:{}}), getJSON('/static/webull-activity.json',{open_orders:[],today_orders:[],history:[]})
     ]);
@@ -164,7 +181,10 @@
     const ownedSymbols=new Set(positions.map(p=>p.symbol));
     const watchPages=renderWatchlist(watch,stocks,quotes,ownedSymbols);
     const dynamic=['portfolio',...positions.map(p=>`owned-${p.symbol}`),'limits',...Array.from({length:watchPages},(_,i)=>`watchlist-${i+1}`)];
-    if(!installed){ updateRotation(dynamic); installed=true; }
+    const sig=dynamic.join('|');
+    if(!installed){ updateRotation(dynamic,true); installed=true; rotationSignature=sig; return; }
+    if(sig!==rotationSignature){ updateRotation(dynamic,false); rotationSignature=sig; }
+    restoreActiveScreen(activeBefore);
   }
 
   function labelObserver(){
