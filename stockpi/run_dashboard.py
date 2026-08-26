@@ -50,9 +50,10 @@ def resilient_summary(force: bool = False) -> dict:
         clean = dict(result)
         clean["stale"] = False
         clean["last_attempt"] = now
+        clean["last_success"] = float(clean.get("updated") or now)
         with _summary_lock:
             _last_good_summary = copy.deepcopy(clean)
-            _last_good_at = float(clean.get("updated") or now)
+            _last_good_at = clean["last_success"]
         return clean
 
     with _summary_lock:
@@ -248,6 +249,79 @@ def resilient_refresh_quotes(force: bool = False):
 
 dashboard.quote_for = public_quote
 dashboard.refresh_quotes = resilient_refresh_quotes
+
+
+# Replace the public API views with status-rich versions that still deliberately
+# omit credentials and account IDs.
+def api_webull_summary_hardened():
+    s = dashboard.WEBULL.summary()
+    public = {
+        "configured": bool(s.get("configured")),
+        "connected": bool(s.get("connected")),
+        "stale": bool(s.get("stale")),
+        "read_only": True,
+        "environment": s.get("environment"),
+        "needs_account_selection": bool(s.get("needs_account_selection")),
+        "balance": s.get("balance", {}),
+        "positions": s.get("positions", []),
+        "watchlists": [
+            {"name": w.get("name"), "instruments": w.get("instruments", []), "error": w.get("error")}
+            for w in s.get("watchlists", [])
+        ],
+        "market_data_enabled": bool(s.get("market_data_enabled")),
+        "market_data_connected": bool(s.get("market_data_connected")),
+        "market_data_error": s.get("market_data_error"),
+        "updated": s.get("updated"),
+        "last_attempt": s.get("last_attempt"),
+        "last_success": s.get("last_success"),
+        "error": s.get("error"),
+    }
+    account = s.get("account") or {}
+    if account:
+        public["account"] = {
+            "account_type": account.get("account_type"),
+            "account_name": account.get("account_name"),
+        }
+    return dashboard.jsonify(public)
+
+
+def api_quotes_hardened():
+    dashboard.refresh_quotes()
+    with dashboard.lock:
+        return dashboard.jsonify({
+            "ts": dashboard.cache.get("quote_ts", 0),
+            "attempt_ts": dashboard.cache.get("quote_attempt_ts", 0),
+            "error": dashboard.cache.get("quote_error"),
+            "quotes": dashboard.cache.get("quotes", {}),
+        })
+
+
+def api_health():
+    try:
+        s = dashboard.WEBULL.summary()
+    except Exception as exc:
+        s = {"configured": False, "connected": False, "error": str(exc)}
+    with dashboard.lock:
+        quote_ts = dashboard.cache.get("quote_ts", 0)
+        quote_count = len(dashboard.cache.get("quotes", {}) or {})
+        cloud_ok = bool(dashboard.cache.get("cloud_ok"))
+    return dashboard.jsonify({
+        "ok": True,
+        "server_time": time.time(),
+        "webull_configured": bool(s.get("configured")),
+        "webull_connected": bool(s.get("connected")),
+        "webull_stale": bool(s.get("stale")),
+        "webull_updated": s.get("updated"),
+        "quote_ts": quote_ts,
+        "quote_count": quote_count,
+        "cloud_ok": cloud_ok,
+    })
+
+
+dashboard.app.view_functions["api_webull_summary"] = api_webull_summary_hardened
+dashboard.app.view_functions["api_quotes"] = api_quotes_hardened
+if "api_health" not in dashboard.app.view_functions:
+    dashboard.app.add_url_rule("/api/health", "api_health", api_health, methods=["GET"])
 
 
 # Prime the cloud cache from disk immediately. This is local I/O only and lets
