@@ -25,8 +25,8 @@ install -m 644 "$SOURCE_DIR/static/camera-motion.css" "$APPDIR/static/camera-mot
 install -m 644 "$SOURCE_DIR/static/wyze-camera.js" "$APPDIR/static/wyze-camera.js"
 
 # Wyze motion is deliberately isolated from the working WebRTC streaming bridge.
-# The legacy bridge is used only for its read-only Wyze Web API motion endpoint.
-# It is bound to localhost and camera controls are disabled.
+# The legacy bridge is used only for its Wyze Web API motion endpoint and is
+# bound to localhost, so its REST API is not exposed to other LAN devices.
 if [ -f "$WYZE_ENV" ]; then
   chmod 600 "$WYZE_ENV"
   docker rm -f wyze-motion-sensor >/dev/null 2>&1 || true
@@ -40,7 +40,6 @@ if [ -f "$WYZE_ENV" ]; then
     -e 'MOTION_INT=1.5' \
     -e 'MOTION_START=False' \
     -e 'ON_DEMAND=True' \
-    -e 'DISABLE_CONTROL=True' \
     -e 'WB_AUTH=False' \
     mrlt8/wyze-bridge:latest >/dev/null
   echo "Wyze motion-only sidecar started on 127.0.0.1:5001."
@@ -80,7 +79,7 @@ echo "Camera motion alert system installed."
 echo "Motion API: http://farmpi.local:8091/api/motion"
 echo "Behavior: newest detected camera goes full-screen; returns on motion Stop or after 10 seconds."
 echo "Amcrest: local NVR VideoMotion event stream, channels 1-3."
-echo "Wyze: read-only cloud motion events from localhost-only sidecar; WebRTC streaming remains on port 5080."
+echo "Wyze: cloud motion events from localhost-only sidecar; WebRTC streaming remains on port 5080."
 echo "Backup: $APPDIR/backups/$STAMP"
 echo
 echo "Health:"
