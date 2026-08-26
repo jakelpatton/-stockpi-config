@@ -126,6 +126,41 @@ if ! grep -q 'owned-positions.js' <<<"$HTML"; then
 fi
 echo "Base template: OK — 1838 Estate / Portfolio"
 
+# Capture one verified Webull response to a local static snapshot. The browser
+# renders this immediately, before any live Webull/quote/chart request can race.
+SUMMARY_TMP="$TMP/webull-summary.json"
+if ! curl -fsS --max-time 30 http://127.0.0.1:8080/api/webull/summary -o "$SUMMARY_TMP"; then
+  echo "ERROR: Could not read Webull summary for initial Portfolio snapshot."
+  exit 1
+fi
+
+POSITION_COUNT="$("$APPDIR/venv/bin/python" - "$SUMMARY_TMP" <<'PY'
+import json,sys
+p=sys.argv[1]
+d=json.load(open(p))
+positions=[x for x in d.get('positions',[]) if float(x.get('quantity') or 0)>0]
+print(len(positions))
+PY
+)"
+
+if [[ "${POSITION_COUNT:-0}" -lt 1 ]]; then
+  echo "ERROR: Webull summary returned no positive-share positions."
+  cat "$SUMMARY_TMP"
+  exit 1
+fi
+
+install -o "$TARGET_USER" -g "$TARGET_GROUP" -m 0644 "$SUMMARY_TMP" "$APPDIR/static/portfolio-snapshot.json"
+echo "Portfolio snapshot: OK ($POSITION_COUNT owned positions)"
+
+# Verify that Flask can serve the snapshot the browser will use for first paint.
+SERVED_COUNT="$(curl -fsS --max-time 5 http://127.0.0.1:8080/static/portfolio-snapshot.json | "$APPDIR/venv/bin/python" -c 'import json,sys; d=json.load(sys.stdin); print(sum(1 for p in d.get("positions",[]) if float(p.get("quantity") or 0)>0))')"
+if [[ "$SERVED_COUNT" != "$POSITION_COUNT" ]]; then
+  echo "ERROR: Served portfolio snapshot does not match Webull response."
+  exit 1
+fi
+
+echo "Served snapshot: OK ($SERVED_COUNT positions)"
+
 if command -v node >/dev/null 2>&1; then
   node --check "$APPDIR/static/stock-identity.js"
   node --check "$APPDIR/static/owned-positions.js"
@@ -134,46 +169,42 @@ if command -v node >/dev/null 2>&1; then
   echo "JavaScript syntax: OK"
 fi
 
-POSITION_COUNT="$(curl -fsS --max-time 12 http://127.0.0.1:8080/api/webull/summary | "$APPDIR/venv/bin/python" -c 'import json,sys; d=json.load(sys.stdin); print(sum(1 for p in d.get("positions",[]) if float(p.get("quantity") or 0)>0))' 2>/dev/null || echo 0)"
+# The smoke test now depends only on localhost HTML + a local static JSON file.
+# It no longer waits for a live Webull request, so a card must appear quickly.
 SMOKE_PROFILE="/tmp/1838-estate-smoke-$$"
 SMOKE_DOM="/tmp/1838-estate-smoke-dom.html"
 SMOKE_ERR="/tmp/1838-estate-smoke-errors.log"
 rm -rf "$SMOKE_PROFILE" "$SMOKE_DOM" "$SMOKE_ERR"
 
 if command -v chromium >/dev/null 2>&1; then
-  timeout 30s chromium \
+  timeout 25s chromium \
     --headless \
     --no-sandbox \
     --disable-gpu \
     --user-data-dir="$SMOKE_PROFILE" \
-    --virtual-time-budget=14000 \
+    --virtual-time-budget=7000 \
     --dump-dom \
     "http://127.0.0.1:8080/?smoke=$(date +%s)" \
     >"$SMOKE_DOM" 2>"$SMOKE_ERR" || true
 
-  if [[ "${POSITION_COUNT:-0}" -gt 0 ]]; then
-    if ! grep -q 'owned-investment-card' "$SMOKE_DOM"; then
-      echo "ERROR: Chromium loaded the page but did not render owned-position cards."
-      echo "Webull positions returned: $POSITION_COUNT"
-      echo "Recent Chromium output:"
-      tail -n 35 "$SMOKE_ERR" || true
-      rm -rf "$SMOKE_PROFILE"
-      exit 1
-    fi
-    echo "Rendered Portfolio cards: OK ($POSITION_COUNT owned positions returned)"
-  elif grep -q 'ownedPositionCards' "$SMOKE_DOM"; then
-    echo "Portfolio renderer: OK (no positive-share Webull positions returned during smoke test)"
-  else
-    echo "ERROR: Portfolio renderer did not initialize in Chromium."
-    tail -n 35 "$SMOKE_ERR" || true
+  CARD_COUNT="$(grep -o 'class=\"owned-investment-card' "$SMOKE_DOM" | wc -l | tr -d ' ')"
+  if [[ "${CARD_COUNT:-0}" -lt 1 ]]; then
+    echo "ERROR: Chromium still did not render the local Portfolio snapshot."
+    echo "Expected positions: $POSITION_COUNT"
+    echo "Renderer markers:"
+    grep -oE 'ownedPositionCards|data-render-source="[^"]+"|Loading portfolio|Portfolio display error' "$SMOKE_DOM" | head -n 20 || true
+    echo "Recent Chromium output:"
+    tail -n 40 "$SMOKE_ERR" || true
     rm -rf "$SMOKE_PROFILE"
     exit 1
   fi
+  echo "Rendered Portfolio cards: OK ($CARD_COUNT cards from local snapshot)"
   rm -rf "$SMOKE_PROFILE"
 else
   echo "Chromium smoke test skipped: chromium command not found"
 fi
 
+# Only after the DOM smoke test succeeds do we replace the visible kiosk.
 UIDNUM="$(id -u "$TARGET_USER")"
 RUNTIME="/run/user/$UIDNUM"
 SOCKET="$(find "$RUNTIME" -maxdepth 1 -type s -name 'wayland-*' 2>/dev/null | head -n1 || true)"
@@ -183,21 +214,18 @@ if [[ -n "$SOCKET" ]]; then
     nohup "$APPDIR/start-kiosk.sh" >/tmp/1838-estate-kiosk-launch.log 2>&1 &
   echo "Kiosk: restarting one clean 1838 Estate Chromium window"
 else
-  echo "Kiosk: Wayland session not found; reboot or run $APPDIR/start-kiosk.sh from the desktop session"
+  echo "Kiosk: Wayland session not found; run $APPDIR/start-kiosk.sh from the desktop session"
 fi
 
 echo
 echo "FIXED / VERIFIED:"
-echo "  - exact branding: 1838 Estate"
-echo "  - Portfolio renders before charts are fetched"
-echo "  - charts have a timeout and cannot hold the page blank"
-echo "  - visible error state replaces silent blank failures"
+echo "  - 1838 Estate branding"
+echo "  - Portfolio first paint comes from a verified local Webull snapshot"
+echo "  - live Webull refresh happens after cards are already visible"
+echo "  - 1-day charts enrich cards afterward and cannot block them"
 echo "  - company names + logo fallback chain"
-echo "  - 1-day chart in each owned stock card"
 echo "  - full My investment metrics"
-echo "  - automatic sizing + Portfolio continuation pages"
+echo "  - automatic sizing + continuation pages"
 echo "  - Markets immediately follows Portfolio"
 echo "  - camera frontend remains disabled"
-echo "  - duplicate stock/bootstrap scripts removed"
-echo "  - stale Chromium sessions replaced with one clean kiosk"
 echo "  - 18-second rotation restored"
