@@ -90,6 +90,33 @@
     return screen.querySelector('#marketsFollowGrid');
   }
 
+  function enforceRotation(){
+    try{
+      if(typeof cfg==='undefined'||!Array.isArray(cfg.screens)||!cfg.screens.length)return;
+      const active=document.querySelector('.screen.active')?.dataset.screen||'';
+      const before=cfg.screens.join('|');
+      // Portfolio now contains every owned stock; Markets contains the intentional
+      // followed list. Remove older generated duplicates from the visible cycle.
+      const list=cfg.screens.filter(name=>
+        name!=='markets' &&
+        name!=='portfolio' &&
+        !String(name).startsWith('owned-') &&
+        !String(name).startsWith('watchlist-')
+      );
+      const at=list.indexOf('stocks');
+      if(at>=0)list.splice(at+1,0,'markets');
+      else list.unshift('stocks','markets');
+      if(list.join('|')===before)return;
+      cfg.screens=list;
+      if(typeof idx!=='undefined'){
+        const keep=active?cfg.screens.indexOf(active):-1;
+        idx=keep>=0?keep:Math.min(Number(idx)||0,Math.max(0,cfg.screens.length-1));
+      }
+      if(typeof buildDots==='function')buildDots();
+      if(typeof schedule==='function')schedule();
+    }catch(e){console.warn('Portfolio/Markets rotation repair',e)}
+  }
+
   function configureGrid(root,count){
     let cols=1;
     if(count===2)cols=2;
@@ -162,18 +189,15 @@
         <div class="owned-company">${logoHTML(symbol)}<div><b>${esc(meta.name)}</b><span>${esc(symbol)}</span></div></div>
         <div class="owned-current"><b>${money(current)}</b><span class="${chartTone}">${signedPct(dayPct)}</span></div>
       </header>
-
       <div class="owned-chart-wrap">
         ${sparkline(chartCache.get(symbol),chartTone)}
         <div class="owned-chart-caption"><span>1D</span><span>${Number.isFinite(dayPL)?`${signedMoney(dayPL)} today`:'Today'}</span></div>
       </div>
-
       <div class="owned-investment-title">My investment</div>
       <div class="owned-investment-hero">
         <div><b>${money(invested)}</b><span>Total invested</span></div>
         <div class="owned-result ${cardTone}"><b>${signedMoney(totalPL)}</b><span>${resultWord}</span></div>
       </div>
-
       <div class="owned-detail-list">
         <div><span>Total value $</span><b>${money(value)}</b></div>
         <div><span>${percentLabel}</span><b class="${cardTone}">${signedPct(totalPct)}</b></div>
@@ -252,19 +276,26 @@
     }else{
       marketsRoot.innerHTML=followed.map(s=>renderMarketCard(s,qmap[String(s.symbol||'').toUpperCase()]||{})).join('');
     }
+    enforceRotation();
   }
 
   function boot(){
     ensureRoot();
     ensureMarketsScreen();
     relabelPortfolio();
+    enforceRotation();
     setTimeout(refresh,500);
+    setTimeout(relabelPortfolio,2200);
     setInterval(refresh,REFRESH_MS);
+    // market-sequence rebuilds its generated pages periodically; immediately put
+    // the simplified Portfolio -> Markets order back after any such rebuild.
+    setInterval(enforceRotation,1000);
     const main=document.querySelector('main.screens');
     if(main)new MutationObserver(()=>{
       const active=document.querySelector('.screen.active')?.dataset.screen;
       if(active==='stocks'||active==='markets')setTimeout(refresh,100);
       relabelPortfolio();
+      enforceRotation();
     }).observe(main,{attributes:true,subtree:true,attributeFilter:['class']});
   }
 
