@@ -1,0 +1,19 @@
+/* Professional attention states for recommendation thresholds. */
+.market-sequence-screen.threshold-buy .market-heading,
+.watch-row.threshold-buy{box-shadow:inset 5px 0 0 rgba(202,168,92,.95)}
+.market-sequence-screen.threshold-strong .market-heading,
+.watch-row.threshold-strong{box-shadow:inset 7px 0 0 rgba(230,181,78,.98),0 0 34px rgba(230,181,78,.09)}
+.market-sequence-screen.threshold-aggressive .market-heading,
+.watch-row.threshold-aggressive{box-shadow:inset 9px 0 0 rgba(255,196,70,1),0 0 48px rgba(255,196,70,.14)}
+.market-sequence-screen.threshold-buy .market-heading h2,
+.watch-row.threshold-buy .ticker{color:#dbc07f!important}
+.market-sequence-screen.threshold-strong .market-heading h2,
+.watch-row.threshold-strong .ticker{color:#f0cb67!important}
+.market-sequence-screen.threshold-aggressive .market-heading h2,
+.watch-row.threshold-aggressive .ticker{color:#ffd462!important;text-shadow:0 0 18px rgba(255,212,98,.16)}
+.threshold-banner{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 12px;padding:10px 14px;border:1px solid rgba(202,168,92,.35);background:rgba(202,168,92,.07);font:800 12px/1.2 var(--estate-sans,Arial,sans-serif);letter-spacing:.09em;text-transform:uppercase}
+.threshold-banner strong{font:700 17px/1.1 var(--estate-serif,Georgia,serif);letter-spacing:.02em}.threshold-banner small{font:800 9px var(--estate-sans,Arial,sans-serif);color:var(--estate-muted,#a7aa9f)}
+.threshold-banner.buy{border-color:rgba(202,168,92,.45)}.threshold-banner.strong{border-color:rgba(230,181,78,.65);background:rgba(230,181,78,.09)}.threshold-banner.aggressive{border-color:rgba(255,196,70,.88);background:rgba(255,196,70,.12);box-shadow:0 0 28px rgba(255,196,70,.09)}
+.threshold-dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:currentColor;margin-right:8px;box-shadow:0 0 12px currentColor}
+.watch-row .watch-alert{font:800 10px/1.2 var(--estate-sans,Arial,sans-serif);letter-spacing:.07em;text-transform:uppercase;margin-top:5px}.watch-row.threshold-buy .watch-alert,.watch-row.threshold-strong .watch-alert,.watch-row.threshold-aggressive .watch-alert{color:#f0cb67}
+.webull-alert-note{position:absolute;right:30px;bottom:14px;font:700 9px/1.2 var(--estate-sans,Arial,sans-serif);letter-spacing:.05em;color:var(--estate-muted,#7f867c)}
