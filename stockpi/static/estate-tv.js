@@ -10,6 +10,15 @@
     }
   }
 
+  function ensurePortfolioAssets(){
+    if(!document.querySelector('link[href="/static/portfolio-enhanced.css"]')){
+      const l=document.createElement('link');l.rel='stylesheet';l.href='/static/portfolio-enhanced.css';document.head.appendChild(l);
+    }
+    if(!document.querySelector('script[src="/static/portfolio-enhanced.js"]')){
+      const s=document.createElement('script');s.src='/static/portfolio-enhanced.js';s.defer=true;document.body.appendChild(s);
+    }
+  }
+
   function addHomeHeading(){
     const home=document.querySelector('[data-screen="home"]');
     if(!home||home.querySelector('.estate-home-heading')) return;
@@ -28,7 +37,7 @@
     if(stocks){
       const e=stocks.querySelector('.eyebrow'); if(e)e.textContent='MARKETS • PORTFOLIO';
       const h=stocks.querySelector('h2'); if(h)h.textContent='Portfolio & Markets';
-      const c=stocks.querySelector('.section-caption'); if(c)c.textContent='Owned positions • live prices • entry zones';
+      const c=stocks.querySelector('.section-caption'); if(c)c.textContent='Owned positions • Webull account • market snapshots • entry zones';
     }
 
     addHomeHeading();
@@ -76,6 +85,6 @@
     update();
   }
 
-  function boot(){ensureActivityAssets();relabel();maintainScreenLabel();setTimeout(relabel,600);setTimeout(relabel,1800)}
+  function boot(){ensureActivityAssets();ensurePortfolioAssets();relabel();maintainScreenLabel();setTimeout(relabel,600);setTimeout(relabel,1800)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
