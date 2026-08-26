@@ -35,6 +35,9 @@
     if(!document.querySelector('script[src="/static/market-watchlist-sync.js"]')){
       const s=document.createElement('script');s.src='/static/market-watchlist-sync.js';s.defer=true;document.body.appendChild(s);
     }
+    if(!document.querySelector('script[src="/static/ticker-prices.js"]')){
+      const s=document.createElement('script');s.src='/static/ticker-prices.js';s.defer=true;document.body.appendChild(s);
+    }
   }
 
   function slowTickerToHalfSpeed(){
