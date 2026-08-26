@@ -13,25 +13,18 @@ fi
 
 mkdir -p "$APPDIR/static"
 
-# Never replace ~/farmpi/webull.env here. Webull credentials remain local.
+# Never replace ~/farmpi/webull.env, auth tokens, or dashboard settings here.
+# The repository now contains the canonical activity-history handling, so no
+# source-code patch script is needed.
 install -m 700 "$SOURCE_DIR/webull_activity_service.py" "$APPDIR/webull_activity_service.py"
 install -m 644 "$SOURCE_DIR/static/webull-activity.js" "$APPDIR/static/webull-activity.js"
 install -m 644 "$SOURCE_DIR/static/webull-activity.css" "$APPDIR/static/webull-activity.css"
 install -m 644 "$SOURCE_DIR/static/webull-history.html" "$APPDIR/static/webull-history.html"
 install -m 644 "$SOURCE_DIR/static/estate-tv.js" "$APPDIR/static/estate-tv.js"
-install -m 644 "$SOURCE_DIR/dashboard_config.json" "$APPDIR/dashboard_config.json"
 
-# Webull US currently rejects same-day start/end parameters on Order History.
-# Patch the source/deployed monitor to use Webull's full-history query and filter
-# today's orders locally. This script is idempotent.
-if [ -f "$SOURCE_DIR/fix-webull-activity-history.sh" ]; then
-  chmod +x "$SOURCE_DIR/fix-webull-activity-history.sh"
-  "$SOURCE_DIR/fix-webull-activity-history.sh"
-fi
-
-# The official Webull SDK should already be present after configure-webull.sh,
-# but ensure the existing Farm venv has the current dependencies.
+# Ensure the existing Farm venv has the current read-only dependencies.
 "$APPDIR/venv/bin/pip" install -q -r "$SOURCE_DIR/requirements.txt"
+"$APPDIR/venv/bin/python" -m py_compile "$APPDIR/webull_activity_service.py"
 
 sudo tee "/etc/systemd/system/$SERVICE" >/dev/null <<EOF
 [Unit]
@@ -61,6 +54,7 @@ sudo systemctl restart farm-dashboard
 echo
 echo "Webull activity monitor installed."
 echo "It uses query/subscription methods only; no order-changing calls are implemented."
+echo "Local Webull credentials/tokens and dashboard settings were not touched."
 echo "Service: $SERVICE"
 echo "TV activity data: $APPDIR/static/webull-activity.json"
 echo "Complete history: http://farmpi.local:8080/static/webull-history.html"
