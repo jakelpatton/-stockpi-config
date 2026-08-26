@@ -25,6 +25,8 @@ RSYNC_EXCLUDES=(
   --exclude 'power_schedule.json'
   --exclude 'stocks.json'
   --exclude 'cloud_portfolio_cache.json'
+  --exclude 'webull-summary-cache.json'
+  --exclude 'quote-cache.json'
   --exclude 'static/webull-activity.json'
   --exclude 'backups/'
   --exclude '.deployed-commit'
@@ -96,7 +98,7 @@ log "New main commit detected: ${NEW_COMMIT:0:12} (previous $PREVIOUS_LABEL)."
 
 # Validate files that can be checked without starting the dashboard.
 python3 -m py_compile "$SOURCE/stockpi/app.py"
-for py_file in run_dashboard.py webull_readonly.py camera_motion_server.py; do
+for py_file in run_dashboard.py webull_readonly.py camera_motion_server.py webull_activity_service.py; do
   if [[ -f "$SOURCE/stockpi/$py_file" ]]; then
     python3 -m py_compile "$SOURCE/stockpi/$py_file"
   fi
@@ -164,7 +166,8 @@ systemctl restart farm-dashboard.service
 # a slow SD card or package import never causes a false rollback.
 healthy=0
 for _ in $(seq 1 60); do
-  if curl -fsS --max-time 2 http://127.0.0.1:8080/ >/dev/null 2>&1; then
+  if curl -fsS --max-time 2 http://127.0.0.1:8080/api/health >/dev/null 2>&1 || \
+     curl -fsS --max-time 2 http://127.0.0.1:8080/ >/dev/null 2>&1; then
     healthy=1
     break
   fi
