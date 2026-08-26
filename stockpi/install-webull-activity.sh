@@ -21,6 +21,14 @@ install -m 644 "$SOURCE_DIR/static/webull-history.html" "$APPDIR/static/webull-h
 install -m 644 "$SOURCE_DIR/static/estate-tv.js" "$APPDIR/static/estate-tv.js"
 install -m 644 "$SOURCE_DIR/dashboard_config.json" "$APPDIR/dashboard_config.json"
 
+# Webull US currently rejects same-day start/end parameters on Order History.
+# Patch the source/deployed monitor to use Webull's full-history query and filter
+# today's orders locally. This script is idempotent.
+if [ -f "$SOURCE_DIR/fix-webull-activity-history.sh" ]; then
+  chmod +x "$SOURCE_DIR/fix-webull-activity-history.sh"
+  "$SOURCE_DIR/fix-webull-activity-history.sh"
+fi
+
 # The official Webull SDK should already be present after configure-webull.sh,
 # but ensure the existing Farm venv has the current dependencies.
 "$APPDIR/venv/bin/pip" install -q -r "$SOURCE_DIR/requirements.txt"
@@ -47,6 +55,7 @@ EOF
 
 sudo systemctl daemon-reload
 sudo systemctl enable --now "$SERVICE"
+sudo systemctl restart "$SERVICE"
 sudo systemctl restart farm-dashboard
 
 echo
