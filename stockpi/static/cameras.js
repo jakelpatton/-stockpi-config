@@ -8,11 +8,20 @@
   const REFRESH_MS = 1200;
   let timer=null, portfolioTimer=null;
 
+  function addStyle(href){
+    if(!document.querySelector(`link[href="${href}"]`)){const l=document.createElement('link');l.rel='stylesheet';l.href=href;document.head.appendChild(l)}
+  }
+  function addScript(src){
+    if(!document.querySelector(`script[src="${src}"]`)){const s=document.createElement('script');s.src=src;s.defer=true;document.body.appendChild(s)}
+  }
   function ensureStyles(){
-    if(!document.querySelector('link[href="/static/cameras.css"]')){const l=document.createElement('link');l.rel='stylesheet';l.href='/static/cameras.css';document.head.appendChild(l)}
-    if(!document.querySelector('link[href="/static/thesis.css"]')){const l=document.createElement('link');l.rel='stylesheet';l.href='/static/thesis.css';document.head.appendChild(l)}
-    if(!document.querySelector('link[href="/static/tv-fit.css"]')){const l=document.createElement('link');l.rel='stylesheet';l.href='/static/tv-fit.css';document.head.appendChild(l)}
-    if(!document.querySelector('script[src="/static/thesis.js"]')){const s=document.createElement('script');s.src='/static/thesis.js';s.defer=true;document.body.appendChild(s)}
+    addStyle('/static/cameras.css');
+    addStyle('/static/thesis.css');
+    addStyle('/static/thesis-summary.css');
+    addStyle('/static/tv-fit.css');
+    addStyle('/static/estate-tv.css');
+    addScript('/static/thesis.js');
+    addScript('/static/estate-tv.js');
     if(!document.getElementById('portfolioStyles')){
       const s=document.createElement('style'); s.id='portfolioStyles'; s.textContent=`
         .portfolio-panel{margin:0 0 14px;padding:14px 16px;border:1px solid rgba(100,116,139,.22);border-radius:16px;background:rgba(255,255,255,.72);box-shadow:0 8px 28px rgba(15,23,42,.06)}
@@ -91,7 +100,7 @@
 
   function refreshFrames(){const active=document.querySelector('.screen.active')?.dataset.screen==='cameras';if(!active)return;const stamp=Date.now();CAMERAS.filter(c=>!c.disabled).forEach(c=>{const img=document.getElementById(`cameraFeed${c.channel}`);if(img)img.src=`/api/cameras/snapshot/${c.channel}?t=${stamp}`});const u=document.getElementById('cameraUpdated');if(u)u.textContent='Updated '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})}
 
-  function patchScreenName(){const map={stocks:'Stocks',thesis:'Investment Thesis',home:'Home Overview',water:'Water Systems',power:'Power / Climate / Electrical',cameras:'Cameras'};const obs=new MutationObserver(()=>{const active=document.querySelector('.screen.active');const el=document.getElementById('screenName');if(active&&el&&map[active.dataset.screen])el.textContent=map[active.dataset.screen];if(active?.dataset.screen==='cameras')refreshFrames();if(active?.dataset.screen==='stocks')refreshPortfolio()});const main=document.querySelector('main.screens');if(main)obs.observe(main,{attributes:true,subtree:true,attributeFilter:['class']})}
+  function patchScreenName(){const map={stocks:'Portfolio & Markets',thesis:'Sunday Market Review',home:'Estate Overview',water:'Water & Leak Watch',power:'Energy & Electrical',cameras:'Security & Cameras'};const obs=new MutationObserver(()=>{const active=document.querySelector('.screen.active');const el=document.getElementById('screenName');if(active&&el&&map[active.dataset.screen])el.textContent=map[active.dataset.screen];if(active?.dataset.screen==='cameras')refreshFrames();if(active?.dataset.screen==='stocks')refreshPortfolio()});const main=document.querySelector('main.screens');if(main)obs.observe(main,{attributes:true,subtree:true,attributeFilter:['class']})}
 
   function boot(){ensureStyles();makePortfolio();makeScreen();patchScreenName();checkStatus();refreshFrames();refreshPortfolio();timer=setInterval(refreshFrames,REFRESH_MS);portfolioTimer=setInterval(refreshPortfolio,20000);setInterval(checkStatus,15000)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
