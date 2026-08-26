@@ -1,75 +1,77 @@
 (() => {
+  window.FARM_SIMPLE_MARKETS = true;
+
   const REFRESH_MS = 15000;
   const CHART_REFRESH_MS = 60000;
-  let lastChartFetch = 0;
   const chartCache = new Map();
+  let lastChartFetch = 0;
 
-  // User-facing names intentionally override broker/provider naming.
   const IDENTITY = {
-    EXE: {name:'Chesapeake Energy', domain:'chesapeakeenergy.com'},
-    TEL: {name:'TE Connectivity', domain:'te.com'},
-    CMI: {name:'Cummins', domain:'cummins.com'},
-    ADI: {name:'Analog Devices', domain:'analog.com'},
-    AEIS:{name:'Advanced Energy Industries',domain:'advancedenergy.com'},
-    ALAB:{name:'Astera Labs',domain:'asteralabs.com'},
-    AMAT:{name:'Applied Materials',domain:'appliedmaterials.com'},
-    ASML:{name:'ASML Holding',domain:'asml.com'},
-    GNRC:{name:'Generac',domain:'generac.com'},
-    KLAC:{name:'KLA',domain:'kla.com'},
-    LRCX:{name:'Lam Research',domain:'lamresearch.com'},
-    NVDA:{name:'NVIDIA',domain:'nvidia.com'},
-    POWL:{name:'Powell Industries',domain:'powellind.com'},
-    TER:{name:'Teradyne',domain:'teradyne.com'}
+    EXE:{name:'Chesapeake Energy',description:'Energy • Owned position',domain:'expandenergy.com'},
+    TEL:{name:'TE Connectivity',description:'Connectivity & sensors • Owned position',domain:'te.com'},
+    CMI:{name:'Cummins',description:'Power & industrial • Owned position',domain:'cummins.com'},
+    ADI:{name:'Analog Devices',description:'Semiconductors',domain:'analog.com'},
+    AEIS:{name:'Advanced Energy Industries',description:'Power conversion',domain:'advancedenergy.com'},
+    ALAB:{name:'Astera Labs',description:'AI connectivity',domain:'asteralabs.com'},
+    AMAT:{name:'Applied Materials',description:'Semiconductor equipment',domain:'appliedmaterials.com'},
+    ASML:{name:'ASML Holding',description:'Lithography systems',domain:'asml.com'},
+    GNRC:{name:'Generac',description:'Power generation',domain:'generac.com'},
+    KLAC:{name:'KLA',description:'Process control equipment',domain:'kla.com'},
+    LRCX:{name:'Lam Research',description:'Semiconductor equipment',domain:'lamresearch.com'},
+    NVDA:{name:'NVIDIA',description:'AI computing',domain:'nvidia.com'},
+    POWL:{name:'Powell Industries',description:'Electrical infrastructure',domain:'powellind.com'},
+    TER:{name:'Teradyne',description:'Semiconductor test',domain:'teradyne.com'}
   };
 
-  const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const num = (...values) => { for (const value of values) { const n = Number(value); if (Number.isFinite(n)) return n; } return NaN; };
-  const money = value => { const n=Number(value); return Number.isFinite(n) ? n.toLocaleString(undefined,{style:'currency',currency:'USD',minimumFractionDigits:2,maximumFractionDigits:2}) : '—'; };
-  const signedMoney = value => { const n=Number(value); return Number.isFinite(n) ? `${n>=0?'+':'-'}${money(Math.abs(n))}` : '—'; };
-  const signedPct = value => { const n=Number(value); return Number.isFinite(n) ? `${n>=0?'↑ ':'↓ '}${Math.abs(n).toFixed(2)}%` : '—'; };
-  const shares = value => { const n=Number(value); return Number.isFinite(n) ? n.toFixed(n<10?5:2).replace(/0+$/,'').replace(/\.$/,'') : '—'; };
-  const tone = value => { const n=Number(value); return !Number.isFinite(n)?'flat':n>0?'up':n<0?'down':'flat'; };
-  const identity = symbol => IDENTITY[symbol] || {name:symbol,domain:null};
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const num=(...vals)=>{for(const v of vals){const n=Number(v);if(Number.isFinite(n))return n}return NaN};
+  const money=v=>{const n=Number(v);return Number.isFinite(n)?n.toLocaleString(undefined,{style:'currency',currency:'USD',minimumFractionDigits:2,maximumFractionDigits:2}):'—'};
+  const signedMoney=v=>{const n=Number(v);return Number.isFinite(n)?`${n>=0?'+':'-'}${money(Math.abs(n))}`:'—'};
+  const signedPct=v=>{const n=Number(v);return Number.isFinite(n)?`${n>=0?'↑':'↓'} ${Math.abs(n).toFixed(2)}%`:'—'};
+  const shares=v=>{const n=Number(v);return Number.isFinite(n)?n.toFixed(n<10?5:2).replace(/0+$/,'').replace(/\.$/,''):'—'};
+  const tone=v=>{const n=Number(v);return !Number.isFinite(n)?'flat':n>0?'up':n<0?'down':'flat'};
+  const identity=symbol=>IDENTITY[symbol]||{name:symbol,description:'Owned stock',domain:null};
 
   async function getJSON(url,fallback){
     try{const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error(String(r.status));return await r.json()}catch(e){return fallback}
   }
 
-  function logoHTML(symbol,extraClass=''){
-    const meta=identity(symbol);
-    const src=meta.domain?`https://icons.duckduckgo.com/ip3/${encodeURIComponent(meta.domain)}.ico`:'';
-    return `<span class="owned-logo ${extraClass}"><span class="owned-logo-letter">${esc(symbol.slice(0,1))}</span>${src?`<img src="${src}" alt="${esc(meta.name)} logo" referrerpolicy="no-referrer" onerror="this.style.display='none'">`:''}</span>`;
+  function logoHTML(symbol){
+    const meta=identity(symbol),letter=esc(symbol.slice(0,1));
+    if(!meta.domain)return `<span class="owned-logo"><span class="owned-logo-letter">${letter}</span></span>`;
+    const google=`https://www.google.com/s2/favicons?domain=${encodeURIComponent(meta.domain)}&sz=128`;
+    const duck=`https://icons.duckduckgo.com/ip3/${encodeURIComponent(meta.domain)}.ico`;
+    return `<span class="owned-logo"><span class="owned-logo-letter">${letter}</span><img src="${google}" alt="${esc(meta.name)} logo" referrerpolicy="no-referrer" data-fallback="${duck}" onerror="if(this.dataset.fallback){this.src=this.dataset.fallback;this.dataset.fallback=''}else{this.style.display='none'}"></span>`;
   }
 
   function relabelPortfolio(){
-    const stocks=document.querySelector('.screen[data-screen="stocks"]');
-    if(!stocks)return;
-    stocks.dataset.marketTitle='Portfolio';
-    const e=stocks.querySelector('.screen-heading .eyebrow');
-    const h=stocks.querySelector('.screen-heading h2');
-    const c=stocks.querySelector('.screen-heading .section-caption');
-    if(e)e.textContent='WEBULL • OWNED POSITIONS';
-    if(h)h.textContent='Portfolio';
-    if(c)c.textContent='Owned investments • position value • cost • gain/loss • intraday progress';
+    const screen=document.querySelector('.screen[data-screen="stocks"]');
+    if(!screen)return;
+    screen.dataset.marketTitle='Portfolio';
+    const eyebrow=screen.querySelector('.screen-heading .eyebrow');
+    const title=screen.querySelector('.screen-heading h2');
+    const caption=screen.querySelector('.screen-heading .section-caption');
+    if(eyebrow)eyebrow.textContent='WEBULL • OWNED POSITIONS';
+    if(title)title.textContent='Portfolio';
+    if(caption)caption.textContent='Your owned investments • value • cost • gain/loss • 1-day progress';
   }
 
-  function ensureRoot(){
-    const stocks=document.querySelector('.screen[data-screen="stocks"]');
-    if(!stocks)return null;
+  function ensurePortfolioRoot(){
+    const screen=document.querySelector('.screen[data-screen="stocks"]');
+    if(!screen)return null;
     relabelPortfolio();
-    document.getElementById('rows')?.classList.add('owned-legacy-hidden');
-    document.getElementById('portfolioFocusRows')?.classList.add('owned-legacy-hidden');
+    ['rows','portfolioFocusRows','portfolioPanel'].forEach(id=>document.getElementById(id)?.classList.add('owned-legacy-hidden'));
     let root=document.getElementById('ownedPositionCards');
     if(root)return root;
     root=document.createElement('section');
     root.id='ownedPositionCards';
     root.className='owned-position-grid';
-    const anchor=document.getElementById('portfolioFocusRows')||document.getElementById('rows')||document.getElementById('portfolioPanel')||stocks.querySelector('.screen-heading');
-    anchor?.insertAdjacentElement('afterend',root);
+    const heading=screen.querySelector('.screen-heading');
+    heading?.insertAdjacentElement('afterend',root);
     return root;
   }
 
-  function ensureMarketsScreen(){
+  function ensureMarketsRoot(){
     let screen=document.querySelector('.screen[data-screen="markets"]');
     if(!screen){
       const main=document.querySelector('main.screens');
@@ -78,99 +80,66 @@
       screen.className='screen';
       screen.dataset.screen='markets';
       screen.dataset.marketTitle='Markets';
-      screen.innerHTML=`
-        <div class="screen-heading markets-heading">
-          <div><div class="eyebrow">MARKET WATCH • FOLLOWING</div><h2>Markets</h2></div>
-          <div class="section-caption">Stocks being followed • current price • daily move • entry levels</div>
-        </div>
-        <div id="marketsFollowGrid" class="markets-follow-grid"></div>`;
+      screen.innerHTML=`<div class="screen-heading markets-heading"><div><div class="eyebrow">MARKET WATCH • FOLLOWING</div><h2>Markets</h2></div><div class="section-caption">Stocks being followed • current price • daily move • entry levels</div></div><div id="marketsFollowGrid" class="markets-follow-grid"></div>`;
       main.appendChild(screen);
     }
     screen.dataset.marketTitle='Markets';
     return screen.querySelector('#marketsFollowGrid');
   }
 
-  function enforceRotation(){
-    try{
-      if(typeof cfg==='undefined'||!Array.isArray(cfg.screens)||!cfg.screens.length)return;
-      const active=document.querySelector('.screen.active')?.dataset.screen||'';
-      const before=cfg.screens.join('|');
-      // Portfolio now contains every owned stock; Markets contains the intentional
-      // followed list. Remove older generated duplicates from the visible cycle.
-      const list=cfg.screens.filter(name=>
-        name!=='markets' &&
-        name!=='portfolio' &&
-        !String(name).startsWith('owned-') &&
-        !String(name).startsWith('watchlist-')
-      );
-      const at=list.indexOf('stocks');
-      if(at>=0)list.splice(at+1,0,'markets');
-      else list.unshift('stocks','markets');
-      if(list.join('|')===before)return;
-      cfg.screens=list;
-      if(typeof idx!=='undefined'){
-        const keep=active?cfg.screens.indexOf(active):-1;
-        idx=keep>=0?keep:Math.min(Number(idx)||0,Math.max(0,cfg.screens.length-1));
-      }
-      if(typeof buildDots==='function')buildDots();
-      if(typeof schedule==='function')schedule();
-    }catch(e){console.warn('Portfolio/Markets rotation repair',e)}
-  }
-
-  function configureGrid(root,count){
-    let cols=1;
-    if(count===2)cols=2;
-    else if(count===3)cols=3;
-    else if(count===4)cols=2;
-    else if(count<=6)cols=3;
-    else if(count<=8)cols=4;
-    else if(count<=12)cols=4;
-    else cols=5;
-    const rows=Math.max(1,Math.ceil(count/cols));
-    root.style.setProperty('--owned-cols',String(cols));
-    root.style.setProperty('--owned-rows',String(rows));
+  function setPortfolioLayout(root,count){
+    let cols=1,rows=1,density='roomy';
+    if(count===2){cols=2}
+    else if(count===3){cols=3}
+    else if(count===4){cols=2;rows=2;density='normal'}
+    else if(count<=6){cols=3;rows=2;density='normal'}
+    else if(count<=8){cols=4;rows=2;density='compact'}
+    else {cols=4;rows=Math.ceil(count/4);density='dense'}
+    root.style.setProperty('--owned-cols',cols);
+    root.style.setProperty('--owned-rows',rows);
     root.dataset.count=String(count);
-    root.dataset.density=count<=3?'roomy':count<=6?'normal':count<=8?'compact':'dense';
+    root.dataset.density=density;
   }
 
-  function configureMarketsGrid(root,count){
-    const cols=count<=12?2:count<=18?3:4;
-    const rows=Math.max(1,Math.ceil(Math.max(1,count)/cols));
-    root.style.setProperty('--markets-cols',String(cols));
-    root.style.setProperty('--markets-rows',String(rows));
-    root.dataset.count=String(count);
-    root.dataset.density=count<=8?'roomy':count<=12?'normal':count<=18?'compact':'dense';
+  function setMarketsLayout(root,count){
+    const cols=count<=8?2:count<=15?3:4;
+    root.style.setProperty('--markets-cols',cols);
+    root.dataset.density=count<=8?'roomy':count<=15?'normal':'compact';
   }
 
-  function sparkline(points,cls){
-    const vals=(points||[]).map(Number).filter(Number.isFinite);
-    if(vals.length<2)return `<div class="owned-chart-empty">DAY CHART • collecting data</div>`;
-    const min=Math.min(...vals),max=Math.max(...vals),span=max-min||1;
+  function sparkline(points,cls,fallbackStart,fallbackEnd){
+    let vals=(points||[]).map(Number).filter(Number.isFinite);
+    let fallback=false;
+    if(vals.length<2&&Number.isFinite(fallbackStart)&&Number.isFinite(fallbackEnd)){
+      vals=[fallbackStart,fallbackEnd];fallback=true;
+    }
+    if(vals.length<2)return `<div class="owned-chart-empty">1D chart loading…</div>`;
+    const min=Math.min(...vals),max=Math.max(...vals),span=max-min||Math.max(Math.abs(max)*.002,1);
     const coords=vals.map((v,i)=>{
-      const x=vals.length===1?0:(i/(vals.length-1))*100;
-      const y=26-((v-min)/span)*22;
+      const x=(i/(vals.length-1))*100;
+      const y=42-((v-min)/span)*34;
       return `${x.toFixed(2)},${y.toFixed(2)}`;
     }).join(' ');
-    return `<svg class="owned-sparkline ${cls}" viewBox="0 0 100 30" preserveAspectRatio="none" role="img" aria-label="Intraday price chart"><polyline points="${coords}" fill="none" vector-effect="non-scaling-stroke"/></svg>`;
+    return `<svg class="owned-sparkline ${cls}" viewBox="0 0 100 48" preserveAspectRatio="none" role="img" aria-label="1-day stock price chart"><line x1="0" y1="42" x2="100" y2="42" class="chart-baseline"/><polyline points="${coords}" fill="none" vector-effect="non-scaling-stroke"/></svg>${fallback?'<div class="owned-chart-fallback">START → NOW</div>':''}`;
   }
 
   async function loadCharts(symbols){
     const unique=[...new Set(symbols.filter(Boolean))];
     const now=Date.now();
-    if(now-lastChartFetch<CHART_REFRESH_MS && unique.every(s=>chartCache.has(s)))return;
+    if(now-lastChartFetch<CHART_REFRESH_MS&&unique.every(s=>chartCache.has(s)))return;
     lastChartFetch=now;
     await Promise.all(unique.map(async symbol=>{
       const data=await getJSON(`${location.protocol}//${location.hostname}:8092/api/chart/${encodeURIComponent(symbol)}`,null);
-      if(data&&Array.isArray(data.points)&&data.points.length)chartCache.set(symbol,data.points);
+      if(data&&Array.isArray(data.points)&&data.points.length>=2)chartCache.set(symbol,data.points);
     }));
   }
 
-  function renderCard(position,quote){
+  function renderOwnedCard(position,quote){
     const symbol=String(position.symbol||'').toUpperCase();
     const meta=identity(symbol);
-    const current=num(quote?.price,position.last_price);
     const quantity=num(position.quantity);
     const avg=num(position.average_cost);
+    const current=num(quote?.price,position.last_price);
     const invested=num(position.cost_basis,Number.isFinite(quantity)&&Number.isFinite(avg)?quantity*avg:NaN);
     const value=num(position.market_value,Number.isFinite(quantity)&&Number.isFinite(current)?quantity*current:NaN);
     const totalPL=num(position.unrealized_pl,Number.isFinite(value)&&Number.isFinite(invested)?value-invested:NaN);
@@ -178,64 +147,51 @@
     const prev=num(quote?.prev_close);
     const dayPct=num(quote?.pct,Number.isFinite(current)&&Number.isFinite(prev)&&prev?(current-prev)/prev*100:NaN);
     const dayPL=num(position.day_pl,Number.isFinite(dayPct)&&Number.isFinite(value)?value*(dayPct/100):NaN);
+    const totalTone=tone(totalPL),dayTone=tone(dayPct);
     const gain=Number.isFinite(totalPL)&&totalPL>=0;
-    const resultWord=gain?'Gain':'Loss';
-    const percentLabel=gain?'Total gain %':'Total loss %';
-    const cardTone=tone(totalPL);
-    const chartTone=tone(dayPct);
 
-    return `<article class="owned-investment-card ${cardTone}">
+    return `<article class="owned-investment-card ${totalTone}">
       <header class="owned-card-head">
-        <div class="owned-company">${logoHTML(symbol)}<div><b>${esc(meta.name)}</b><span>${esc(symbol)}</span></div></div>
-        <div class="owned-current"><b>${money(current)}</b><span class="${chartTone}">${signedPct(dayPct)}</span></div>
+        <div class="owned-company">${logoHTML(symbol)}<div class="owned-company-copy"><b>${esc(meta.name)}</b><span class="owned-ticker">${esc(symbol)}</span><small>${esc(meta.description)}</small></div></div>
+        <div class="owned-current"><b>${money(current)}</b><span class="${dayTone}">${signedPct(dayPct)}</span></div>
       </header>
+
       <div class="owned-chart-wrap">
-        ${sparkline(chartCache.get(symbol),chartTone)}
-        <div class="owned-chart-caption"><span>1D</span><span>${Number.isFinite(dayPL)?`${signedMoney(dayPL)} today`:'Today'}</span></div>
+        ${sparkline(chartCache.get(symbol),dayTone,prev,current)}
+        <div class="owned-chart-caption"><span>1 DAY</span><span class="${dayTone}">${Number.isFinite(dayPL)?`${signedMoney(dayPL)} today`:'Today'}</span></div>
       </div>
-      <div class="owned-investment-title">My investment</div>
-      <div class="owned-investment-hero">
-        <div><b>${money(invested)}</b><span>Total invested</span></div>
-        <div class="owned-result ${cardTone}"><b>${signedMoney(totalPL)}</b><span>${resultWord}</span></div>
-      </div>
-      <div class="owned-detail-list">
-        <div><span>Total value $</span><b>${money(value)}</b></div>
-        <div><span>${percentLabel}</span><b class="${cardTone}">${signedPct(totalPct)}</b></div>
-        <div><span>Shares owned</span><b>${shares(quantity)}</b></div>
-        <div><span>Average cost per share</span><b>${money(avg)}</b></div>
-        <div><span>Current share price</span><b>${money(current)}</b></div>
-      </div>
+
+      <section class="owned-investment-section">
+        <div class="owned-investment-title">My investment</div>
+        <div class="owned-investment-hero">
+          <div><b>${money(invested)}</b><span>Total invested</span></div>
+          <div class="owned-result ${totalTone}"><b>${signedMoney(totalPL)}</b><span>${gain?'Gain':'Loss'}</span></div>
+        </div>
+        <div class="owned-detail-list">
+          <div><span>Total value $</span><b>${money(value)}</b></div>
+          <div><span>${gain?'Total gain %':'Total loss %'}</span><b class="${totalTone}">${signedPct(totalPct)}</b></div>
+          <div><span>Shares owned</span><b>${shares(quantity)}</b></div>
+          <div><span>Average cost per share</span><b>${money(avg)}</b></div>
+          <div><span>Current share price</span><b>${money(current)}</b></div>
+        </div>
+      </section>
     </article>`;
   }
 
-  function marketSignal(stock,current){
-    const buy=num(stock.buy),strong=num(stock.strong_buy,stock.strong),aggressive=num(stock.aggressive_buy,stock.aggressive);
-    if(Number.isFinite(current)&&Number.isFinite(aggressive)&&current<=aggressive)return 'AGGRESSIVE BUY';
+  function signal(stock,current){
+    const buy=num(stock.buy),strong=num(stock.strong_buy,stock.strong),agg=num(stock.aggressive_buy,stock.aggressive);
+    if(Number.isFinite(current)&&Number.isFinite(agg)&&current<=agg)return 'AGGRESSIVE BUY';
     if(Number.isFinite(current)&&Number.isFinite(strong)&&current<=strong)return 'STRONG BUY';
     if(Number.isFinite(current)&&Number.isFinite(buy)&&current<=buy)return 'BUY';
     return 'HOLD';
   }
 
   function renderMarketCard(stock,quote){
-    const symbol=String(stock.symbol||'').toUpperCase();
-    const meta=identity(symbol);
-    const current=num(quote?.price,stock.webull_last_price);
-    const dayPct=num(quote?.pct);
-    const buy=num(stock.buy),strong=num(stock.strong_buy,stock.strong),aggressive=num(stock.aggressive_buy,stock.aggressive);
-    const signal=marketSignal(stock,current);
-    return `<article class="market-follow-card">
-      <div class="market-follow-main">
-        <div class="market-follow-company">${logoHTML(symbol,'market-logo')}<div><b>${esc(symbol)}</b><span>${esc(meta.name)}</span></div></div>
-        <div class="market-follow-price"><b>${money(current)}</b><span class="${tone(dayPct)}">${signedPct(dayPct)}</span></div>
-        <div class="market-follow-signal ${signal.includes('BUY')?'buy':''}">${signal}</div>
-      </div>
-      <div class="market-follow-levels">
-        <div><span>Buy</span><b>${money(buy)}</b></div>
-        <div><span>Strong Buy</span><b>${money(strong)}</b></div>
-        <div><span>Aggressive</span><b>${money(aggressive)}</b></div>
-      </div>
-      <div class="market-follow-note">${esc(stock.note||'Following for a better entry.')}</div>
-    </article>`;
+    const symbol=String(stock.symbol||'').toUpperCase(),meta=identity(symbol);
+    const current=num(quote?.price,stock.webull_last_price),dayPct=num(quote?.pct);
+    const buy=num(stock.buy),strong=num(stock.strong_buy,stock.strong),agg=num(stock.aggressive_buy,stock.aggressive);
+    const action=signal(stock,current);
+    return `<article class="market-follow-card"><div class="market-follow-main"><div class="market-follow-company">${logoHTML(symbol)}<div><b>${esc(meta.name)}</b><span>${esc(symbol)} • ${esc(meta.description.replace(' • Owned position',''))}</span></div></div><div class="market-follow-price"><b>${money(current)}</b><span class="${tone(dayPct)}">${signedPct(dayPct)}</span></div><div class="market-follow-signal ${action.includes('BUY')?'buy':''}">${action}</div></div><div class="market-follow-levels"><div><span>Buy</span><b>${money(buy)}</b></div><div><span>Strong Buy</span><b>${money(strong)}</b></div><div><span>Aggressive</span><b>${money(agg)}</b></div></div><div class="market-follow-note">${esc(stock.note||'Following for a better entry.')}</div></article>`;
   }
 
   function followedStocks(stocks,positions){
@@ -243,18 +199,33 @@
     return (stocks||[]).filter(stock=>{
       const symbol=String(stock.symbol||'').toUpperCase();
       if(!symbol||owned.has(symbol)||stock.owned||Number(stock.position_usd)>0)return false;
-      // Keep the intentional thesis/follow list. Webull-only watchlist rows with no
-      // stored recommendation/note stay off this page.
-      return Number.isFinite(num(stock.buy,stock.strong_buy,stock.strong,stock.aggressive_buy,stock.aggressive)) || !!stock.note;
+      return Number.isFinite(num(stock.buy,stock.strong_buy,stock.strong,stock.aggressive_buy,stock.aggressive))||!!stock.note;
     });
   }
 
+  function repairRotation(){
+    try{
+      if(typeof cfg==='undefined'||!Array.isArray(cfg.screens))return;
+      const active=document.querySelector('.screen.active')?.dataset.screen||'';
+      const wanted=['stocks','markets','activity','home','water','power','thesis'];
+      const available=wanted.filter(name=>document.querySelector(`.screen[data-screen="${name}"]`));
+      const same=cfg.screens.length===available.length&&cfg.screens.every((x,i)=>x===available[i]);
+      cfg.rotation_enabled=true;
+      if(!same)cfg.screens=available;
+      if(typeof idx!=='undefined'){
+        const keep=active?cfg.screens.indexOf(active):-1;
+        idx=keep>=0?keep:0;
+      }
+      if(typeof buildDots==='function')buildDots();
+      if(typeof schedule==='function')schedule();
+    }catch(e){console.warn('rotation repair',e)}
+  }
+
   async function refresh(){
-    const root=ensureRoot();
-    const marketsRoot=ensureMarketsScreen();
-    if(!root||!marketsRoot)return;
+    const portfolioRoot=ensurePortfolioRoot(),marketsRoot=ensureMarketsRoot();
+    if(!portfolioRoot||!marketsRoot)return;
     const [webull,quotesResult,stocks]=await Promise.all([
-      getJSON('/api/webull/summary',{positions:[],connected:false}),
+      getJSON('/api/webull/summary',{positions:[]}),
       getJSON('/api/quotes',{quotes:{}}),
       getJSON('/api/stocks',[])
     ]);
@@ -262,41 +233,30 @@
     const qmap=quotesResult.quotes||{};
     const followed=followedStocks(stocks,positions);
 
-    configureGrid(root,positions.length);
+    setPortfolioLayout(portfolioRoot,positions.length);
     if(!positions.length){
-      root.innerHTML='<div class="owned-empty"><b>No owned positions found.</b><span>Waiting for the Webull account position feed.</span></div>';
+      portfolioRoot.innerHTML='<div class="owned-empty"><b>No owned positions found.</b><span>Waiting for Webull position data.</span></div>';
     }else{
       await loadCharts(positions.map(p=>String(p.symbol||'').toUpperCase()));
-      root.innerHTML=positions.map(p=>renderCard(p,qmap[String(p.symbol||'').toUpperCase()]||{})).join('');
+      portfolioRoot.innerHTML=positions.map(p=>renderOwnedCard(p,qmap[String(p.symbol||'').toUpperCase()]||{})).join('');
     }
 
-    configureMarketsGrid(marketsRoot,followed.length);
-    if(!followed.length){
-      marketsRoot.innerHTML='<div class="markets-empty"><b>No followed stocks configured.</b><span>Stocks with stored entry levels will appear here automatically.</span></div>';
-    }else{
-      marketsRoot.innerHTML=followed.map(s=>renderMarketCard(s,qmap[String(s.symbol||'').toUpperCase()]||{})).join('');
-    }
-    enforceRotation();
+    setMarketsLayout(marketsRoot,followed.length);
+    marketsRoot.innerHTML=followed.length?followed.map(s=>renderMarketCard(s,qmap[String(s.symbol||'').toUpperCase()]||{})).join(''):'<div class="markets-empty"><b>No followed stocks configured.</b><span>Stocks with stored entry levels appear here automatically.</span></div>';
+    repairRotation();
   }
 
   function boot(){
-    ensureRoot();
-    ensureMarketsScreen();
+    ensurePortfolioRoot();
+    ensureMarketsRoot();
     relabelPortfolio();
-    enforceRotation();
-    setTimeout(refresh,500);
-    setTimeout(relabelPortfolio,2200);
+    setTimeout(refresh,350);
+    setTimeout(repairRotation,1200);
     setInterval(refresh,REFRESH_MS);
-    // market-sequence rebuilds its generated pages periodically; immediately put
-    // the simplified Portfolio -> Markets order back after any such rebuild.
-    setInterval(enforceRotation,1000);
-    const main=document.querySelector('main.screens');
-    if(main)new MutationObserver(()=>{
-      const active=document.querySelector('.screen.active')?.dataset.screen;
-      if(active==='stocks'||active==='markets')setTimeout(refresh,100);
-      relabelPortfolio();
-      enforceRotation();
-    }).observe(main,{attributes:true,subtree:true,attributeFilter:['class']});
+    setInterval(repairRotation,10000);
+    document.addEventListener('farm-screen-change',e=>{
+      if(e.detail?.screen==='stocks'||e.detail?.screen==='markets')setTimeout(refresh,80);
+    });
   }
 
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
