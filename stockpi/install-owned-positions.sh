@@ -52,18 +52,13 @@ for file in "${FILES[@]}"; do
   curl -fsSL "$REPO_RAW/$file?cachebust=$(date +%s%N)" -o "$TMP/$file"
 done
 
-# Install the exact base template first. This is important: the old installer only
-# copied enhancement files, leaving an old Farm/Stocks dashboard.html in place.
 install -o "$TARGET_USER" -g "$TARGET_GROUP" -m 0644 "$TMP/templates/dashboard.html" "$APPDIR/templates/dashboard.html"
 install -o "$TARGET_USER" -g "$TARGET_GROUP" -m 0644 "$TMP/owned_chart_server.py" "$APPDIR/owned_chart_server.py"
-
 for file in "${FILES[@]}"; do
   [[ "$file" == "templates/dashboard.html" || "$file" == "owned_chart_server.py" ]] && continue
   install -o "$TARGET_USER" -g "$TARGET_GROUP" -m 0644 "$TMP/$file" "$APPDIR/$file"
 done
 
-# dashboard_config.json is intentionally preserved by auto-deploy. Repair it so
-# an old local setting cannot disable or strand rotation.
 APPDIR="$APPDIR" "$APPDIR/venv/bin/python" - <<'PY'
 import json, os
 from pathlib import Path
@@ -128,12 +123,9 @@ if ! wait_for_url "1838 Estate dashboard" "http://127.0.0.1:8080/api/health" 60;
   exit 1
 fi
 
-# Verify the SERVER is actually serving the new base template, not merely that
-# Flask is listening.
 HTML="$(curl -fsS --max-time 5 http://127.0.0.1:8080/)"
 if ! grep -q '1838 Estate' <<<"$HTML"; then
   echo "ERROR: Flask is running but is not serving the 1838 Estate template."
-  echo "Template on disk: $APPDIR/templates/dashboard.html"
   grep -nE '1838 Estate|<h1>|<title>' "$APPDIR/templates/dashboard.html" | head -n 10 || true
   exit 1
 fi
@@ -144,19 +136,37 @@ fi
 
 echo "Base template verification: OK — 1838 Estate + direct Portfolio assets"
 
+# Do not refresh Chromium while Flask is restarting. Once both services are
+# verified healthy, send F5 into the active Raspberry Pi Wayland session. This
+# fixes the white/error page that can otherwise remain after a dashboard restart.
+refresh_kiosk() {
+  local uid runtime socket display
+  uid="$(id -u "$TARGET_USER")"
+  runtime="/run/user/$uid"
+  [[ -d "$runtime" ]] || return 1
+  socket="$(find "$runtime" -maxdepth 1 -type s -name 'wayland-*' 2>/dev/null | head -n 1 || true)"
+  [[ -n "$socket" ]] || return 1
+  display="$(basename "$socket")"
+  command -v wtype >/dev/null 2>&1 || return 1
+  sudo -u "$TARGET_USER" env XDG_RUNTIME_DIR="$runtime" WAYLAND_DISPLAY="$display" wtype -k F5 >/dev/null 2>&1 || return 1
+  return 0
+}
+
+if refresh_kiosk; then
+  echo "Kiosk refresh: sent F5 after server became healthy"
+else
+  echo "Kiosk refresh: automatic key refresh unavailable; press F5 once on the TV keyboard"
+fi
+
 echo
 echo "INSTALLED:"
-echo "  - exact brand: 1838 Estate (not 1838 Farm)"
-echo "  - Portfolio base page is built into dashboard.html"
-echo "  - Portfolio JavaScript/CSS load directly, independent of cameras"
+echo "  - exact brand: 1838 Estate"
+echo "  - Portfolio HTML and assets load directly"
 echo "  - small owned-position summary strip"
-echo "  - large Cash App-style owned cards"
-echo "  - company names, descriptions, ticker and logo fallback chain"
+echo "  - large owned-stock cards with company identity"
+echo "  - logo fallback chain"
 echo "  - 1-day intraday chart in every owned card"
 echo "  - investment value/cost/gain-loss/shares/average cost/current price"
-echo "  - automatic resizing and additional Portfolio pages above 6 positions"
-echo "  - Markets follows Portfolio"
+echo "  - automatic sizing plus Portfolio continuation pages above 6 positions"
+echo "  - Markets immediately follows Portfolio"
 echo "  - rotation repaired and enabled"
-echo
-echo "The browser must reload once to replace the old page already in memory."
-echo "If you are at the Pi keyboard: Ctrl+Shift+R"
