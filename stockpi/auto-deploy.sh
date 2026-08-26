@@ -10,8 +10,11 @@ SOURCE="$DEPLOY_HOME/.farmpi-deploy"
 BACKUP="$DEPLOY_HOME/.farmpi-backup"
 STAMP="$APPDIR/.deployed-commit"
 LOCK="/run/farmpi-auto-deploy.lock"
+SERVICE_FILE="/etc/systemd/system/farm-dashboard.service"
 DEPLOY_STARTED=0
 LAST_COMMIT=""
+ORIGINAL_EXECSTART=""
+SERVICE_FILE_CHANGED=0
 
 # Files below are local runtime state, credentials, generated caches, or settings.
 # They must never be removed or overwritten by a GitHub code deployment.
@@ -49,6 +52,15 @@ restore_previous(){
       "${RSYNC_EXCLUDES[@]}" \
       "$BACKUP/" "$APPDIR/"
 
+    # If this deployment changed the systemd runner, put the prior ExecStart back
+    # before restarting the rolled-back application. Without this, a failed first
+    # run_dashboard.py deployment could restore old code but leave systemd pointing
+    # at a file that no longer exists.
+    if [[ "$SERVICE_FILE_CHANGED" -eq 1 && -n "$ORIGINAL_EXECSTART" && -f "$SERVICE_FILE" ]]; then
+      sed -i "s#^ExecStart=.*#${ORIGINAL_EXECSTART}#" "$SERVICE_FILE"
+      systemctl daemon-reload
+    fi
+
     if [[ -n "$LAST_COMMIT" ]]; then
       echo "$LAST_COMMIT" > "$STAMP"
       chown "$DEPLOY_USER" "$STAMP"
@@ -69,6 +81,10 @@ fi
 if [[ ! -x "$APPDIR/venv/bin/python" ]]; then
   log "Python virtual environment is missing at $APPDIR/venv; refusing to deploy."
   exit 1
+fi
+
+if [[ -f "$SERVICE_FILE" ]]; then
+  ORIGINAL_EXECSTART="$(grep '^ExecStart=' "$SERVICE_FILE" | head -n1 || true)"
 fi
 
 if [[ ! -d "$SOURCE/.git" ]]; then
@@ -144,11 +160,14 @@ fi
 # Migrate existing installations to the nonblocking runner. app.py remains the
 # Flask application module; run_dashboard.py starts Flask first and moves slow
 # network refreshes to background workers.
-SERVICE_FILE="/etc/systemd/system/farm-dashboard.service"
 if [[ -f "$APPDIR/run_dashboard.py" && -f "$SERVICE_FILE" ]]; then
   if grep -q '^ExecStart=' "$SERVICE_FILE"; then
-    sed -i "s#^ExecStart=.*#ExecStart=$APPDIR/venv/bin/python $APPDIR/run_dashboard.py#" "$SERVICE_FILE"
-    systemctl daemon-reload
+    NEW_EXECSTART="ExecStart=$APPDIR/venv/bin/python $APPDIR/run_dashboard.py"
+    if [[ "$ORIGINAL_EXECSTART" != "$NEW_EXECSTART" ]]; then
+      sed -i "s#^ExecStart=.*#${NEW_EXECSTART}#" "$SERVICE_FILE"
+      SERVICE_FILE_CHANGED=1
+      systemctl daemon-reload
+    fi
   fi
 fi
 
