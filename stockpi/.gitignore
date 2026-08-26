@@ -4,7 +4,10 @@ cameras.env
 .webull-token/
 conf/token.txt
 
-# Runtime caches
+# Runtime caches / generated state
 cloud_portfolio_cache.json
+static/webull-activity.json
+.deployed-commit
+backups/
 __pycache__/
 *.pyc
