@@ -68,7 +68,9 @@ streams = {
 
 with open(out_path, 'w', encoding='utf-8') as f:
     f.write('api:\n')
-    f.write('  listen: ":1985"\n')
+    # Kiosk Chromium is on this Pi, so keep the diagnostic/player API local-only.
+    # /api/streams contains source RTSP URLs and therefore must not be LAN-exposed.
+    f.write('  listen: "127.0.0.1:1985"\n')
     f.write('  origin: "*"\n')
     f.write('rtsp:\n')
     f.write('  listen: ""\n')
@@ -98,7 +100,7 @@ echo "Amcrest native-resolution go2rtc relay started."
 echo "  Front Porch:     NVR channel 1 main stream • 1920x1080 H.264 @ 30 fps"
 echo "  Rockhouse Front: NVR channel 2 main stream • 2688x1520 H.264 @ 20 fps"
 echo "  Rockhouse Back:  NVR channel 3 main stream • 3840x2160 H.264 @ 15 fps"
-echo "  Browser relay:   http://farmpi.local:1985"
+echo "  Browser relay:   localhost-only on 127.0.0.1:1985"
 echo "  WebRTC media:    $PI_IP:8556"
 
 # Wyze motion is deliberately isolated from the working WebRTC streaming bridge.
@@ -160,9 +162,38 @@ echo "Amcrest: native main-stream RTSP -> go2rtc -> WebRTC; no JPEG refresh and 
 echo "Wyze: read-only cloud motion events; working Floodlight Pro WebRTC remains on port 5080."
 echo "Backup: $APPDIR/backups/$STAMP"
 echo
-echo "Health:"
-curl -fsS http://127.0.0.1:8091/api/health || true
+
+if curl -fsS --max-time 3 http://127.0.0.1:8091/api/health; then
+  echo
+  echo "Motion service: OK"
+else
+  echo
+  echo "Motion service failed to answer on port 8091."
+  echo "Service status:"
+  sudo systemctl status farm-camera-motion.service --no-pager -l || true
+  echo
+  echo "Recent log:"
+  sudo journalctl -u farm-camera-motion.service -n 40 --no-pager || true
+fi
+
 echo
-echo "Amcrest relay streams:"
-curl -fsS http://127.0.0.1:1985/api/streams || true
+echo "Amcrest relay:"
+if curl -fsS --max-time 3 http://127.0.0.1:1985/api/streams >/tmp/amcrest-streams.json; then
+  python3 - <<'PY'
+import json
+try:
+    with open('/tmp/amcrest-streams.json', encoding='utf-8') as f:
+        data=json.load(f)
+    for name in ('front_porch','rockhouse_front','rockhouse_back'):
+        s=data.get(name,{})
+        producers=s.get('producers') or []
+        medias=(producers[0].get('medias') if producers else []) or []
+        print(f"  {name}: {'connected' if producers else 'not connected'}" + (f" • {', '.join(medias)}" if medias else ''))
+except Exception as e:
+    print('  Unable to summarize streams:', e)
+PY
+else
+  echo "  go2rtc API did not answer."
+fi
+rm -f /tmp/amcrest-streams.json
 echo
