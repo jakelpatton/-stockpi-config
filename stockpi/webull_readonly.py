@@ -17,12 +17,18 @@ import threading
 import time
 from typing import Any
 
-# The official SDK's default error logger can dump complete signed request
-# headers, including the App Key. Keep those credential-bearing request dumps
-# out of the dashboard journal; callers still receive concise exceptions.
-logging.getLogger("webull").setLevel(logging.CRITICAL)
-logging.getLogger("webull.core").setLevel(logging.CRITICAL)
-logging.getLogger("webull.core.client").setLevel(logging.CRITICAL)
+# The official SDK can log signed request headers and token fragments. Suppress
+# the full Webull logger hierarchy before any SDK client is instantiated.
+for _logger_name in (
+    "webull",
+    "webull.core",
+    "webull.core.client",
+    "webull.core.http",
+    "webull.core.http.initializer",
+    "webull.core.http.initializer.token",
+    "webull.core.http.initializer.token.token_manager",
+):
+    logging.getLogger(_logger_name).setLevel(logging.CRITICAL)
 
 try:
     from webull.core.client import ApiClient
@@ -84,6 +90,10 @@ class WebullReadOnly:
         self.base_dir = Path(base_dir)
         self.env_file = Path(os.environ.get("WEBULL_ENV_FILE", self.base_dir / "webull.env"))
         self._lock = threading.Lock()
+        # Serialize SDK network calls. The dashboard has several background data
+        # sources; the official SDK/token manager is safer when one request chain
+        # at a time owns a client.
+        self._api_lock = threading.RLock()
         self._summary_cache: tuple[float, dict] = (0.0, {})
         self._accounts_cache: tuple[float, list] = (0.0, [])
         self._watch_cache: tuple[float, list] = (0.0, [])
@@ -148,8 +158,9 @@ class WebullReadOnly:
         with self._lock:
             if not force and now - self._accounts_cache[0] < 3600 and self._accounts_cache[1]:
                 return list(self._accounts_cache[1])
-        trade, _ = self._clients()
-        payload = _response_json(trade.account_v2.get_account_list())
+        with self._api_lock:
+            trade, _ = self._clients()
+            payload = _response_json(trade.account_v2.get_account_list())
         accounts = _list_payload(payload, "accounts", "account_list", "items")
         if not accounts and isinstance(payload, dict) and any(k in payload for k in ("account_id", "accountId")):
             accounts = [payload]
@@ -175,32 +186,33 @@ class WebullReadOnly:
         with self._lock:
             if not force and now - self._watch_cache[0] < 120:
                 return list(self._watch_cache[1])
-        _, data = self._clients()
-        watch_payload = _response_json(data.watchlist.get_watchlist())
-        watchlists = _list_payload(watch_payload, "watchlists", "items")
-        normalized = []
-        for watch in watchlists:
-            wid = str(watch.get("watchlist_id") or watch.get("watchlistId") or watch.get("id") or "")
-            entry = {
-                "watchlist_id": wid,
-                "name": watch.get("name") or watch.get("watchlist_name") or "Watchlist",
-                "instruments": [],
-            }
-            if wid:
-                try:
-                    instruments_payload = _response_json(data.watchlist.get_instruments(wid))
-                    instruments = _list_payload(instruments_payload, "instruments", "items")
-                    entry["instruments"] = [
-                        {
-                            "symbol": str(i.get("symbol") or "").upper(),
-                            "name": i.get("name") or "",
-                            "exchange": i.get("exchange_code") or i.get("exchange") or "",
-                        }
-                        for i in instruments if i.get("symbol")
-                    ]
-                except Exception as exc:
-                    entry["error"] = str(exc)
-            normalized.append(entry)
+        with self._api_lock:
+            _, data = self._clients()
+            watch_payload = _response_json(data.watchlist.get_watchlist())
+            watchlists = _list_payload(watch_payload, "watchlists", "items")
+            normalized = []
+            for watch in watchlists:
+                wid = str(watch.get("watchlist_id") or watch.get("watchlistId") or watch.get("id") or "")
+                entry = {
+                    "watchlist_id": wid,
+                    "name": watch.get("name") or watch.get("watchlist_name") or "Watchlist",
+                    "instruments": [],
+                }
+                if wid:
+                    try:
+                        instruments_payload = _response_json(data.watchlist.get_instruments(wid))
+                        instruments = _list_payload(instruments_payload, "instruments", "items")
+                        entry["instruments"] = [
+                            {
+                                "symbol": str(i.get("symbol") or "").upper(),
+                                "name": i.get("name") or "",
+                                "exchange": i.get("exchange_code") or i.get("exchange") or "",
+                            }
+                            for i in instruments if i.get("symbol")
+                        ]
+                    except Exception as exc:
+                        entry["error"] = str(exc)[:180]
+                normalized.append(entry)
         with self._lock:
             self._watch_cache = (now, list(normalized))
         return normalized
@@ -221,101 +233,124 @@ class WebullReadOnly:
             if not force and now - self._summary_cache[0] < 15 and self._summary_cache[1]:
                 return dict(self._summary_cache[1])
         try:
-            account_id, account, accounts = self._selected_account()
-            if not account_id:
+            with self._api_lock:
+                account_id, account, accounts = self._selected_account()
+                if not account_id:
+                    result = {
+                        "configured": True, "connected": True, "read_only": True,
+                        "environment": self.environment,
+                        "needs_account_selection": True,
+                        "accounts": [self._safe_account(a) for a in accounts],
+                        "positions": [], "watchlists": [], "balance": {},
+                        "error": "Multiple Webull accounts found; select WEBULL_ACCOUNT_ID",
+                        "updated": time.time(),
+                    }
+                    with self._lock:
+                        self._summary_cache = (now, result)
+                    return result
+
+                trade, _ = self._clients()
+                balance_raw = _response_json(trade.account_v2.get_account_balance(account_id))
+                positions_raw = _response_json(trade.account_v2.get_account_position(account_id))
+
+                positions_list = _list_payload(positions_raw, "positions", "items")
+                if not positions_list and isinstance(positions_raw, list):
+                    positions_list = positions_raw
+                positions = []
+                for p in positions_list:
+                    qty = _float(p.get("quantity") or p.get("qty"))
+                    avg = _float(p.get("cost_price") or p.get("avg_cost") or p.get("average_cost"))
+                    last = _float(p.get("last_price") or p.get("market_price"))
+                    upl = _float(p.get("unrealized_profit_loss") or p.get("unrealized_pl"))
+
+                    # Preserve account-native fields rather than reconstructing
+                    # values the Webull account endpoint already provides.
+                    raw_cost = _float(p.get("cost"))
+                    raw_market_value = _float(p.get("market_value"))
+                    raw_upl_rate = _float(p.get("unrealized_profit_loss_rate"))
+                    raw_proportion = _float(p.get("proportion"))
+                    day_pl = _float(p.get("day_profit_loss"))
+                    day_realized_pl = _float(p.get("day_realized_profit_loss"))
+
+                    market_value = raw_market_value if raw_market_value is not None else ((qty * last) if qty is not None and last is not None else None)
+                    cost_basis = raw_cost if raw_cost is not None else ((qty * avg) if qty is not None and avg is not None else None)
+                    if raw_upl_rate is not None:
+                        total_pct = raw_upl_rate * 100 if abs(raw_upl_rate) <= 1 else raw_upl_rate
+                    else:
+                        total_pct = (upl / cost_basis * 100) if upl is not None and cost_basis else None
+                    if raw_proportion is not None:
+                        proportion_pct = raw_proportion * 100 if abs(raw_proportion) <= 1 else raw_proportion
+                    else:
+                        proportion_pct = None
+
+                    symbol = str(p.get("symbol") or "").upper()
+                    if not symbol:
+                        continue
+                    positions.append({
+                        "symbol": symbol,
+                        "instrument_type": p.get("instrument_type") or "",
+                        "quantity": qty,
+                        "average_cost": avg,
+                        "last_price": last,
+                        "market_value": market_value,
+                        "cost_basis": cost_basis,
+                        "unrealized_pl": upl,
+                        "unrealized_pct": total_pct,
+                        "day_pl": day_pl,
+                        "day_realized_pl": day_realized_pl,
+                        "proportion_pct": proportion_pct,
+                        "currency": p.get("currency") or "USD",
+                        "event_outcome": p.get("event_outcome") or "",
+                    })
+
+                balance = self._normalize_balance(balance_raw)
+                try:
+                    watchlists = self.watchlists()
+                    watch_error = None
+                except Exception as exc:
+                    watchlists, watch_error = [], str(exc)[:180]
+
+                # Enrich owned positions with one batch Webull market snapshot.
+                # Lack of a market-data entitlement is non-fatal.
+                symbols = [p["symbol"] for p in positions if p.get("instrument_type") in ("", "EQUITY")]
+                market = self.market_quotes(symbols)
+                for p in positions:
+                    m = market.get(p["symbol"])
+                    if m:
+                        p["market"] = m
+                        if m.get("price") is not None:
+                            p["last_price"] = m["price"]
+                            if p.get("quantity") is not None:
+                                p["market_value"] = p["quantity"] * m["price"]
+                        prev = m.get("prev_close")
+                        current = m.get("price")
+                        if p.get("day_pl") is None and p.get("quantity") is not None and current is not None and prev is not None:
+                            p["day_pl"] = p["quantity"] * (current - prev)
+                        if p.get("quantity") is not None and current is not None and prev is not None:
+                            p["day_pct"] = ((current - prev) / prev * 100) if prev else None
+                    elif p.get("last_price") is not None:
+                        p["market"] = {"symbol": p["symbol"], "price": p["last_price"], "source": "webull-position"}
+
                 result = {
                     "configured": True, "connected": True, "read_only": True,
                     "environment": self.environment,
-                    "needs_account_selection": True,
-                    "accounts": [self._safe_account(a) for a in accounts],
-                    "positions": [], "watchlists": [], "balance": {},
-                    "error": "Multiple Webull accounts found; select WEBULL_ACCOUNT_ID",
+                    "account": self._safe_account(account or {"account_id": account_id}),
+                    "balance": balance,
+                    "positions": positions,
+                    "watchlists": watchlists,
+                    "watchlist_error": watch_error,
+                    "market_data_enabled": self.use_market_data,
+                    "market_data_connected": bool(market),
+                    "market_data_error": self._market_last_error,
+                    "updated": time.time(),
+                    "error": None,
                 }
-                with self._lock:
-                    self._summary_cache = (now, result)
-                return result
-
-            trade, _ = self._clients()
-            balance_raw = _response_json(trade.account_v2.get_account_balance(account_id))
-            positions_raw = _response_json(trade.account_v2.get_account_position(account_id))
-            positions_list = _list_payload(positions_raw, "positions", "items")
-            if not positions_list and isinstance(positions_raw, list):
-                positions_list = positions_raw
-            positions = []
-            for p in positions_list:
-                qty = _float(p.get("quantity") or p.get("qty"))
-                avg = _float(p.get("cost_price") or p.get("avg_cost") or p.get("average_cost"))
-                last = _float(p.get("last_price") or p.get("market_price"))
-                upl = _float(p.get("unrealized_profit_loss") or p.get("unrealized_pl"))
-                market_value = (qty * last) if qty is not None and last is not None else None
-                cost_basis = (qty * avg) if qty is not None and avg is not None else None
-                total_pct = (upl / cost_basis * 100) if upl is not None and cost_basis else None
-                symbol = str(p.get("symbol") or "").upper()
-                if not symbol:
-                    continue
-                positions.append({
-                    "symbol": symbol,
-                    "instrument_type": p.get("instrument_type") or "",
-                    "quantity": qty,
-                    "average_cost": avg,
-                    "last_price": last,
-                    "market_value": market_value,
-                    "cost_basis": cost_basis,
-                    "unrealized_pl": upl,
-                    "unrealized_pct": total_pct,
-                    "currency": p.get("currency") or "USD",
-                    "event_outcome": p.get("event_outcome") or "",
-                })
-
-            balance = self._normalize_balance(balance_raw)
-            try:
-                watchlists = self.watchlists()
-                watch_error = None
-            except Exception as exc:
-                watchlists, watch_error = [], str(exc)
-
-            # Enrich owned positions with one batch Webull market snapshot. The
-            # market query requests regular, extended-hours and overnight data.
-            # Failure is non-fatal: account/position data remains available and
-            # the existing public quote fallback continues to work.
-            symbols = [p["symbol"] for p in positions if p.get("instrument_type") in ("", "EQUITY")]
-            market = self.market_quotes(symbols)
-            for p in positions:
-                m = market.get(p["symbol"])
-                if m:
-                    p["market"] = m
-                    if m.get("price") is not None:
-                        p["last_price"] = m["price"]
-                        if p.get("quantity") is not None:
-                            p["market_value"] = p["quantity"] * m["price"]
-                    prev = m.get("prev_close")
-                    current = m.get("price")
-                    if p.get("quantity") is not None and current is not None and prev is not None:
-                        p["day_pl"] = p["quantity"] * (current - prev)
-                        p["day_pct"] = ((current - prev) / prev * 100) if prev else None
-                elif p.get("last_price") is not None:
-                    p["market"] = {"symbol": p["symbol"], "price": p["last_price"], "source": "webull-position"}
-
-            result = {
-                "configured": True, "connected": True, "read_only": True,
-                "environment": self.environment,
-                "account": self._safe_account(account or {"account_id": account_id}),
-                "balance": balance,
-                "positions": positions,
-                "watchlists": watchlists,
-                "watchlist_error": watch_error,
-                "market_data_enabled": self.use_market_data,
-                "market_data_connected": bool(market),
-                "market_data_error": self._market_last_error,
-                "updated": time.time(),
-                "error": None,
-            }
         except Exception as exc:
             result = {
                 "configured": True, "connected": False, "read_only": True,
                 "environment": self.environment,
                 "positions": [], "watchlists": [], "balance": {},
-                "error": str(exc),
+                "error": str(exc)[:240],
                 "updated": time.time(),
             }
         with self._lock:
@@ -448,14 +483,13 @@ class WebullReadOnly:
             if not force and cached_syms == syms and now - ts < 20:
                 return dict(cached)
         try:
-            _, data = self._clients()
-            # Official SDK supports a symbol list (up to 100) and optional
-            # extended-hours / overnight fields in the same snapshot request.
-            payload = _response_json(data.market_data.get_snapshot(
-                list(syms), "US_STOCK",
-                extend_hour_required=True,
-                overnight_required=True,
-            ))
+            with self._api_lock:
+                _, data = self._clients()
+                payload = _response_json(data.market_data.get_snapshot(
+                    list(syms), "US_STOCK",
+                    extend_hour_required=True,
+                    overnight_required=True,
+                ))
             quotes = {}
             for row in self._snapshot_rows(payload):
                 q = self._normalize_snapshot(row)
