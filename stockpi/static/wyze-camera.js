@@ -1,7 +1,16 @@
 (() => {
   const STREAM_NAME='farm_backyard_cam';
-  const PLAYER_PAGE=`http://farmpi.local:5080/camera/${STREAM_NAME}`;
-  const HLS_URL=`http://farmpi.local:5080/hls/${STREAM_NAME}.m3u8`;
+  const PLAYER_PAGE=`${location.protocol}//${location.hostname}:5080/camera/${STREAM_NAME}`;
+  const HLS_URL=`${location.protocol}//${location.hostname}:5080/hls/${STREAM_NAME}.m3u8`;
+
+  function loadMotionAssets(){
+    if(!document.querySelector('link[href="/static/camera-motion.css"]')){
+      const l=document.createElement('link');l.rel='stylesheet';l.href='/static/camera-motion.css';document.head.appendChild(l);
+    }
+    if(!document.querySelector('script[src="/static/camera-motion.js"]')){
+      const s=document.createElement('script');s.src='/static/camera-motion.js';s.defer=true;document.body.appendChild(s);
+    }
+  }
 
   function install(){
     const placeholder=document.getElementById('cameraPlaceholder4');
@@ -22,6 +31,7 @@
   }
 
   function boot(){
+    loadMotionAssets();
     if(install())return;
     const main=document.querySelector('main.screens')||document.body;
     const obs=new MutationObserver(()=>{if(install())obs.disconnect()});
