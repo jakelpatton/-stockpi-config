@@ -31,8 +31,9 @@ install -m 644 "$SOURCE_DIR/static/camera-motion.css" "$APPDIR/static/camera-mot
 install -m 644 "$SOURCE_DIR/static/wyze-camera.js" "$APPDIR/static/wyze-camera.js"
 
 # Build a private go2rtc config from the existing Amcrest credentials.
-# The RTSP URLs use the NVR's main stream (subtype=0), preserving the camera's
-# native H.264 resolution/bitrate/FPS with no transcoding on the Pi.
+# Use NVR substream 1 (subtype=1) for the fullscreen motion view. This keeps
+# continuous camera bandwidth and Pi/browser decode load much lower than the
+# native-resolution main streams while retaining real-time H.264 video.
 mkdir -p "$AMCREST_GO2RTC"
 chmod 700 "$AMCREST_GO2RTC"
 PI_IP="$(hostname -I | awk '{print $1}')"
@@ -58,7 +59,7 @@ if not password:
     raise SystemExit('AMCREST_NVR_PASSWORD is empty')
 
 def rtsp(channel):
-    return f'rtsp://{user}:{password}@{ip}:554/cam/realmonitor?channel={channel}&subtype=0'
+    return f'rtsp://{user}:{password}@{ip}:554/cam/realmonitor?channel={channel}&subtype=1'
 
 streams = {
     'front_porch': rtsp(1),
@@ -96,10 +97,10 @@ docker run -d \
   -v "$AMCREST_GO2RTC:/config:ro" \
   alexxit/go2rtc:latest >/dev/null
 
-echo "Amcrest native-resolution go2rtc relay started."
-echo "  Front Porch:     NVR channel 1 main stream • 1920x1080 H.264 @ 30 fps"
-echo "  Rockhouse Front: NVR channel 2 main stream • 2688x1520 H.264 @ 20 fps"
-echo "  Rockhouse Back:  NVR channel 3 main stream • 3840x2160 H.264 @ 15 fps"
+echo "Amcrest substream go2rtc relay started."
+echo "  Front Porch:     NVR channel 1 substream 1"
+echo "  Rockhouse Front: NVR channel 2 substream 1"
+echo "  Rockhouse Back:  NVR channel 3 substream 1"
 echo "  Browser relay:   localhost-only on 127.0.0.1:1985"
 echo "  WebRTC media:    $PI_IP:8556"
 
@@ -158,7 +159,7 @@ echo
 echo "Camera motion alert system installed."
 echo "Motion API: http://farmpi.local:8091/api/motion"
 echo "Behavior: newest detected camera goes full-screen; returns on motion Stop or after 10 seconds."
-echo "Amcrest: native main-stream RTSP -> go2rtc -> WebRTC; no JPEG refresh and no transcoding."
+echo "Amcrest: substream-1 RTSP -> go2rtc -> WebRTC; no JPEG refresh and no transcoding."
 echo "Wyze: read-only cloud motion events; working Floodlight Pro WebRTC remains on port 5080."
 echo "Backup: $APPDIR/backups/$STAMP"
 echo
