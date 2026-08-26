@@ -22,10 +22,65 @@ install -m 700 "$SOURCE_DIR/webull_setup.py" "$APPDIR/webull_setup.py"
 printf '\nWebull OpenAPI credentials are stored only on this Raspberry Pi.\n'
 printf 'They will be written to %s with mode 600.\n\n' "$ENVFILE"
 
-read -r -s -p "Webull App Key: " WEBULL_APP_KEY
-echo
-read -r -s -p "Webull App Secret: " WEBULL_APP_SECRET
-echo
+is_repeated_value() {
+  local value="$1" len part n repeated i
+  len=${#value}
+  for n in 2 3 4; do
+    if (( len > 0 && len % n == 0 )); then
+      part="${value:0:len/n}"
+      repeated=""
+      for ((i=0; i<n; i++)); do repeated+="$part"; done
+      if [ "$value" = "$repeated" ]; then
+        echo "$n"
+        return 0
+      fi
+    fi
+  done
+  return 1
+}
+
+while true; do
+  read -r -s -p "Webull App Key (paste once): " WEBULL_APP_KEY
+  echo
+  WEBULL_APP_KEY="${WEBULL_APP_KEY//$'\r'/}"
+  if [ -z "$WEBULL_APP_KEY" ]; then
+    echo "App Key cannot be blank."
+    continue
+  fi
+  if [[ "$WEBULL_APP_KEY" =~ [[:space:]] ]]; then
+    echo "App Key contains whitespace. Copy only the key value from Webull."
+    continue
+  fi
+  if repeats="$(is_repeated_value "$WEBULL_APP_KEY")"; then
+    echo "The App Key appears to have been pasted $repeats times consecutively."
+    echo "Please paste the Webull App Key exactly once."
+    continue
+  fi
+  echo "Captured App Key length: ${#WEBULL_APP_KEY} characters (value hidden)."
+  break
+done
+
+while true; do
+  read -r -s -p "Webull App Secret (paste once): " WEBULL_APP_SECRET
+  echo
+  WEBULL_APP_SECRET="${WEBULL_APP_SECRET//$'\r'/}"
+  if [ -z "$WEBULL_APP_SECRET" ]; then
+    echo "App Secret cannot be blank."
+    continue
+  fi
+  if [[ "$WEBULL_APP_SECRET" =~ [[:space:]] ]]; then
+    echo "App Secret contains whitespace. Copy only the secret value from Webull."
+    continue
+  fi
+  if repeats="$(is_repeated_value "$WEBULL_APP_SECRET")"; then
+    echo "The App Secret appears to have been pasted $repeats times consecutively."
+    echo "Please paste the Webull App Secret exactly once."
+    continue
+  fi
+  echo "Captured App Secret length: ${#WEBULL_APP_SECRET} characters (value hidden)."
+  break
+done
+
 read -r -p "Environment [prod/sandbox] (default prod): " WEBULL_ENVIRONMENT
 WEBULL_ENVIRONMENT="${WEBULL_ENVIRONMENT:-prod}"
 
