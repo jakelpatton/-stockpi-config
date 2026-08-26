@@ -1,7 +1,7 @@
 """Read-only Webull OpenAPI integration for the Farm dashboard.
 
 This module intentionally exposes only GET/query operations: account list, balance,
-positions, watchlists, and market snapshots.  It contains no order placement,
+positions, watchlists, and market-data queries. It contains no order placement,
 replacement, cancellation, transfer, or withdrawal methods.
 
 Credentials are loaded from ~/farmpi/webull.env (or WEBULL_ENV_FILE) and the
@@ -19,7 +19,9 @@ from typing import Any
 
 # The official SDK's default error logger can dump complete signed request
 # headers, including the App Key. Keep those credential-bearing request dumps
-# out of the dashboard journal; callers still receive the concise exception.
+# out of the dashboard journal; callers still receive concise exceptions.
+logging.getLogger("webull").setLevel(logging.CRITICAL)
+logging.getLogger("webull.core").setLevel(logging.CRITICAL)
 logging.getLogger("webull.core.client").setLevel(logging.CRITICAL)
 
 try:
@@ -87,6 +89,7 @@ class WebullReadOnly:
         self._watch_cache: tuple[float, list] = (0.0, [])
         self._quote_cache: tuple[float, tuple[str, ...], dict] = (0.0, tuple(), {})
         self._market_retry_after = 0.0
+        self._market_last_error = None
         self._client_key = None
         self._api = self._trade = self._data = None
         self.reload()
@@ -110,6 +113,8 @@ class WebullReadOnly:
             self._accounts_cache = (0.0, [])
             self._watch_cache = (0.0, [])
             self._quote_cache = (0.0, tuple(), {})
+            self._market_retry_after = 0.0
+            self._market_last_error = None
 
     @property
     def configured(self) -> bool:
@@ -226,7 +231,8 @@ class WebullReadOnly:
                     "positions": [], "watchlists": [], "balance": {},
                     "error": "Multiple Webull accounts found; select WEBULL_ACCOUNT_ID",
                 }
-                with self._lock: self._summary_cache = (now, result)
+                with self._lock:
+                    self._summary_cache = (now, result)
                 return result
 
             trade, _ = self._clients()
@@ -249,6 +255,7 @@ class WebullReadOnly:
                     continue
                 positions.append({
                     "symbol": symbol,
+                    "instrument_type": p.get("instrument_type") or "",
                     "quantity": qty,
                     "average_cost": avg,
                     "last_price": last,
@@ -257,6 +264,7 @@ class WebullReadOnly:
                     "unrealized_pl": upl,
                     "unrealized_pct": total_pct,
                     "currency": p.get("currency") or "USD",
+                    "event_outcome": p.get("event_outcome") or "",
                 })
 
             balance = self._normalize_balance(balance_raw)
@@ -265,6 +273,29 @@ class WebullReadOnly:
                 watch_error = None
             except Exception as exc:
                 watchlists, watch_error = [], str(exc)
+
+            # Enrich owned positions with one batch Webull market snapshot. The
+            # market query requests regular, extended-hours and overnight data.
+            # Failure is non-fatal: account/position data remains available and
+            # the existing public quote fallback continues to work.
+            symbols = [p["symbol"] for p in positions if p.get("instrument_type") in ("", "EQUITY")]
+            market = self.market_quotes(symbols)
+            for p in positions:
+                m = market.get(p["symbol"])
+                if m:
+                    p["market"] = m
+                    if m.get("price") is not None:
+                        p["last_price"] = m["price"]
+                        if p.get("quantity") is not None:
+                            p["market_value"] = p["quantity"] * m["price"]
+                    prev = m.get("prev_close")
+                    current = m.get("price")
+                    if p.get("quantity") is not None and current is not None and prev is not None:
+                        p["day_pl"] = p["quantity"] * (current - prev)
+                        p["day_pct"] = ((current - prev) / prev * 100) if prev else None
+                elif p.get("last_price") is not None:
+                    p["market"] = {"symbol": p["symbol"], "price": p["last_price"], "source": "webull-position"}
+
             result = {
                 "configured": True, "connected": True, "read_only": True,
                 "environment": self.environment,
@@ -274,6 +305,8 @@ class WebullReadOnly:
                 "watchlists": watchlists,
                 "watchlist_error": watch_error,
                 "market_data_enabled": self.use_market_data,
+                "market_data_connected": bool(market),
+                "market_data_error": self._market_last_error,
                 "updated": time.time(),
                 "error": None,
             }
@@ -302,25 +335,107 @@ class WebullReadOnly:
         d = raw.get("balance", raw) if isinstance(raw, dict) else {}
         assets = d.get("account_currency_assets") if isinstance(d, dict) else None
         usd = next((x for x in assets or [] if x.get("currency") == "USD"), (assets or [{}])[0] if assets else {})
+
         def first(*keys):
             for key in keys:
                 v = _float(d.get(key)) if isinstance(d, dict) else None
-                if v is not None: return v
+                if v is not None:
+                    return v
                 v = _float(usd.get(key)) if isinstance(usd, dict) else None
-                if v is not None: return v
+                if v is not None:
+                    return v
             return None
+
+        calls = d.get("open_margin_calls") if isinstance(d, dict) else None
         return {
             "currency": d.get("total_asset_currency") or usd.get("currency") or "USD",
             "cash": first("total_cash_balance", "cash_balance"),
+            "settled_cash": first("settled_cash"),
+            "unsettled_cash": first("unsettled_cash"),
+            "held_amount": first("held_amount"),
             "buying_power": first("buying_power", "overnight_buying_power", "day_buying_power"),
+            "day_buying_power": first("day_buying_power"),
+            "overnight_buying_power": first("overnight_buying_power"),
+            "night_trading_buying_power": first("night_trading_buying_power"),
+            "available_withdrawal": first("available_withdrawal"),
             "market_value": first("total_market_value", "market_value"),
             "net_liquidation_value": first("total_net_liquidation_value", "net_liquidation_value"),
             "day_pl": first("total_day_profit_loss", "day_profit_loss"),
             "unrealized_pl": first("total_unrealized_profit_loss", "unrealized_profit_loss"),
+            "maintenance_margin": first("maintenance_margin"),
+            "interests_unpaid": first("interests_unpaid"),
+            "open_margin_calls": calls if isinstance(calls, list) else ([] if not calls else calls),
+        }
+
+    @staticmethod
+    def _snapshot_rows(payload: Any) -> list[dict]:
+        rows = _list_payload(payload, "snapshots", "items", "quotes")
+        if rows:
+            return [x for x in rows if isinstance(x, dict)]
+        if isinstance(payload, dict):
+            data = payload.get("data")
+            if isinstance(data, dict) and (data.get("symbol") or data.get("ticker")):
+                return [data]
+            if payload.get("symbol") or payload.get("ticker"):
+                return [payload]
+        return []
+
+    @staticmethod
+    def _normalize_snapshot(row: dict) -> dict:
+        symbol = str(row.get("symbol") or row.get("ticker") or "").upper()
+        price = _float(row.get("price") or row.get("last_price") or row.get("close"))
+        prev = _float(row.get("pre_close") or row.get("prev_close") or row.get("previous_close"))
+        change = _float(row.get("change"))
+        pct = _float(row.get("change_ratio") or row.get("change_rate") or row.get("pct"))
+        if pct is not None and abs(pct) <= 1 and row.get("change_ratio") is not None:
+            pct *= 100
+        if change is None and price is not None and prev is not None:
+            change = price - prev
+        if pct is None and change is not None and prev:
+            pct = change / prev * 100
+
+        ext_pct = _float(row.get("ext_change_ratio") or row.get("extended_change_ratio"))
+        ovn_pct = _float(row.get("ovn_change_ratio") or row.get("overnight_change_ratio"))
+        if ext_pct is not None and abs(ext_pct) <= 1:
+            ext_pct *= 100
+        if ovn_pct is not None and abs(ovn_pct) <= 1:
+            ovn_pct *= 100
+
+        return {
+            "symbol": symbol,
+            "price": price,
+            "prev_close": prev,
+            "change": change,
+            "pct": pct,
+            "open": _float(row.get("open")),
+            "high": _float(row.get("high")),
+            "low": _float(row.get("low")),
+            "volume": _float(row.get("volume")),
+            "turnover": _float(row.get("turnover") or row.get("turnover_rate")),
+            "trade_time": row.get("trade_time") or row.get("time") or "",
+            "ext_trade_time": row.get("ext_trade_time") or row.get("extended_trade_time") or "",
+            "ext_price": _float(row.get("ext_price") or row.get("extended_price")),
+            "ext_high": _float(row.get("ext_high") or row.get("extended_high")),
+            "ext_low": _float(row.get("ext_low") or row.get("extended_low")),
+            "ext_volume": _float(row.get("ext_volume") or row.get("extended_volume")),
+            "ext_change": _float(row.get("ext_change") or row.get("extended_change")),
+            "ext_pct": ext_pct,
+            "ovn_trade_time": row.get("ovn_trade_time") or row.get("overnight_trade_time") or "",
+            "ovn_price": _float(row.get("ovn_price") or row.get("overnight_price")),
+            "ovn_high": _float(row.get("ovn_high") or row.get("overnight_high")),
+            "ovn_low": _float(row.get("ovn_low") or row.get("overnight_low")),
+            "ovn_volume": _float(row.get("ovn_volume") or row.get("overnight_volume")),
+            "ovn_change": _float(row.get("ovn_change") or row.get("overnight_change")),
+            "ovn_pct": ovn_pct,
+            "source": "webull",
         }
 
     def market_quotes(self, symbols: list[str], force: bool = False) -> dict[str, dict]:
-        """Try Webull market snapshots. Returns {} when unavailable/subscription is absent."""
+        """Try official Webull snapshots including extended/overnight fields.
+
+        Returns {} when OpenAPI market-data entitlement is unavailable. No write or
+        trading methods are used.
+        """
         self.reload()
         if not self.configured or not self.use_market_data or time.time() < self._market_retry_after:
             return {}
@@ -334,27 +449,27 @@ class WebullReadOnly:
                 return dict(cached)
         try:
             _, data = self._clients()
-            payload = _response_json(data.market_data.get_snapshot(symbols=list(syms), category="US_STOCK"))
-            rows = _list_payload(payload, "snapshots", "items")
-            if not rows and isinstance(payload, list): rows = payload
+            # Official SDK supports a symbol list (up to 100) and optional
+            # extended-hours / overnight fields in the same snapshot request.
+            payload = _response_json(data.market_data.get_snapshot(
+                list(syms), "US_STOCK",
+                extend_hour_required=True,
+                overnight_required=True,
+            ))
             quotes = {}
-            for row in rows:
-                symbol = str(row.get("symbol") or "").upper()
-                if not symbol: continue
-                price = _float(row.get("price") or row.get("last_price") or row.get("close"))
-                prev = _float(row.get("pre_close") or row.get("prev_close") or row.get("previous_close"))
-                change = _float(row.get("change"))
-                pct = _float(row.get("change_ratio") or row.get("change_rate") or row.get("pct"))
-                if pct is not None and abs(pct) <= 1 and row.get("change_ratio") is not None:
-                    pct *= 100
-                if change is None and price is not None and prev is not None: change = price - prev
-                if pct is None and change is not None and prev: pct = change / prev * 100
-                quotes[symbol] = {"symbol": symbol, "price": price, "prev_close": prev, "change": change, "pct": pct, "source": "webull"}
-            with self._lock: self._quote_cache = (now, syms, quotes)
+            for row in self._snapshot_rows(payload):
+                q = self._normalize_snapshot(row)
+                if q["symbol"]:
+                    quotes[q["symbol"]] = q
+            self._market_last_error = None
+            self._market_retry_after = 0.0
+            with self._lock:
+                self._quote_cache = (now, syms, quotes)
             return quotes
-        except Exception:
-            # Avoid repeatedly hammering an endpoint when the user's OpenAPI market-data
+        except Exception as exc:
+            # Avoid repeatedly hammering an endpoint when the OpenAPI market-data
             # subscription is absent. Public quote fallback remains available.
+            self._market_last_error = str(exc)[:240]
             self._market_retry_after = time.time() + 600
             return {}
 
