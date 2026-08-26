@@ -1,0 +1,54 @@
+/* Large-format market rotation for a 1920x1080 TV viewed across the room. */
+.market-sequence-screen{padding:18px 30px 16px;box-sizing:border-box}
+.market-sequence-screen .market-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:14px}
+.market-sequence-screen .market-heading .eyebrow{font:800 12px/1.2 var(--estate-sans,Arial,sans-serif);letter-spacing:.18em;text-transform:uppercase;color:var(--estate-brass,#b7904a)}
+.market-sequence-screen .market-heading h2{margin:3px 0 0;font:600 34px/1.05 var(--estate-serif,Georgia,serif)}
+.market-sequence-screen .market-heading .market-caption{font:700 12px/1.3 var(--estate-sans,Arial,sans-serif);letter-spacing:.06em;color:var(--estate-muted,#9ca3af);text-align:right}
+.market-panel{border:1px solid var(--estate-line,rgba(183,144,74,.28));background:rgba(7,18,15,.82);box-shadow:0 14px 42px rgba(0,0,0,.22)}
+.market-up{color:var(--estate-good,#74b88a)!important}.market-down{color:#e48a7a!important}.market-flat{color:var(--estate-ivory,#eee7d7)!important}
+.market-kicker{font:800 11px/1.15 var(--estate-sans,Arial,sans-serif);letter-spacing:.12em;text-transform:uppercase;color:var(--estate-muted,#a7aa9f)}
+
+/* Portfolio overview */
+.portfolio-summary-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.portfolio-summary-grid>div{padding:13px 14px;min-height:72px}
+.portfolio-summary-grid span{display:block;font:800 10px/1.15 var(--estate-sans,Arial,sans-serif);letter-spacing:.1em;text-transform:uppercase;color:var(--estate-muted,#a7aa9f)}
+.portfolio-summary-grid b{display:block;margin-top:7px;font:600 23px/1 var(--estate-serif,Georgia,serif);white-space:nowrap}
+.portfolio-summary-main{display:grid;grid-template-columns:1.55fr .75fr;gap:12px}
+.portfolio-holdings{padding:12px 14px}
+.portfolio-holding-row{display:grid;grid-template-columns:110px 125px 145px 145px 155px 125px 1fr;align-items:center;gap:8px;padding:12px 4px;border-bottom:1px solid var(--estate-line,rgba(183,144,74,.18))}
+.portfolio-holding-row:last-child{border-bottom:0}.portfolio-holding-row.head{padding-top:3px;padding-bottom:7px}
+.portfolio-holding-row.head span{font:800 9px var(--estate-sans,Arial,sans-serif);letter-spacing:.1em;text-transform:uppercase;color:var(--estate-muted,#a7aa9f)}
+.portfolio-holding-row b{font:600 17px/1.1 var(--estate-serif,Georgia,serif)}
+.portfolio-holding-row .ticker{font-size:24px;color:var(--estate-brass,#d1b06c)}
+.portfolio-side{padding:14px 16px;display:flex;flex-direction:column;gap:12px}
+.portfolio-side .big-account{padding-bottom:12px;border-bottom:1px solid var(--estate-line,rgba(183,144,74,.18))}
+.portfolio-side .big-account b{display:block;margin-top:7px;font:600 31px/1 var(--estate-serif,Georgia,serif)}
+.portfolio-side .detail-pair{display:flex;justify-content:space-between;gap:12px;font:700 14px/1.2 var(--estate-sans,Arial,sans-serif)}
+.portfolio-side .detail-pair span{color:var(--estate-muted,#a7aa9f)}
+
+/* One owned stock per page */
+.owned-hero{display:grid;grid-template-columns:1.08fr .92fr;gap:14px;height:calc(100% - 62px)}
+.owned-primary,.owned-secondary{padding:18px 20px;min-height:0}
+.owned-symbol-line{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;padding-bottom:12px;border-bottom:1px solid var(--estate-line,rgba(183,144,74,.22))}
+.owned-ticker{font:700 58px/.95 var(--estate-serif,Georgia,serif);letter-spacing:.02em}.owned-company{margin-top:5px;font:700 14px var(--estate-sans,Arial,sans-serif);color:var(--estate-muted,#a7aa9f)}
+.owned-weight{text-align:right}.owned-weight b{display:block;font:600 30px/1 var(--estate-serif,Georgia,serif)}.owned-weight span{font:800 10px var(--estate-sans,Arial,sans-serif);letter-spacing:.09em;color:var(--estate-muted,#a7aa9f)}
+.owned-price-row{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;padding:14px 0}
+.owned-price{font:600 52px/.95 var(--estate-serif,Georgia,serif)}.owned-day{text-align:right;font:800 16px/1.35 var(--estate-sans,Arial,sans-serif)}
+.owned-metric-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.owned-metric{padding:11px 12px;border:1px solid var(--estate-line,rgba(183,144,74,.18));background:rgba(255,255,255,.025)}
+.owned-metric span{display:block;font:800 9px var(--estate-sans,Arial,sans-serif);letter-spacing:.1em;text-transform:uppercase;color:var(--estate-muted,#a7aa9f)}.owned-metric b{display:block;margin-top:5px;font:600 20px/1.1 var(--estate-serif,Georgia,serif)}
+.rec-box{padding:15px 16px;border:1px solid rgba(183,144,74,.42);background:rgba(183,144,74,.055);margin-bottom:12px}
+.rec-box .rec-title{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}.rec-box .rec-title b{font:700 18px var(--estate-serif,Georgia,serif)}.rec-box .rec-title span{font:800 10px var(--estate-sans,Arial,sans-serif);letter-spacing:.07em;color:var(--estate-muted,#a7aa9f);text-align:right}
+.rec-levels{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.rec-levels>div{padding:11px 9px;border:1px solid var(--estate-line,rgba(183,144,74,.2));text-align:center}.rec-levels span{display:block;font:800 9px var(--estate-sans,Arial,sans-serif);letter-spacing:.08em;text-transform:uppercase;color:var(--estate-muted,#a7aa9f)}.rec-levels b{display:block;margin-top:6px;font:600 24px var(--estate-serif,Georgia,serif)}
+.rec-status{margin-top:10px;font:800 12px/1.25 var(--estate-sans,Arial,sans-serif);letter-spacing:.05em}.rec-note{margin-top:9px;font:600 13px/1.35 var(--estate-sans,Arial,sans-serif);color:var(--estate-ivory,#eee7d7)}
+.activity-box{padding:14px 16px;margin-top:12px}.activity-box .activity-main{margin-top:7px;font:700 18px/1.25 var(--estate-sans,Arial,sans-serif)}.activity-box .activity-sub{margin-top:5px;font:700 11px/1.25 var(--estate-sans,Arial,sans-serif);color:var(--estate-muted,#a7aa9f)}
+
+/* Limit orders */
+.limit-list{display:grid;grid-template-columns:1fr;gap:10px}.limit-order{display:grid;grid-template-columns:110px 115px 145px 160px 145px 135px 1fr;align-items:center;gap:12px;padding:16px 18px}.limit-order .ticker{font:700 28px var(--estate-serif,Georgia,serif);color:var(--estate-brass,#d1b06c)}.limit-order span{display:block;font:800 9px var(--estate-sans,Arial,sans-serif);letter-spacing:.09em;text-transform:uppercase;color:var(--estate-muted,#a7aa9f)}.limit-order b{display:block;margin-top:4px;font:600 18px var(--estate-serif,Georgia,serif)}
+.limit-empty{padding:70px 30px;text-align:center}.limit-empty b{display:block;font:600 36px var(--estate-serif,Georgia,serif)}.limit-empty span{display:block;margin-top:12px;font:700 15px var(--estate-sans,Arial,sans-serif);color:var(--estate-muted,#a7aa9f)}
+
+/* Watchlist: four large rows/page */
+.watchlist-grid{display:grid;grid-template-columns:1fr;gap:8px}.watch-row{display:grid;grid-template-columns:105px 1fr 130px 145px 145px 145px 165px;align-items:center;gap:10px;padding:11px 15px;min-height:80px}.watch-row .ticker{font:700 26px var(--estate-serif,Georgia,serif);color:var(--estate-brass,#d1b06c)}.watch-row .company{font:700 13px/1.2 var(--estate-sans,Arial,sans-serif)}.watch-row .company small{display:block;margin-top:4px;color:var(--estate-muted,#a7aa9f);font-size:10px}.watch-row span{display:block;font:800 8px var(--estate-sans,Arial,sans-serif);letter-spacing:.09em;text-transform:uppercase;color:var(--estate-muted,#a7aa9f)}.watch-row b{display:block;margin-top:4px;font:600 17px var(--estate-serif,Georgia,serif)}.watch-row .rec-missing{font:800 11px/1.25 var(--estate-sans,Arial,sans-serif);color:#d7b66e}
+.market-page-count{font:800 10px var(--estate-sans,Arial,sans-serif);letter-spacing:.1em;color:var(--estate-muted,#a7aa9f)}
+
+@media(max-width:1100px){.portfolio-summary-grid{grid-template-columns:repeat(3,1fr)}.portfolio-summary-main,.owned-hero{grid-template-columns:1fr}.portfolio-holding-row{grid-template-columns:90px repeat(5,1fr)}.portfolio-holding-row>*:last-child{display:none}.watch-row{grid-template-columns:90px 1fr repeat(3,120px)}.watch-row>*:nth-child(6),.watch-row>*:nth-child(7){display:none}}
