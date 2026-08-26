@@ -8,38 +8,62 @@ TARGET_HOME="$(getent passwd "$TARGET_USER" | cut -d: -f6)"
 APPDIR="$TARGET_HOME/farmpi"
 
 if [[ -z "$TARGET_HOME" || ! -d "$APPDIR" ]]; then
-  echo "Expected FarmPi dashboard at $APPDIR but it was not found."
+  echo "Expected dashboard at $APPDIR but it was not found."
   exit 1
 fi
 if [[ ! -x "$APPDIR/venv/bin/python" ]]; then
-  echo "FarmPi Python environment is missing at $APPDIR/venv."
+  echo "Dashboard Python environment is missing at $APPDIR/venv."
   exit 1
 fi
 
-echo "Installing final 1838 Estate Portfolio / Markets dashboard for $TARGET_USER..."
+echo "Installing 1838 Estate Portfolio / Markets dashboard for $TARGET_USER..."
 
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
-for file in \
-  owned_chart_server.py \
-  static/stock-identity.js \
-  static/owned-positions.js \
-  static/owned-positions.css \
-  static/estate-tv.js \
-  static/rotation-controller.js; do
+
+FILES=(
+  "templates/dashboard.html"
+  "owned_chart_server.py"
+  "static/stock-identity.js"
+  "static/owned-positions.js"
+  "static/owned-positions.css"
+  "static/estate-tv.js"
+  "static/estate-tv.css"
+  "static/rotation-controller.js"
+  "static/thesis.js"
+  "static/thesis.css"
+  "static/thesis-summary.css"
+  "static/tv-fit.css"
+  "static/webull-activity.js"
+  "static/webull-activity.css"
+  "static/portfolio-enhanced.js"
+  "static/portfolio-enhanced.css"
+  "static/market-sequence.css"
+  "static/market-alerts.js"
+  "static/market-alerts.css"
+  "static/market-watchlist-sync.js"
+  "static/ticker-prices.js"
+  "static/dashboard-watchdog.js"
+)
+
+for file in "${FILES[@]}"; do
   mkdir -p "$TMP/$(dirname "$file")"
-  curl -fsSL "$REPO_RAW/$file" -o "$TMP/$file"
+  echo "  fetching $file"
+  curl -fsSL "$REPO_RAW/$file?cachebust=$(date +%s%N)" -o "$TMP/$file"
 done
 
+# Install the exact base template first. This is important: the old installer only
+# copied enhancement files, leaving an old Farm/Stocks dashboard.html in place.
+install -o "$TARGET_USER" -g "$TARGET_GROUP" -m 0644 "$TMP/templates/dashboard.html" "$APPDIR/templates/dashboard.html"
 install -o "$TARGET_USER" -g "$TARGET_GROUP" -m 0644 "$TMP/owned_chart_server.py" "$APPDIR/owned_chart_server.py"
-install -o "$TARGET_USER" -g "$TARGET_GROUP" -m 0644 "$TMP/static/stock-identity.js" "$APPDIR/static/stock-identity.js"
-install -o "$TARGET_USER" -g "$TARGET_GROUP" -m 0644 "$TMP/static/owned-positions.js" "$APPDIR/static/owned-positions.js"
-install -o "$TARGET_USER" -g "$TARGET_GROUP" -m 0644 "$TMP/static/owned-positions.css" "$APPDIR/static/owned-positions.css"
-install -o "$TARGET_USER" -g "$TARGET_GROUP" -m 0644 "$TMP/static/estate-tv.js" "$APPDIR/static/estate-tv.js"
-install -o "$TARGET_USER" -g "$TARGET_GROUP" -m 0644 "$TMP/static/rotation-controller.js" "$APPDIR/static/rotation-controller.js"
 
-# dashboard_config.json is intentionally preserved by auto-deploy. Repair it here
-# so an old local setting cannot keep the kiosk stuck on Portfolio.
+for file in "${FILES[@]}"; do
+  [[ "$file" == "templates/dashboard.html" || "$file" == "owned_chart_server.py" ]] && continue
+  install -o "$TARGET_USER" -g "$TARGET_GROUP" -m 0644 "$TMP/$file" "$APPDIR/$file"
+done
+
+# dashboard_config.json is intentionally preserved by auto-deploy. Repair it so
+# an old local setting cannot disable or strand rotation.
 APPDIR="$APPDIR" "$APPDIR/venv/bin/python" - <<'PY'
 import json, os
 from pathlib import Path
@@ -98,26 +122,41 @@ if ! wait_for_url "1-day chart service" "http://127.0.0.1:8092/api/health" 30; t
   exit 1
 fi
 
-# The dashboard can take ~20 seconds to start because its startup path warms
-# market/Webull caches. Give it enough time instead of reporting a false failure.
-if ! wait_for_url "1838 Estate dashboard" "http://127.0.0.1:8080/api/health" 45; then
+if ! wait_for_url "1838 Estate dashboard" "http://127.0.0.1:8080/api/health" 60; then
   sudo systemctl status farm-dashboard.service --no-pager || true
-  sudo journalctl -u farm-dashboard.service -n 50 --no-pager || true
+  sudo journalctl -u farm-dashboard.service -n 60 --no-pager || true
   exit 1
 fi
 
+# Verify the SERVER is actually serving the new base template, not merely that
+# Flask is listening.
+HTML="$(curl -fsS --max-time 5 http://127.0.0.1:8080/)"
+if ! grep -q '1838 Estate' <<<"$HTML"; then
+  echo "ERROR: Flask is running but is not serving the 1838 Estate template."
+  echo "Template on disk: $APPDIR/templates/dashboard.html"
+  grep -nE '1838 Estate|<h1>|<title>' "$APPDIR/templates/dashboard.html" | head -n 10 || true
+  exit 1
+fi
+if ! grep -q 'owned-positions.js?v=20260826c' <<<"$HTML"; then
+  echo "ERROR: dashboard HTML does not directly load the final Portfolio JavaScript."
+  exit 1
+fi
+
+echo "Base template verification: OK — 1838 Estate + direct Portfolio assets"
+
 echo
-echo "FINAL PORTFOLIO FEATURES INSTALLED:"
-echo "  - 1838 Estate branding"
+echo "INSTALLED:"
+echo "  - exact brand: 1838 Estate (not 1838 Farm)"
+echo "  - Portfolio base page is built into dashboard.html"
+echo "  - Portfolio JavaScript/CSS load directly, independent of cameras"
 echo "  - small owned-position summary strip"
 echo "  - large Cash App-style owned cards"
-echo "  - company display names + descriptions"
-echo "  - logo chain: local file -> Google favicon -> DuckDuckGo -> monogram"
+echo "  - company names, descriptions, ticker and logo fallback chain"
 echo "  - 1-day intraday chart in every owned card"
-echo "  - Total invested / value / gain-loss / shares / avg cost / current price"
-echo "  - automatic 1-6 card resizing"
-echo "  - automatic additional Portfolio pages above 6 positions"
-echo "  - Markets immediately after all Portfolio pages"
-echo "  - stable rotation without resetting the 18-second timer"
+echo "  - investment value/cost/gain-loss/shares/average cost/current price"
+echo "  - automatic resizing and additional Portfolio pages above 6 positions"
+echo "  - Markets follows Portfolio"
+echo "  - rotation repaired and enabled"
 echo
-echo "Reload Chromium once with Ctrl+Shift+R."
+echo "The browser must reload once to replace the old page already in memory."
+echo "If you are at the Pi keyboard: Ctrl+Shift+R"
