@@ -1,5 +1,11 @@
-/* Large owned-position cards and a separate Markets page. */
-.screen[data-screen="stocks"].active,
+/* 1838 Estate Portfolio + Markets: large owned cards, automatic paging, stable TV sizing. */
+.screen[data-screen="stocks"].active{
+  display:grid!important;
+  grid-template-rows:auto 78px minmax(0,1fr)!important;
+  gap:10px!important;
+  min-height:0!important;
+}
+.screen.portfolio-continuation-screen.active,
 .screen[data-screen="markets"].active{
   display:grid!important;
   grid-template-rows:auto minmax(0,1fr)!important;
@@ -11,7 +17,28 @@
 .screen[data-screen="stocks"] #portfolioFocusRows,
 .screen[data-screen="stocks"] #portfolioPanel{display:none!important}
 
-#ownedPositionCards{
+#ownedPortfolioSummary{
+  display:grid;
+  grid-template-columns:150px 150px 170px 90px minmax(0,1fr);
+  gap:8px;
+  min-height:0;
+  height:78px;
+  padding:8px 10px;
+  border:1px solid var(--estate-brass3,#725022);
+  background:linear-gradient(145deg,#101712,#0a0f0b);
+  box-shadow:inset 0 0 0 3px #090b09;
+  overflow:hidden;
+}
+.owned-summary-total{min-width:0;padding:4px 8px;border-right:1px solid rgba(203,159,79,.17)}
+.owned-summary-total>span{display:block;font:800 8px/1 var(--estate-sans,Arial,sans-serif);letter-spacing:.1em;text-transform:uppercase;color:var(--estate-muted,#b9aa8c)}
+.owned-summary-total>b{display:block;margin-top:7px;font:500 20px/1 var(--estate-serif,Georgia,serif);color:var(--estate-ivory,#eadfc7);white-space:nowrap}
+.owned-summary-chips{display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:5px;min-width:0;overflow:hidden}
+.owned-summary-chip{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:7px;align-content:center;padding:5px 7px;border:1px solid rgba(203,159,79,.16);background:rgba(255,255,255,.018);min-width:0}
+.owned-summary-chip>b{font:700 12px/1 var(--estate-serif,Georgia,serif);color:var(--estate-brass2,#d2ad69)}
+.owned-summary-chip>span{font:600 11px/1 var(--estate-serif,Georgia,serif);text-align:right;white-space:nowrap}
+.owned-summary-chip>em{grid-column:1/-1;margin-top:3px;font:800 7px/1 var(--estate-sans,Arial,sans-serif);font-style:normal;letter-spacing:.04em}
+
+.owned-position-grid{
   --owned-cols:3;
   --owned-rows:1;
   display:grid!important;
@@ -22,92 +49,74 @@
   height:100%;
   overflow:hidden;
 }
-
 .owned-investment-card{
   min-width:0;min-height:0;height:100%;overflow:hidden;
   display:flex;flex-direction:column;
-  padding:18px 20px 16px;
+  padding:18px 20px 15px;
   border:1px solid var(--estate-brass3,#725022);
   border-radius:4px;
   background:linear-gradient(150deg,#121a14,#090d0a);
   box-shadow:inset 0 0 0 3px #090b09,inset 0 0 0 4px rgba(200,151,69,.11),0 10px 24px rgba(0,0,0,.3);
   color:var(--estate-ivory,#eadfc7);
 }
-
 .owned-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;min-width:0}
 .owned-company{display:flex;align-items:center;gap:13px;min-width:0;flex:1}
 .owned-company-copy{min-width:0}
-.owned-company-copy>b{display:block;font:600 26px/1.02 var(--estate-serif,Georgia,serif);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--estate-ivory,#eadfc7)}
-.owned-company-copy .owned-ticker{display:inline-block;margin-top:5px;font:900 12px/1 var(--estate-sans,Arial,sans-serif);letter-spacing:.13em;color:var(--estate-brass2,#d2ad69)}
-.owned-company-copy small{display:block;margin-top:5px;font:600 10px/1.15 var(--estate-sans,Arial,sans-serif);letter-spacing:.035em;color:var(--estate-muted,#b9aa8c);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.owned-logo{position:relative;display:grid;place-items:center;flex:0 0 58px;width:58px;height:58px;border-radius:14px;border:1px solid rgba(210,173,105,.42);background:#f3f0e9;overflow:hidden;box-shadow:0 3px 10px rgba(0,0,0,.25)}
-.owned-logo img{position:absolute;inset:7px;width:44px;height:44px;object-fit:contain;z-index:2}
-.owned-logo-letter{font:900 19px/1 var(--estate-sans,Arial,sans-serif);color:#544a3c;z-index:1}
+.owned-company-copy>b{display:block;font:600 27px/1.02 var(--estate-serif,Georgia,serif);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--estate-ivory,#eadfc7)}
+.owned-company-copy .owned-ticker{display:inline-block;margin-top:5px;font:900 12px/1 var(--estate-sans,Arial,sans-serif);letter-spacing:.14em;color:var(--estate-brass2,#d2ad69)}
+.owned-company-copy small{display:block;margin-top:5px;font:650 10px/1.15 var(--estate-sans,Arial,sans-serif);letter-spacing:.025em;color:var(--estate-muted,#b9aa8c);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.owned-logo{position:relative;display:grid;place-items:center;flex:0 0 62px;width:62px;height:62px;border-radius:14px;border:1px solid rgba(210,173,105,.45);background:#f3f0e9;overflow:hidden;box-shadow:0 3px 10px rgba(0,0,0,.28)}
+.owned-logo img{position:absolute;inset:7px;width:48px;height:48px;object-fit:contain;z-index:2;background:#f3f0e9}
+.owned-logo-letter{font:900 20px/1 var(--estate-sans,Arial,sans-serif);color:#544a3c;z-index:1}
 .owned-current{text-align:right;white-space:nowrap;padding-top:2px}
-.owned-current>b{display:block;font:500 29px/1 var(--estate-serif,Georgia,serif);color:var(--estate-ivory,#eadfc7)}
+.owned-current>b{display:block;font:500 30px/1 var(--estate-serif,Georgia,serif);color:var(--estate-ivory,#eadfc7)}
 .owned-current>span{display:block;margin-top:7px;font:850 13px/1 var(--estate-sans,Arial,sans-serif)}
 
-.owned-chart-wrap{position:relative;margin:13px 0 11px;padding:8px 0 5px;min-height:126px;border-top:1px solid rgba(203,159,79,.18);border-bottom:1px solid rgba(203,159,79,.18)}
-.owned-sparkline{display:block;width:100%;height:98px;overflow:visible}
-.owned-sparkline polyline{stroke-width:2.35;stroke-linecap:round;stroke-linejoin:round}
-.owned-sparkline .chart-baseline{stroke:rgba(185,170,140,.18);stroke-width:.7;vector-effect:non-scaling-stroke}
+.owned-chart-wrap{position:relative;margin:13px 0 10px;padding:8px 0 5px;min-height:130px;border-top:1px solid rgba(203,159,79,.18);border-bottom:1px solid rgba(203,159,79,.18)}
+.owned-sparkline{display:block;width:100%;height:101px;overflow:visible}
+.owned-sparkline polyline{stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.owned-sparkline .chart-baseline{stroke:rgba(185,170,140,.17);stroke-width:.7;vector-effect:non-scaling-stroke}
 .owned-sparkline.up polyline{stroke:var(--estate-good,#8ca883)}
 .owned-sparkline.down polyline{stroke:#d27d72}
 .owned-sparkline.flat polyline{stroke:var(--estate-muted,#b9aa8c)}
-.owned-chart-empty{height:98px;display:grid;place-items:center;font:800 10px var(--estate-sans,Arial,sans-serif);letter-spacing:.08em;color:var(--estate-muted,#b9aa8c)}
+.owned-chart-empty{height:101px;display:grid;place-items:center;font:800 10px var(--estate-sans,Arial,sans-serif);letter-spacing:.08em;color:var(--estate-muted,#b9aa8c)}
 .owned-chart-fallback{position:absolute;right:0;top:7px;font:800 7px var(--estate-sans,Arial,sans-serif);letter-spacing:.1em;color:var(--estate-muted,#b9aa8c)}
 .owned-chart-caption{display:flex;justify-content:space-between;gap:10px;margin-top:2px;font:850 9px var(--estate-sans,Arial,sans-serif);letter-spacing:.09em;color:var(--estate-muted,#b9aa8c)}
 
 .owned-investment-section{min-height:0;display:flex;flex-direction:column;flex:1}
-.owned-investment-title{font:500 27px/1 var(--estate-serif,Georgia,serif);color:var(--estate-brass2,#d2ad69);margin:2px 0 10px}
+.owned-investment-title{font:500 28px/1 var(--estate-serif,Georgia,serif);color:var(--estate-brass2,#d2ad69);margin:2px 0 9px}
 .owned-investment-hero{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:end;padding-bottom:10px;border-bottom:1px solid rgba(203,159,79,.22)}
-.owned-investment-hero>div>b{display:block;font:500 34px/1 var(--estate-serif,Georgia,serif);color:var(--estate-ivory,#eadfc7)}
+.owned-investment-hero>div>b{display:block;font:500 35px/1 var(--estate-serif,Georgia,serif);color:var(--estate-ivory,#eadfc7)}
 .owned-investment-hero>div>span{display:block;margin-top:6px;font:500 13px/1.15 var(--estate-serif,Georgia,serif);color:var(--estate-muted,#b9aa8c)}
 .owned-result{text-align:right}.owned-result.up b{color:var(--estate-good,#8ca883)!important}.owned-result.down b{color:#d27d72!important}
-
-.owned-detail-list{display:grid;grid-template-columns:1fr;gap:0;margin-top:5px;min-height:0}
-.owned-detail-list>div{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(203,159,79,.13)}
+.owned-detail-list{display:grid;grid-template-columns:1fr;gap:0;margin-top:4px;min-height:0}
+.owned-detail-list>div{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:7px 0;border-bottom:1px solid rgba(203,159,79,.13)}
 .owned-detail-list>div:last-child{border-bottom:0}
 .owned-detail-list span{font:500 13px/1.15 var(--estate-serif,Georgia,serif);color:var(--estate-muted,#b9aa8c);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .owned-detail-list b{font:600 15px/1.1 var(--estate-serif,Georgia,serif);white-space:nowrap;color:var(--estate-ivory,#eadfc7)}
 .up{color:var(--estate-good,#8ca883)!important}.down{color:#d27d72!important}.flat{color:var(--estate-muted,#b9aa8c)!important}
 
-#ownedPositionCards[data-density="normal"]{gap:10px}
-#ownedPositionCards[data-density="normal"] .owned-investment-card{padding:10px 12px 9px}
-#ownedPositionCards[data-density="normal"] .owned-company-copy>b{font-size:17px}
-#ownedPositionCards[data-density="normal"] .owned-logo{width:36px;height:36px;flex-basis:36px;border-radius:9px}
-#ownedPositionCards[data-density="normal"] .owned-logo img{inset:5px;width:26px;height:26px}
-#ownedPositionCards[data-density="normal"] .owned-current>b{font-size:20px}
-#ownedPositionCards[data-density="normal"] .owned-current>span{font-size:9px;margin-top:4px}
-#ownedPositionCards[data-density="normal"] .owned-chart-wrap{min-height:58px;margin:5px 0;padding:3px 0}
-#ownedPositionCards[data-density="normal"] .owned-sparkline,#ownedPositionCards[data-density="normal"] .owned-chart-empty{height:43px}
-#ownedPositionCards[data-density="normal"] .owned-investment-title{font-size:18px;margin:1px 0 5px}
-#ownedPositionCards[data-density="normal"] .owned-investment-hero>div>b{font-size:22px}
-#ownedPositionCards[data-density="normal"] .owned-investment-hero>div>span{font-size:9px;margin-top:3px}
-#ownedPositionCards[data-density="normal"] .owned-detail-list>div{padding:3px 0}
-#ownedPositionCards[data-density="normal"] .owned-detail-list span{font-size:9px}
-#ownedPositionCards[data-density="normal"] .owned-detail-list b{font-size:11px}
-
-#ownedPositionCards[data-density="compact"] .owned-investment-card,#ownedPositionCards[data-density="dense"] .owned-investment-card{padding:7px 8px}
-#ownedPositionCards[data-density="compact"] .owned-company-copy>b,#ownedPositionCards[data-density="dense"] .owned-company-copy>b{font-size:13px}
-#ownedPositionCards[data-density="compact"] .owned-company-copy small,#ownedPositionCards[data-density="dense"] .owned-company-copy small{display:none}
-#ownedPositionCards[data-density="compact"] .owned-logo,#ownedPositionCards[data-density="dense"] .owned-logo{width:27px;height:27px;flex-basis:27px;border-radius:7px}
-#ownedPositionCards[data-density="compact"] .owned-logo img,#ownedPositionCards[data-density="dense"] .owned-logo img{inset:4px;width:19px;height:19px}
-#ownedPositionCards[data-density="compact"] .owned-current>b,#ownedPositionCards[data-density="dense"] .owned-current>b{font-size:15px}
-#ownedPositionCards[data-density="compact"] .owned-chart-wrap,#ownedPositionCards[data-density="dense"] .owned-chart-wrap{min-height:38px;margin:3px 0;padding:2px 0}
-#ownedPositionCards[data-density="compact"] .owned-sparkline,#ownedPositionCards[data-density="dense"] .owned-sparkline{height:27px}
-#ownedPositionCards[data-density="compact"] .owned-chart-caption,#ownedPositionCards[data-density="dense"] .owned-chart-caption{font-size:6px}
-#ownedPositionCards[data-density="compact"] .owned-investment-title,#ownedPositionCards[data-density="dense"] .owned-investment-title{font-size:13px;margin:1px 0 2px}
-#ownedPositionCards[data-density="compact"] .owned-investment-hero>div>b,#ownedPositionCards[data-density="dense"] .owned-investment-hero>div>b{font-size:16px}
-#ownedPositionCards[data-density="compact"] .owned-investment-hero>div>span,#ownedPositionCards[data-density="dense"] .owned-investment-hero>div>span{font-size:7px;margin-top:1px}
-#ownedPositionCards[data-density="compact"] .owned-detail-list>div,#ownedPositionCards[data-density="dense"] .owned-detail-list>div{padding:2px 0}
-#ownedPositionCards[data-density="compact"] .owned-detail-list span,#ownedPositionCards[data-density="dense"] .owned-detail-list span{font-size:7px}
-#ownedPositionCards[data-density="compact"] .owned-detail-list b,#ownedPositionCards[data-density="dense"] .owned-detail-list b{font-size:8px}
+.owned-position-grid[data-density="normal"]{gap:10px}
+.owned-position-grid[data-density="normal"] .owned-investment-card{padding:9px 11px 8px}
+.owned-position-grid[data-density="normal"] .owned-company-copy>b{font-size:17px}
+.owned-position-grid[data-density="normal"] .owned-company-copy small{font-size:8px;margin-top:3px}
+.owned-position-grid[data-density="normal"] .owned-logo{width:37px;height:37px;flex-basis:37px;border-radius:9px}
+.owned-position-grid[data-density="normal"] .owned-logo img{inset:5px;width:27px;height:27px}
+.owned-position-grid[data-density="normal"] .owned-current>b{font-size:20px}
+.owned-position-grid[data-density="normal"] .owned-current>span{font-size:9px;margin-top:4px}
+.owned-position-grid[data-density="normal"] .owned-chart-wrap{min-height:57px;margin:4px 0;padding:3px 0}
+.owned-position-grid[data-density="normal"] .owned-sparkline,.owned-position-grid[data-density="normal"] .owned-chart-empty{height:42px}
+.owned-position-grid[data-density="normal"] .owned-investment-title{font-size:18px;margin:1px 0 4px}
+.owned-position-grid[data-density="normal"] .owned-investment-hero{padding-bottom:4px}
+.owned-position-grid[data-density="normal"] .owned-investment-hero>div>b{font-size:22px}
+.owned-position-grid[data-density="normal"] .owned-investment-hero>div>span{font-size:9px;margin-top:2px}
+.owned-position-grid[data-density="normal"] .owned-detail-list>div{padding:3px 0}
+.owned-position-grid[data-density="normal"] .owned-detail-list span{font-size:9px}
+.owned-position-grid[data-density="normal"] .owned-detail-list b{font-size:11px}
 
 .owned-empty,.markets-empty{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid var(--estate-brass3,#725022);background:#0d130f;color:var(--estate-muted,#b9aa8c)}
 .owned-empty b,.markets-empty b{font:500 26px var(--estate-serif,Georgia,serif);color:var(--estate-brass2,#d2ad69)}
 .owned-empty span,.markets-empty span{margin-top:8px;font:600 12px var(--estate-sans,Arial,sans-serif)}
-
 #marketsFollowGrid{--markets-cols:2;display:grid;grid-template-columns:repeat(var(--markets-cols),minmax(0,1fr));gap:10px;min-height:0;height:100%;overflow:hidden}
 .market-follow-card{display:flex;flex-direction:column;min-width:0;padding:12px 14px;border:1px solid var(--estate-brass3,#725022);background:linear-gradient(145deg,#101712,#0a0f0b);box-shadow:inset 0 0 0 3px #090b09;color:var(--estate-ivory,#eadfc7)}
 .market-follow-main{display:grid;grid-template-columns:minmax(0,1.3fr) auto auto;gap:12px;align-items:center}
@@ -117,4 +126,9 @@
 .market-follow-levels{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:10px}.market-follow-levels>div{padding:6px 8px;border-top:1px solid rgba(203,159,79,.18)}.market-follow-levels span{display:block;font:800 7px var(--estate-sans,Arial,sans-serif);letter-spacing:.08em;text-transform:uppercase;color:var(--estate-muted,#b9aa8c)}.market-follow-levels b{display:block;margin-top:3px;font:600 12px var(--estate-serif,Georgia,serif)}
 .market-follow-note{margin-top:auto;padding-top:7px;font:600 9px/1.2 var(--estate-sans,Arial,sans-serif);color:var(--estate-muted,#b9aa8c);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-@media(max-width:1100px){#ownedPositionCards[data-count="3"]{grid-template-columns:repeat(3,minmax(0,1fr))}#marketsFollowGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:1200px){
+  #ownedPortfolioSummary{grid-template-columns:130px 130px 145px 70px minmax(0,1fr)}
+  .owned-summary-total>b{font-size:17px}
+  .owned-company-copy>b{font-size:23px}
+  .owned-logo{width:54px;height:54px;flex-basis:54px}.owned-logo img{width:40px;height:40px}
+}
