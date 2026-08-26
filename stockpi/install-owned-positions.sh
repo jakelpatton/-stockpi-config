@@ -77,22 +77,32 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now farm-owned-charts.service
 sudo systemctl restart farm-owned-charts.service
 sudo systemctl restart farm-dashboard.service
-sleep 3
 
 echo
-if curl -fsS --max-time 4 http://127.0.0.1:8092/api/health >/dev/null; then
-  echo "1-day chart service: OK"
-else
-  echo "1-day chart service did not answer. Recent log:"
-  sudo journalctl -u farm-owned-charts.service -n 30 --no-pager || true
+wait_for_url() {
+  local name="$1" url="$2" attempts="${3:-45}"
+  local i
+  for ((i=1; i<=attempts; i++)); do
+    if curl -fsS --max-time 2 "$url" >/dev/null 2>&1; then
+      echo "$name: OK (${i}s)"
+      return 0
+    fi
+    sleep 1
+  done
+  echo "$name did not answer after ${attempts}s."
+  return 1
+}
+
+if ! wait_for_url "1-day chart service" "http://127.0.0.1:8092/api/health" 30; then
+  sudo journalctl -u farm-owned-charts.service -n 40 --no-pager || true
   exit 1
 fi
 
-if curl -fsS --max-time 4 http://127.0.0.1:8080/ >/dev/null; then
-  echo "1838 Estate dashboard: OK"
-else
-  echo "Dashboard did not answer. Recent log:"
-  sudo journalctl -u farm-dashboard.service -n 30 --no-pager || true
+# The dashboard can take ~20 seconds to start because its startup path warms
+# market/Webull caches. Give it enough time instead of reporting a false failure.
+if ! wait_for_url "1838 Estate dashboard" "http://127.0.0.1:8080/api/health" 45; then
+  sudo systemctl status farm-dashboard.service --no-pager || true
+  sudo journalctl -u farm-dashboard.service -n 50 --no-pager || true
   exit 1
 fi
 
