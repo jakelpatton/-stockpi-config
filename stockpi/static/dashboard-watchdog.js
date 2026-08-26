@@ -44,6 +44,12 @@
     const current=activeName();
     if(current!==lastScreen){lastScreen=current;lastScreenChange=Date.now();return;}
     if(document.getElementById('cameraMotionOverlay')?.classList.contains('visible'))return;
+
+    // The thesis screen deliberately owns the rotation timer while its long
+    // scrolling review is running. Never let the generic stuck-screen watchdog
+    // interrupt it before the thesis script reaches the end and advances itself.
+    if(current==='thesis')return;
+
     if(typeof cfg==='undefined'||!cfg.rotation_enabled||!Array.isArray(cfg.screens)||cfg.screens.length<2)return;
     const limit=Math.max(8000,(Number(cfg.rotation_seconds)||18)*1000+5000);
     const now=Date.now();
