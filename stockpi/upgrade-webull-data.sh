@@ -30,6 +30,13 @@ install -m 644 "$SOURCE_DIR/static/portfolio-enhanced.js" "$APPDIR/static/portfo
 install -m 644 "$SOURCE_DIR/static/portfolio-enhanced.css" "$APPDIR/static/portfolio-enhanced.css"
 install -m 700 "$SOURCE_DIR/webull_capability_test.py" "$APPDIR/webull_capability_test.py"
 
+# Apply the account-native + public-market hybrid enrichment to deployed files.
+# This keeps Webull query-only while using position day P/L, realized P/L,
+# portfolio proportion, native cost/market values, plus public day range/volume.
+if [ -f "$SOURCE_DIR/apply-webull-hybrid-upgrade.sh" ]; then
+  bash "$SOURCE_DIR/apply-webull-hybrid-upgrade.sh"
+fi
+
 # Ensure the current official SDK/dependencies are present, without touching credentials.
 "$APPDIR/venv/bin/pip" install -q -r "$SOURCE_DIR/requirements.txt"
 
