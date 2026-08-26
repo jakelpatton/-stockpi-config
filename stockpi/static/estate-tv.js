@@ -9,27 +9,36 @@
     s.async=false;
     document.body.appendChild(s);
   }
+  function addStyleOnce(href){
+    if(document.querySelector(`link[href="${href}"]`))return;
+    const l=document.createElement('link');l.rel='stylesheet';l.href=href;document.head.appendChild(l);
+  }
 
   function ensureActivityAssets(){
-    if(!document.querySelector('link[href="/static/webull-activity.css"]')){const l=document.createElement('link');l.rel='stylesheet';l.href='/static/webull-activity.css';document.head.appendChild(l)}
+    addStyleOnce('/static/webull-activity.css');
     addScriptOnce('/static/webull-activity.js');
   }
 
   function ensurePortfolioAssets(){
-    if(!document.querySelector('link[href="/static/portfolio-enhanced.css"]')){const l=document.createElement('link');l.rel='stylesheet';l.href='/static/portfolio-enhanced.css';document.head.appendChild(l)}
+    addStyleOnce('/static/portfolio-enhanced.css');
     addScriptOnce('/static/portfolio-enhanced.js');
   }
 
   function ensureMarketSequenceAssets(){
     addScriptOnce('/static/rotation-controller.js');
-    if(!document.querySelector('link[href="/static/market-sequence.css"]')){const l=document.createElement('link');l.rel='stylesheet';l.href='/static/market-sequence.css';document.head.appendChild(l)}
+    addStyleOnce('/static/market-sequence.css');
     addScriptOnce('/static/market-sequence.js');
-    if(!document.querySelector('link[href="/static/market-alerts.css"]')){const l=document.createElement('link');l.rel='stylesheet';l.href='/static/market-alerts.css';document.head.appendChild(l)}
+    addStyleOnce('/static/market-alerts.css');
     addScriptOnce('/static/market-alerts.js');
     addScriptOnce('/static/market-watchlist-sync.js');
     addScriptOnce('/static/ticker-prices.js');
     if(window.FARM_CAMERAS_ENABLED!==false)addScriptOnce('/static/wyze-camera.js');
     addScriptOnce('/static/dashboard-watchdog.js');
+  }
+
+  function ensureOwnedPositionAssets(){
+    addStyleOnce('/static/owned-positions.css');
+    addScriptOnce('/static/owned-positions.js');
   }
 
   function slowTickerToHalfSpeed(){
@@ -56,7 +65,7 @@
   function relabel(){
     setText('.brand h1','Patton Estate');setText('.location-block b',"Farm • Est’d. 1838");setText('.location-block small','Mt. Vernon, Missouri');
     const stocks=document.querySelector('[data-screen="stocks"]');
-    if(stocks){const e=stocks.querySelector('.eyebrow');if(e)e.textContent='MARKETS • PORTFOLIO';const h=stocks.querySelector('h2');if(h)h.textContent='Portfolio & Markets';const c=stocks.querySelector('.section-caption');if(c)c.textContent='Owned positions • Webull account • market snapshots • entry zones'}
+    if(stocks){const e=stocks.querySelector('.eyebrow');if(e)e.textContent='MARKETS • PORTFOLIO';const h=stocks.querySelector('h2');if(h)h.textContent='Portfolio & Markets';const c=stocks.querySelector('.section-caption');if(c)c.textContent='Owned positions • Webull account • investment detail • intraday progress'}
     addHomeHeading();
     const water=document.querySelector('[data-screen="water"]');if(water){const e=water.querySelector('.screen-heading .eyebrow');if(e)e.textContent='WATER • WELLS • LEAK DETECTION';const h=water.querySelector('.screen-heading h2');if(h)h.textContent='Water & Leak Watch'}
     const power=document.querySelector('[data-screen="power"]');if(power){const e=power.querySelector('.screen-heading .eyebrow');if(e)e.textContent='ESTATE POWER • LOADS • SUPPLY';const h=power.querySelector('.screen-heading h2');if(h)h.textContent='Energy & Electrical';const c=power.querySelector('.section-caption');if(c)c.textContent='Main House and Rockhouse energy usage'}
@@ -70,6 +79,6 @@
     const main=document.querySelector('main.screens');if(main)new MutationObserver(update).observe(main,{attributes:true,subtree:true,attributeFilter:['class']});update();
   }
 
-  function boot(){ensureActivityAssets();ensurePortfolioAssets();ensureMarketSequenceAssets();addScriptOnce('/static/stock-identity.js');addScriptOnce('/static/portfolio-focus-fix.js');relabel();maintainScreenLabel();setTimeout(slowTickerToHalfSpeed,700);setTimeout(relabel,600);setTimeout(relabel,1800)}
+  function boot(){ensureActivityAssets();ensurePortfolioAssets();ensureMarketSequenceAssets();addScriptOnce('/static/stock-identity.js');addScriptOnce('/static/portfolio-focus-fix.js');ensureOwnedPositionAssets();relabel();maintainScreenLabel();setTimeout(slowTickerToHalfSpeed,700);setTimeout(relabel,600);setTimeout(relabel,1800)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
