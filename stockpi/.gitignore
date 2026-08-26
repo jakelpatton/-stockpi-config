@@ -6,6 +6,8 @@ conf/token.txt
 
 # Runtime caches / generated state
 cloud_portfolio_cache.json
+webull-summary-cache.json
+quote-cache.json
 static/webull-activity.json
 .deployed-commit
 backups/
