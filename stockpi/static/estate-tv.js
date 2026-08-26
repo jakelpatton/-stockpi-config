@@ -4,8 +4,6 @@
     if(document.querySelector(`script[src="${src}"]`))return;
     const s=document.createElement('script');
     s.src=src;
-    // Dynamically inserted scripts are async by default; force insertion order so
-    // rotation/data modules do not race each other during kiosk startup.
     s.async=false;
     document.body.appendChild(s);
   }
@@ -24,15 +22,13 @@
     addScriptOnce('/static/portfolio-enhanced.js');
   }
 
-  function ensureMarketSequenceAssets(){
+  function ensureMarketAssets(){
     addScriptOnce('/static/rotation-controller.js');
     addStyleOnce('/static/market-sequence.css');
-    addScriptOnce('/static/market-sequence.js');
     addStyleOnce('/static/market-alerts.css');
     addScriptOnce('/static/market-alerts.js');
     addScriptOnce('/static/market-watchlist-sync.js');
     addScriptOnce('/static/ticker-prices.js');
-    if(window.FARM_CAMERAS_ENABLED!==false)addScriptOnce('/static/wyze-camera.js');
     addScriptOnce('/static/dashboard-watchdog.js');
   }
 
@@ -56,30 +52,48 @@
 
   function addHomeHeading(){
     const home=document.querySelector('[data-screen="home"]');
-    if(!home||home.querySelector('.estate-home-heading')) return;
+    if(!home||home.querySelector('.estate-home-heading'))return;
     const h=document.createElement('div');h.className='screen-heading estate-home-heading';
-    h.innerHTML='<div><div class="eyebrow">PATTON ESTATE • PROPERTY STATUS</div><h2>Estate Overview</h2></div><div class="section-caption">Weather, climate, access and vehicle status</div>';
+    h.innerHTML='<div><div class="eyebrow">1838 ESTATE • PROPERTY STATUS</div><h2>Estate Overview</h2></div><div class="section-caption">Weather, climate, access and vehicle status</div>';
     home.insertBefore(h,home.firstChild);
   }
 
   function relabel(){
-    setText('.brand h1','Patton Estate');setText('.location-block b',"Farm • Est’d. 1838");setText('.location-block small','Mt. Vernon, Missouri');
+    setText('.brand h1','1838 Estate');
+    setText('.location-block b',"Farm • Est’d. 1838");
+    setText('.location-block small','Mt. Vernon, Missouri');
+
     const stocks=document.querySelector('[data-screen="stocks"]');
-    if(stocks){stocks.dataset.marketTitle='Portfolio';const e=stocks.querySelector('.eyebrow');if(e)e.textContent='WEBULL • OWNED POSITIONS';const h=stocks.querySelector('h2');if(h)h.textContent='Portfolio';const c=stocks.querySelector('.section-caption');if(c)c.textContent='Owned investments • position value • cost • gain/loss • intraday progress'}
+    if(stocks){
+      stocks.dataset.marketTitle='Portfolio';
+      const e=stocks.querySelector('.eyebrow');if(e)e.textContent='WEBULL • OWNED POSITIONS';
+      const h=stocks.querySelector('h2');if(h)h.textContent='Portfolio';
+      const c=stocks.querySelector('.section-caption');if(c)c.textContent='Your owned investments • value • cost • gain/loss • 1-day progress';
+    }
     const markets=document.querySelector('[data-screen="markets"]');if(markets)markets.dataset.marketTitle='Markets';
     addHomeHeading();
     const water=document.querySelector('[data-screen="water"]');if(water){const e=water.querySelector('.screen-heading .eyebrow');if(e)e.textContent='WATER • WELLS • LEAK DETECTION';const h=water.querySelector('.screen-heading h2');if(h)h.textContent='Water & Leak Watch'}
     const power=document.querySelector('[data-screen="power"]');if(power){const e=power.querySelector('.screen-heading .eyebrow');if(e)e.textContent='ESTATE POWER • LOADS • SUPPLY';const h=power.querySelector('.screen-heading h2');if(h)h.textContent='Energy & Electrical';const c=power.querySelector('.section-caption');if(c)c.textContent='Main House and Rockhouse energy usage'}
-    const cameras=document.querySelector('[data-screen="cameras"]');if(cameras){const e=cameras.querySelector('.camera-heading .eyebrow');if(e)e.textContent='SECURITY • ESTATE WATCH';const h=cameras.querySelector('.camera-heading h2');if(h)h.textContent='Security & Cameras'}
-    const footer=document.querySelector('footer');if(footer)footer.innerHTML='Patton Estate <span>•</span> Settings: <b>farmpi.local:8080/settings</b>';
+    const footer=document.querySelector('footer');if(footer)footer.innerHTML='1838 Estate <span>•</span> Settings: <b>farmpi.local:8080/settings</b>';
   }
 
   function maintainScreenLabel(){
-    const labels={stocks:'Portfolio',markets:'Markets',portfolio:'Portfolio',activity:'Orders & Trading Activity',limits:'Open Limit Orders',home:'Estate Overview',water:'Water & Leak Watch',power:'Energy & Electrical',cameras:'Security & Cameras',thesis:'Sunday Market Review'};
+    const labels={stocks:'Portfolio',markets:'Markets',activity:'Orders & Trading Activity',home:'Estate Overview',water:'Water & Leak Watch',power:'Energy & Electrical',thesis:'Sunday Market Review'};
     const update=()=>{const active=document.querySelector('.screen.active');const el=document.getElementById('screenName');if(!active||!el)return;if(active.dataset.marketTitle)el.textContent=active.dataset.marketTitle;else if(labels[active.dataset.screen])el.textContent=labels[active.dataset.screen]};
     const main=document.querySelector('main.screens');if(main)new MutationObserver(update).observe(main,{attributes:true,subtree:true,attributeFilter:['class']});update();
   }
 
-  function boot(){ensureActivityAssets();ensurePortfolioAssets();ensureMarketSequenceAssets();addScriptOnce('/static/stock-identity.js');addScriptOnce('/static/portfolio-focus-fix.js');ensureOwnedPositionAssets();relabel();maintainScreenLabel();setTimeout(slowTickerToHalfSpeed,700);setTimeout(relabel,600);setTimeout(relabel,1800)}
+  function boot(){
+    ensureActivityAssets();
+    ensurePortfolioAssets();
+    ensureMarketAssets();
+    addScriptOnce('/static/stock-identity.js');
+    ensureOwnedPositionAssets();
+    relabel();
+    maintainScreenLabel();
+    setTimeout(slowTickerToHalfSpeed,700);
+    setTimeout(relabel,600);
+    setTimeout(relabel,1800);
+  }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
