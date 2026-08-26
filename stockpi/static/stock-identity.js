@@ -1,6 +1,8 @@
 (() => {
-  const REFRESH_MS = 10000;
+  const REFRESH_MS = 5000;
   let busy = false;
+  let applyingRows = false;
+  let lastPayload = null;
 
   const META = {
     ADI:{name:'Analog Devices',domain:'analog.com'},
@@ -71,27 +73,28 @@
     const symbols=focusedSymbols(webull,activity);
     const pmap=new Map((webull.positions||[]).map(p=>[String(p.symbol||'').toUpperCase(),p]));
     const smap=new Map((stocks||[]).map(s=>[String(s.symbol||'').toUpperCase(),s]));
+    applyingRows=true;
     rows.className='portfolio-focus-list';
     rows.dataset.stockIdentity='1';
 
     if(!symbols.length){
       rows.innerHTML='<div class="portfolio-focus-empty">No owned positions or open orders.</div>';
-      return;
+    }else{
+      rows.innerHTML=symbols.map(symbol=>{
+        const m=meta(symbol),p=pmap.get(symbol)||{},s=smap.get(symbol)||{},q=(quotes||{})[symbol]||{},order=openOrderFor(symbol,activity);
+        const price=num(q.price,p.last_price,s.webull_last_price);
+        const dayPct=num(q.pct);
+        const owned=!!pmap.get(symbol) || !!s.owned || Number(s.position_usd)>0;
+        const status=owned&&order?'OWNED + OPEN ORDER':order?'OPEN ORDER':'OWNED';
+        const detail=order?orderText(order):`${shares(p.quantity ?? s.shares_estimate)}${Number.isFinite(num(p.proportion_pct))?' • '+num(p.proportion_pct).toFixed(1)+'% of portfolio':''}`;
+        return `<article class="portfolio-focus-card">
+          <div class="portfolio-focus-id">${logoHTML(symbol,'focus-logo')}<div><b>${esc(symbol)}</b><span>${esc(m.name)}</span></div></div>
+          <div class="portfolio-focus-price"><b>${money(price)}</b><span class="${cls(dayPct)}">${pct(dayPct)}</span></div>
+          <div class="portfolio-focus-status"><b>${status}</b><span>${esc(detail)}</span></div>
+        </article>`;
+      }).join('');
     }
-
-    rows.innerHTML=symbols.map(symbol=>{
-      const m=meta(symbol),p=pmap.get(symbol)||{},s=smap.get(symbol)||{},q=(quotes||{})[symbol]||{},order=openOrderFor(symbol,activity);
-      const price=num(q.price,p.last_price,s.webull_last_price);
-      const dayPct=num(q.pct);
-      const owned=!!pmap.get(symbol) || !!s.owned || Number(s.position_usd)>0;
-      const status=owned&&order?'OWNED + OPEN ORDER':order?'OPEN ORDER':'OWNED';
-      const detail=order?orderText(order):`${shares(p.quantity ?? s.shares_estimate)}${Number.isFinite(num(p.proportion_pct))?' • '+num(p.proportion_pct).toFixed(1)+'% of portfolio':''}`;
-      return `<article class="portfolio-focus-card">
-        <div class="portfolio-focus-id">${logoHTML(symbol,'focus-logo')}<div><b>${esc(symbol)}</b><span>${esc(m.name)}</span></div></div>
-        <div class="portfolio-focus-price"><b>${money(price)}</b><span class="${cls(dayPct)}">${pct(dayPct)}</span></div>
-        <div class="portfolio-focus-status"><b>${status}</b><span>${esc(detail)}</span></div>
-      </article>`;
-    }).join('');
+    setTimeout(()=>{applyingRows=false;},0);
   }
 
   function ensureLogo(el,symbol,sizeClass=''){
@@ -176,13 +179,19 @@
         getJSON('/api/webull/summary',{positions:[]}),
         getJSON('/static/webull-activity.json',{open_orders:[]})
       ]);
-      renderFocusRows(stocks,quoteResult.quotes||{},webull,activity);
+      lastPayload=[stocks,quoteResult.quotes||{},webull,activity];
+      renderFocusRows(...lastPayload);
       setTimeout(decorateExisting,50);
     }finally{busy=false;}
   }
 
   function boot(){
     ensureStyle();
+    const rows=document.getElementById('rows');
+    if(rows)new MutationObserver(()=>{
+      if(applyingRows||!lastPayload)return;
+      setTimeout(()=>{if(!applyingRows&&lastPayload)renderFocusRows(...lastPayload);},0);
+    }).observe(rows,{childList:true,subtree:false});
     setTimeout(refresh,1100);
     setInterval(refresh,REFRESH_MS);
     setInterval(decorateExisting,2000);
