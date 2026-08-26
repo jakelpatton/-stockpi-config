@@ -1,4 +1,9 @@
 (() => {
+  // Temporary stabilization flag: keep all camera implementation in place, but
+  // keep cameras out of the kiosk until the stock pages / rotation work is done.
+  const CAMERAS_ENABLED = false;
+  window.FARM_CAMERAS_ENABLED = CAMERAS_ENABLED;
+
   const CAMERAS = [
     {channel:1, name:'Front Porch', location:'Main House'},
     {channel:2, name:'Rockhouse Front', location:'Rockhouse'},
@@ -27,13 +32,35 @@
   }
 
   function ensureDisplayAssets(){
-    addStyle('/static/cameras.css');
+    if(CAMERAS_ENABLED) addStyle('/static/cameras.css');
     addStyle('/static/thesis.css');
     addStyle('/static/thesis-summary.css');
     addStyle('/static/tv-fit.css');
     addStyle('/static/estate-tv.css');
     addScript('/static/thesis.js');
     addScript('/static/estate-tv.js');
+  }
+
+  function removeCamerasFromRotation(){
+    document.querySelector('[data-screen="cameras"]')?.remove();
+    try{
+      if(typeof cfg==='undefined'||!Array.isArray(cfg.screens))return false;
+      const active=document.querySelector('.screen.active')?.dataset.screen||'';
+      const before=cfg.screens.length;
+      cfg.screens=cfg.screens.filter(s=>s!=='cameras');
+      if(typeof idx!=='undefined'){
+        const keep=active?cfg.screens.indexOf(active):-1;
+        idx=keep>=0?keep:Math.min(Number(idx)||0,Math.max(0,cfg.screens.length-1));
+      }
+      if(before!==cfg.screens.length){
+        if(typeof buildDots==='function')buildDots();
+        if(typeof schedule==='function')schedule();
+      }
+      return true;
+    }catch(e){
+      console.warn('camera rotation disable',e);
+      return false;
+    }
   }
 
   function makeScreen(){
@@ -128,7 +155,16 @@
   }
 
   function boot(){
+    window.FARM_CAMERAS_ENABLED=CAMERAS_ENABLED;
     ensureDisplayAssets();
+
+    if(!CAMERAS_ENABLED){
+      removeCamerasFromRotation();
+      const cleanup=setInterval(removeCamerasFromRotation,250);
+      setTimeout(()=>clearInterval(cleanup),15000);
+      return;
+    }
+
     makeScreen();
     watchScreen();
     checkStatus();
