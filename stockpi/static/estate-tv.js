@@ -19,6 +19,15 @@
     }
   }
 
+  function ensureMarketSequenceAssets(){
+    if(!document.querySelector('link[href="/static/market-sequence.css"]')){
+      const l=document.createElement('link');l.rel='stylesheet';l.href='/static/market-sequence.css';document.head.appendChild(l);
+    }
+    if(!document.querySelector('script[src="/static/market-sequence.js"]')){
+      const s=document.createElement('script');s.src='/static/market-sequence.js';s.defer=true;document.body.appendChild(s);
+    }
+  }
+
   function addHomeHeading(){
     const home=document.querySelector('[data-screen="home"]');
     if(!home||home.querySelector('.estate-home-heading')) return;
@@ -77,14 +86,16 @@
     };
     const update=()=>{
       const active=document.querySelector('.screen.active');
-      const label=document.getElementById('screenName');
-      if(active&&label&&labels[active.dataset.screen]) label.textContent=labels[active.dataset.screen];
+      const el=document.getElementById('screenName');
+      if(!active||!el)return;
+      if(active.dataset.marketTitle)el.textContent=active.dataset.marketTitle;
+      else if(labels[active.dataset.screen])el.textContent=labels[active.dataset.screen];
     };
     const main=document.querySelector('main.screens');
     if(main)new MutationObserver(update).observe(main,{attributes:true,subtree:true,attributeFilter:['class']});
     update();
   }
 
-  function boot(){ensureActivityAssets();ensurePortfolioAssets();relabel();maintainScreenLabel();setTimeout(relabel,600);setTimeout(relabel,1800)}
+  function boot(){ensureActivityAssets();ensurePortfolioAssets();ensureMarketSequenceAssets();relabel();maintainScreenLabel();setTimeout(relabel,600);setTimeout(relabel,1800)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
