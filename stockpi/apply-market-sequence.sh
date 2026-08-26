@@ -10,7 +10,7 @@ if [ ! -d "$APPDIR/static" ]; then
 fi
 
 mkdir -p "$APPDIR/backups/$STAMP/static"
-for f in static/estate-tv.js static/market-sequence.js static/market-sequence.css static/market-alerts.js static/market-alerts.css; do
+for f in static/estate-tv.js static/market-sequence.js static/market-sequence.css static/market-alerts.js static/market-alerts.css static/market-watchlist-sync.js; do
   if [ -f "$APPDIR/$f" ]; then cp -a "$APPDIR/$f" "$APPDIR/backups/$STAMP/$f"; fi
 done
 
@@ -19,6 +19,7 @@ install -m 644 "$SOURCE_DIR/static/market-sequence.js" "$APPDIR/static/market-se
 install -m 644 "$SOURCE_DIR/static/market-sequence.css" "$APPDIR/static/market-sequence.css"
 install -m 644 "$SOURCE_DIR/static/market-alerts.js" "$APPDIR/static/market-alerts.js"
 install -m 644 "$SOURCE_DIR/static/market-alerts.css" "$APPDIR/static/market-alerts.css"
+install -m 644 "$SOURCE_DIR/static/market-watchlist-sync.js" "$APPDIR/static/market-watchlist-sync.js"
 
 sudo systemctl restart farm-dashboard
 sleep 2
