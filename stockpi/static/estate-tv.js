@@ -1,6 +1,15 @@
 (() => {
   function setText(selector,text){const el=document.querySelector(selector);if(el)el.textContent=text}
 
+  function ensureActivityAssets(){
+    if(!document.querySelector('link[href="/static/webull-activity.css"]')){
+      const l=document.createElement('link');l.rel='stylesheet';l.href='/static/webull-activity.css';document.head.appendChild(l);
+    }
+    if(!document.querySelector('script[src="/static/webull-activity.js"]')){
+      const s=document.createElement('script');s.src='/static/webull-activity.js';s.defer=true;document.body.appendChild(s);
+    }
+  }
+
   function addHomeHeading(){
     const home=document.querySelector('[data-screen="home"]');
     if(!home||home.querySelector('.estate-home-heading')) return;
@@ -50,6 +59,7 @@
   function maintainScreenLabel(){
     const labels={
       stocks:'Portfolio & Markets',
+      activity:'Orders & Trading Activity',
       home:'Estate Overview',
       water:'Water & Leak Watch',
       power:'Energy & Electrical',
@@ -66,6 +76,6 @@
     update();
   }
 
-  function boot(){relabel();maintainScreenLabel();setTimeout(relabel,600);setTimeout(relabel,1800)}
+  function boot(){ensureActivityAssets();relabel();maintainScreenLabel();setTimeout(relabel,600);setTimeout(relabel,1800)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
