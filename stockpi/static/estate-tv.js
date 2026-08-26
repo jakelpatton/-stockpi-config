@@ -1,75 +1,50 @@
 (() => {
+  const ASSET_VERSION='20260826-final-portfolio';
   function setText(selector,text){const el=document.querySelector(selector);if(el)el.textContent=text}
-  function addScriptOnce(src){
-    if(document.querySelector(`script[src="${src}"]`))return;
-    const s=document.createElement('script');
-    s.src=src;
-    s.async=false;
-    document.body.appendChild(s);
+  function versioned(src){return `${src}${src.includes('?')?'&':'?'}v=${encodeURIComponent(ASSET_VERSION)}`}
+  function addScriptOnce(src,version=false){
+    const base=src.split('?')[0];
+    if([...document.scripts].some(s=>(s.getAttribute('src')||'').split('?')[0]===base))return;
+    const s=document.createElement('script');s.src=version?versioned(src):src;s.async=false;document.body.appendChild(s);
   }
-  function addStyleOnce(href){
-    if(document.querySelector(`link[href="${href}"]`))return;
-    const l=document.createElement('link');l.rel='stylesheet';l.href=href;document.head.appendChild(l);
-  }
-
-  function ensureActivityAssets(){
-    addStyleOnce('/static/webull-activity.css');
-    addScriptOnce('/static/webull-activity.js');
+  function addStyleOnce(href,version=false){
+    const base=href.split('?')[0];
+    if([...document.querySelectorAll('link[rel="stylesheet"]')].some(l=>(l.getAttribute('href')||'').split('?')[0]===base))return;
+    const l=document.createElement('link');l.rel='stylesheet';l.href=version?versioned(href):href;document.head.appendChild(l);
   }
 
-  function ensurePortfolioAssets(){
-    addStyleOnce('/static/portfolio-enhanced.css');
-    addScriptOnce('/static/portfolio-enhanced.js');
-  }
-
+  function ensureActivityAssets(){addStyleOnce('/static/webull-activity.css');addScriptOnce('/static/webull-activity.js')}
   function ensureMarketAssets(){
-    addScriptOnce('/static/rotation-controller.js');
-    addStyleOnce('/static/market-sequence.css');
+    addScriptOnce('/static/rotation-controller.js',true);
     addStyleOnce('/static/market-alerts.css');
     addScriptOnce('/static/market-alerts.js');
     addScriptOnce('/static/market-watchlist-sync.js');
     addScriptOnce('/static/ticker-prices.js');
     addScriptOnce('/static/dashboard-watchdog.js');
   }
-
   function ensureOwnedPositionAssets(){
-    addStyleOnce('/static/owned-positions.css');
-    addScriptOnce('/static/owned-positions.js');
+    addScriptOnce('/static/stock-identity.js',true);
+    addStyleOnce('/static/owned-positions.css',true);
+    addScriptOnce('/static/owned-positions.js',true);
   }
 
   function slowTickerToHalfSpeed(){
-    const track=document.getElementById('tickerTrack');
-    if(!track||track.dataset.halfSpeed==='1')return;
-    const raw=getComputedStyle(track).animationDuration||'';
-    const first=raw.split(',')[0].trim();
-    const match=first.match(/^([0-9.]+)(ms|s)$/);
-    if(!match)return;
-    const value=parseFloat(match[1]);
-    if(!Number.isFinite(value)||value<=0)return;
-    track.style.animationDuration=`${value*2}${match[2]}`;
-    track.dataset.halfSpeed='1';
+    const track=document.getElementById('tickerTrack');if(!track||track.dataset.halfSpeed==='1')return;
+    const first=(getComputedStyle(track).animationDuration||'').split(',')[0].trim(),match=first.match(/^([0-9.]+)(ms|s)$/);
+    if(!match)return;const value=parseFloat(match[1]);if(!Number.isFinite(value)||value<=0)return;
+    track.style.animationDuration=`${value*2}${match[2]}`;track.dataset.halfSpeed='1';
   }
 
   function addHomeHeading(){
-    const home=document.querySelector('[data-screen="home"]');
-    if(!home||home.querySelector('.estate-home-heading'))return;
+    const home=document.querySelector('[data-screen="home"]');if(!home||home.querySelector('.estate-home-heading'))return;
     const h=document.createElement('div');h.className='screen-heading estate-home-heading';
     h.innerHTML='<div><div class="eyebrow">1838 ESTATE • PROPERTY STATUS</div><h2>Estate Overview</h2></div><div class="section-caption">Weather, climate, access and vehicle status</div>';
     home.insertBefore(h,home.firstChild);
   }
 
   function relabel(){
-    setText('.brand h1','1838 Estate');
-    setText('.location-block b',"Farm • Est’d. 1838");
-    setText('.location-block small','Mt. Vernon, Missouri');
-
-    const stocks=document.querySelector('[data-screen="stocks"]');
-    if(stocks){
-      stocks.dataset.marketTitle='Portfolio';
-      const e=stocks.querySelector('.eyebrow');if(e)e.textContent='WEBULL • OWNED POSITIONS';
-      const h=stocks.querySelector('h2');if(h)h.textContent='Portfolio';
-      const c=stocks.querySelector('.section-caption');if(c)c.textContent='Your owned investments • value • cost • gain/loss • 1-day progress';
-    }
+    setText('.brand h1','1838 Estate');setText('.location-block b',"Farm • Est’d. 1838");setText('.location-block small','Mt. Vernon, Missouri');
+    const stocks=document.querySelector('[data-screen="stocks"]');if(stocks){stocks.dataset.marketTitle='Portfolio';const e=stocks.querySelector('.eyebrow');if(e)e.textContent='WEBULL • OWNED POSITIONS';const h=stocks.querySelector('h2');if(h)h.textContent='Portfolio';const c=stocks.querySelector('.section-caption');if(c)c.textContent='Owned investments • cost • value • gain/loss • 1-day progress'}
     const markets=document.querySelector('[data-screen="markets"]');if(markets)markets.dataset.marketTitle='Markets';
     addHomeHeading();
     const water=document.querySelector('[data-screen="water"]');if(water){const e=water.querySelector('.screen-heading .eyebrow');if(e)e.textContent='WATER • WELLS • LEAK DETECTION';const h=water.querySelector('.screen-heading h2');if(h)h.textContent='Water & Leak Watch'}
@@ -79,21 +54,16 @@
 
   function maintainScreenLabel(){
     const labels={stocks:'Portfolio',markets:'Markets',activity:'Orders & Trading Activity',home:'Estate Overview',water:'Water & Leak Watch',power:'Energy & Electrical',thesis:'Sunday Market Review'};
-    const update=()=>{const active=document.querySelector('.screen.active');const el=document.getElementById('screenName');if(!active||!el)return;if(active.dataset.marketTitle)el.textContent=active.dataset.marketTitle;else if(labels[active.dataset.screen])el.textContent=labels[active.dataset.screen]};
+    const update=()=>{const active=document.querySelector('.screen.active'),el=document.getElementById('screenName');if(!active||!el)return;if(active.dataset.marketTitle)el.textContent=active.dataset.marketTitle;else if(labels[active.dataset.screen])el.textContent=labels[active.dataset.screen]};
     const main=document.querySelector('main.screens');if(main)new MutationObserver(update).observe(main,{attributes:true,subtree:true,attributeFilter:['class']});update();
   }
 
   function boot(){
     ensureActivityAssets();
-    ensurePortfolioAssets();
     ensureMarketAssets();
-    addScriptOnce('/static/stock-identity.js');
     ensureOwnedPositionAssets();
-    relabel();
-    maintainScreenLabel();
-    setTimeout(slowTickerToHalfSpeed,700);
-    setTimeout(relabel,600);
-    setTimeout(relabel,1800);
+    relabel();maintainScreenLabel();
+    setTimeout(slowTickerToHalfSpeed,700);setTimeout(relabel,600);setTimeout(relabel,1800);
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
