@@ -70,6 +70,6 @@
     const main=document.querySelector('main.screens');if(main)new MutationObserver(update).observe(main,{attributes:true,subtree:true,attributeFilter:['class']});update();
   }
 
-  function boot(){ensureActivityAssets();ensurePortfolioAssets();ensureMarketSequenceAssets();addScriptOnce('/static/stock-identity.js');relabel();maintainScreenLabel();setTimeout(slowTickerToHalfSpeed,700);setTimeout(relabel,600);setTimeout(relabel,1800)}
+  function boot(){ensureActivityAssets();ensurePortfolioAssets();ensureMarketSequenceAssets();addScriptOnce('/static/stock-identity.js');addScriptOnce('/static/portfolio-focus-fix.js');relabel();maintainScreenLabel();setTimeout(slowTickerToHalfSpeed,700);setTimeout(relabel,600);setTimeout(relabel,1800)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
