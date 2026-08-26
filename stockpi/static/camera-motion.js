@@ -2,7 +2,10 @@
   const POLL_MS = 400;
   const MAX_VIEW_MS = 10000;
   const MOTION_API = `${location.protocol}//${location.hostname}:8091/api/motion`;
-  const AMCREST_PLAYER = name => `${location.protocol}//${location.hostname}:1985/stream.html?src=${encodeURIComponent(name)}&mode=webrtc,webrtc/tcp,mse`;
+  // The dedicated display runs Chromium on farmpi itself. Keep the go2rtc WebUI
+  // localhost-only so its stream diagnostics cannot expose NVR source credentials
+  // to other LAN clients.
+  const AMCREST_PLAYER = name => `http://127.0.0.1:1985/stream.html?src=${encodeURIComponent(name)}&mode=webrtc,webrtc/tcp,mse`;
   const CAMERAS = {
     1: {name:'Front Porch', kind:'amcrest', player:AMCREST_PLAYER('front_porch')},
     2: {name:'Rockhouse Front', kind:'amcrest', player:AMCREST_PLAYER('rockhouse_front')},
