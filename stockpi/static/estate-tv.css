@@ -1,0 +1,209 @@
+/* Patton Estate TV theme
+   A simplified Gilded Age companion to the touch control panel: dark green,
+   aged brass, warm ivory, larger across-room typography, and focused modules. */
+:root{
+  --estate-black:#060907;
+  --estate-green:#0c1511;
+  --estate-green2:#111b16;
+  --estate-green3:#17241d;
+  --estate-brass:#b4853e;
+  --estate-brass2:#d2ad69;
+  --estate-brass3:#725022;
+  --estate-ivory:#eadfc7;
+  --estate-muted:#b9aa8c;
+  --estate-good:#8ca883;
+  --estate-warn:#c89a4b;
+  --estate-danger:#a84f45;
+  --estate-line:rgba(203,159,79,.38);
+  --estate-script:"URW Chancery L","Apple Chancery","Segoe Script",Georgia,serif;
+  --estate-serif:Baskerville,"Iowan Old Style","Palatino Linotype",Georgia,serif;
+  --estate-sans:Inter,"Segoe UI",Arial,sans-serif;
+}
+
+html,body{background:var(--estate-black)!important;color:var(--estate-ivory)!important}
+body{
+  font-family:var(--estate-serif)!important;
+  background:
+    radial-gradient(circle at 50% -18%,rgba(116,78,37,.35),transparent 40%),
+    linear-gradient(180deg,#10130f 0,#080b09 58%,#050706 100%)!important;
+}
+
+/* Estate masthead */
+.topbar{
+  height:118px!important;
+  padding:14px 30px!important;
+  border:8px solid transparent!important;
+  border-image:linear-gradient(120deg,#5e3e17,#c49a58,#725022,#d2ad69,#654319) 1!important;
+  border-left:0!important;border-right:0!important;border-top:0!important;
+  background:linear-gradient(180deg,#0c130f,#070b08)!important;
+  box-shadow:0 10px 28px rgba(0,0,0,.38),inset 0 -1px rgba(255,224,157,.15)!important;
+}
+.brand{gap:16px!important}
+.brand-mark{
+  width:82px!important;height:82px!important;border-radius:50%!important;
+  border:2px solid var(--estate-brass2)!important;
+  background:radial-gradient(circle,#1e251d,#090c09 72%)!important;
+  box-shadow:inset 0 0 0 5px #0a0d0a,inset 0 0 0 6px var(--estate-brass3),0 5px 16px #000!important;
+}
+.brand-mark img{padding:4px!important;filter:saturate(.78) sepia(.08) brightness(.92)}
+.brand h1{
+  color:var(--estate-brass2)!important;
+  font-family:var(--estate-script)!important;
+  font-size:48px!important;font-weight:500!important;line-height:.95!important;
+  letter-spacing:.01em!important;text-shadow:0 2px 2px #000!important;
+}
+.brand #status{color:var(--estate-muted)!important;font:600 14px var(--estate-sans)!important;margin-top:8px!important}
+.location-block{color:var(--estate-ivory)!important}
+.location-block .pin{color:var(--estate-brass2)!important;font-size:14px!important}
+.location-block b{font:500 20px var(--estate-serif)!important;color:var(--estate-brass2)!important}
+.location-block small{font:500 14px var(--estate-serif)!important;color:var(--estate-muted)!important}
+.header-right-wrap{gap:18px!important}
+.bob-status{
+  border:1px solid var(--estate-line)!important;border-radius:2px!important;
+  background:#0d130f!important;padding:7px 12px 7px 7px!important;
+  box-shadow:inset 0 0 0 3px #090b09,inset 0 0 0 4px rgba(200,151,69,.12)!important;
+}
+.bob-status img{width:54px!important;height:54px!important;background:#17160f!important;border:1px solid var(--estate-brass3)!important}
+.bob-status b{font:500 21px var(--estate-script)!important;color:var(--estate-brass2)!important}
+.bob-status span{font:700 10px var(--estate-sans)!important;letter-spacing:.08em;text-transform:uppercase;color:var(--estate-muted)!important}
+.header-right #screenName{font:700 12px var(--estate-sans)!important;letter-spacing:.16em!important;color:var(--estate-brass2)!important}
+#clock{font:400 34px var(--estate-serif)!important;color:var(--estate-ivory)!important}
+.rotation-dots{top:110px!important;gap:8px!important}
+.dot{width:8px!important;height:8px!important;background:#5d513e!important;border:1px solid rgba(210,173,105,.28)!important}
+.dot.active{width:30px!important;background:linear-gradient(90deg,var(--estate-brass3),var(--estate-brass2))!important}
+
+/* Main canvas */
+.screens{height:calc(100vh - 196px)!important;padding:18px 30px 12px!important}
+.screen{color:var(--estate-ivory)!important}
+.screen-heading,.camera-heading{
+  padding:2px 4px 10px!important;margin-bottom:14px!important;
+  border-bottom:1px solid var(--estate-line)!important;
+}
+.eyebrow,.panel-title,.kicker{
+  color:var(--estate-brass2)!important;
+  font-family:var(--estate-sans)!important;font-weight:800!important;
+  letter-spacing:.15em!important;text-transform:uppercase!important;
+}
+.eyebrow{font-size:12px!important}
+.panel-title{font-size:12px!important}
+.screen h2,.camera-heading h2{
+  color:var(--estate-brass2)!important;
+  font:500 42px/1 var(--estate-script)!important;
+  margin:2px 0 0!important;
+}
+.section-caption{color:var(--estate-muted)!important;font:500 16px var(--estate-serif)!important;padding-top:12px!important}
+.panel,
+.portfolio-panel{
+  position:relative!important;
+  color:var(--estate-ivory)!important;
+  background:linear-gradient(150deg,#111812,#090d0a)!important;
+  border:1px solid var(--estate-brass3)!important;
+  border-radius:3px!important;
+  box-shadow:inset 0 0 0 3px #090b09,inset 0 0 0 4px rgba(200,151,69,.11),0 9px 24px rgba(0,0,0,.28)!important;
+}
+.panel:before,.portfolio-panel:before{
+  content:"";position:absolute;left:7px;top:7px;width:20px;height:20px;
+  border-left:1px solid var(--estate-brass);border-top:1px solid var(--estate-brass);opacity:.52;pointer-events:none;
+}
+.panel:after,.portfolio-panel:after{
+  content:"";position:absolute;right:7px;bottom:7px;width:20px;height:20px;
+  border-right:1px solid var(--estate-brass);border-bottom:1px solid var(--estate-brass);opacity:.52;pointer-events:none;
+}
+.muted{color:var(--estate-muted)!important}.ok,.green-text,.portfolio-up{color:var(--estate-good)!important}.portfolio-down{color:#d27d72!important}
+.purple,.green,.blue,.gold,.rose,.panel-title.purple,.panel-title.green,.panel-title.blue,.panel-title.gold,.panel-title.rose{color:var(--estate-brass2)!important}
+.purple-border,.green-border{border-top:1px solid var(--estate-brass3)!important}
+.detail-list span,.environment-grid span,.electrical-summary span,.three-metrics span,.load-list span,.climate-zone small{color:var(--estate-muted)!important}
+.detail-list>div,.climate-zone,.backup-line,.gate-stats div,.tesla-wide-stats div{border-color:rgba(203,159,79,.22)!important}
+
+/* Portfolio / markets: larger two-column cards rather than a tiny stacked table. */
+.screen[data-screen="stocks"].active{display:grid!important;grid-template-rows:auto auto 1fr!important;gap:12px!important;min-height:0}
+.screen[data-screen="stocks"] .screen-heading{margin:0!important}
+.portfolio-panel{margin:0!important;padding:15px 18px!important}
+.portfolio-head{margin-bottom:11px!important}.portfolio-head h3{font:500 27px var(--estate-script)!important;color:var(--estate-brass2)!important}
+.portfolio-head .eyebrow,.portfolio-total span{color:var(--estate-brass2)!important}
+.portfolio-total b{font:400 29px var(--estate-serif)!important;color:var(--estate-ivory)!important}
+.portfolio-total em{font:700 15px var(--estate-sans)!important}
+.portfolio-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:10px!important}
+.portfolio-position{background:#0d140f!important;border:1px solid rgba(203,159,79,.26)!important;border-radius:2px!important;padding:12px 14px!important}
+.portfolio-symbol b{font:500 22px var(--estate-serif)!important;color:var(--estate-brass2)!important}
+.portfolio-symbol small,.portfolio-metrics span,.portfolio-note{color:var(--estate-muted)!important}
+.portfolio-metrics span{font:700 10px var(--estate-sans)!important}.portfolio-metrics b{font:500 15px var(--estate-serif)!important;color:var(--estate-ivory)!important}
+.stock-list{display:grid!important;grid-template-columns:1fr 1fr!important;grid-template-rows:repeat(4,minmax(0,1fr))!important;gap:10px!important;min-height:0!important}
+.stock{
+  height:100%!important;min-height:0!important;padding:13px 16px!important;
+  grid-template-columns:88px 130px 82px 1fr!important;grid-template-rows:auto auto!important;
+  grid-template-areas:"symbol price pct badge" "zones zones zones zones"!important;
+  column-gap:12px!important;row-gap:8px!important;
+  border:1px solid var(--estate-brass3)!important;border-radius:2px!important;
+  background:linear-gradient(145deg,#101712,#0a0f0b)!important;
+  box-shadow:inset 0 0 0 3px #090b09,0 6px 14px rgba(0,0,0,.2)!important;
+}
+.stock .symbol{grid-area:symbol;font:600 27px var(--estate-serif)!important;color:var(--estate-brass2)!important}
+.stock .price{grid-area:price;font:500 24px var(--estate-serif)!important;color:var(--estate-ivory)!important}
+.stock .pct{grid-area:pct;font:800 16px var(--estate-sans)!important}.stock .zones{grid-area:zones;font:500 15px var(--estate-serif)!important;color:var(--estate-muted)!important;border-top:1px solid rgba(203,159,79,.18);padding-top:7px}
+.stock .subline{font-size:13px!important;color:#9d9077!important;margin-top:3px!important}
+.stock .badge{grid-area:badge;font:800 14px var(--estate-sans)!important;color:var(--estate-muted)!important}.stock .badge.buy{color:var(--estate-good)!important}
+.up{color:#95b28c!important}.down{color:#d27d72!important}
+
+/* Estate overview: weather + property/access, not utility detail. */
+.screen[data-screen="home"].active{display:grid!important;grid-template-rows:auto minmax(210px,.82fr) minmax(300px,1.18fr) minmax(64px,.22fr)!important;gap:12px!important;min-height:0}
+.estate-home-heading{margin:0!important}
+.screen[data-screen="home"] .home-weather-grid,
+.screen[data-screen="home"] .overview-grid,
+.screen[data-screen="home"] .status-strip{height:100%!important;min-height:0!important;margin:0!important}
+.weather-hero{background:linear-gradient(145deg,#151c16,#0b110d)!important;padding:18px 22px!important}
+.weather-icon{color:var(--estate-brass2)!important;font-size:76px!important;text-shadow:0 3px 8px #000}
+.weather-title{color:var(--estate-ivory)!important;font:500 21px var(--estate-serif)!important}
+.weather-number{color:var(--estate-brass2)!important;font:400 56px var(--estate-serif)!important}
+.weather-mini{border-color:rgba(203,159,79,.2)!important}.weather-mini div{font-size:14px!important}.weather-mini span{color:var(--estate-muted)!important}
+.forecast{padding:18px 20px!important}.forecast-row span{font-size:13px!important;color:var(--estate-muted)!important}.forecast-row i{font-size:34px!important;color:var(--estate-brass2)!important}.forecast-row b{font-size:23px!important}.forecast-row div{border-color:rgba(203,159,79,.2)!important}
+.today b{font:400 36px var(--estate-serif)!important}.today span{font:800 10px var(--estate-sans)!important}.today-high{color:#d0a060!important}.today-low{color:#8aa3a0!important;border-color:rgba(203,159,79,.2)!important}
+.property-art{filter:sepia(.15) saturate(.68) brightness(.82) drop-shadow(0 8px 10px rgba(0,0,0,.35))!important}
+.property-body{width:65%!important}.zone{border-color:rgba(203,159,79,.2)!important;padding:13px 0!important}.zone span{font:800 10px var(--estate-sans)!important;color:var(--estate-brass2)!important}.zone b{font:400 30px var(--estate-serif)!important}.zone em{font:500 14px var(--estate-serif)!important;color:var(--estate-good)!important}
+.single-temp{font:400 49px var(--estate-serif)!important;color:var(--estate-ivory)!important}.gate-state b{font:400 37px var(--estate-serif)!important;color:var(--estate-brass2)!important}.gate-state span{color:var(--estate-brass2)!important}.detail-list>div{font-size:14px!important;padding-bottom:7px!important}
+.tesla-t{color:var(--estate-brass2)!important}.car-shape{background:linear-gradient(160deg,#5b5546,#252d29)!important;color:#b69b67!important}.battery-number{font:500 40px var(--estate-serif)!important;color:var(--estate-good)!important}.charge-bar{background:#28261d!important}.charge-bar span{background:linear-gradient(90deg,var(--estate-brass3),var(--estate-good))!important}
+.status-strip{border:1px solid var(--estate-brass3)!important;border-radius:2px!important;background:#0d130f!important}.status-strip>div{border-color:rgba(203,159,79,.2)!important;font-size:14px!important}.status-strip span{font-size:12px!important;color:var(--estate-good)!important}.bob-mini b{font:500 18px var(--estate-script)!important;color:var(--estate-brass2)!important}.bob-mini img{background:#17160f!important}
+
+/* Water / leak watch */
+.screen[data-screen="water"].active{display:grid!important;grid-template-rows:auto minmax(0,1.42fr) minmax(205px,.78fr)!important;gap:12px!important;min-height:0}
+.water-banner{border:1px solid rgba(140,168,131,.45)!important;background:#101b14!important;border-radius:2px!important;color:var(--estate-good)!important;padding:10px 15px!important}.water-banner b{font:500 16px var(--estate-serif)!important}.water-banner small{font-size:12px!important;color:var(--estate-muted)!important}
+.well-panel,.environment-panel{padding:20px!important}.card-title-art img{width:104px!important;height:70px!important;filter:sepia(.15) saturate(.68) brightness(.82) drop-shadow(0 6px 8px #000)!important}
+.three-metrics{margin:24px 0!important}.three-metrics span,.environment-grid span{font:800 10px var(--estate-sans)!important}.three-metrics b{font:400 31px var(--estate-serif)!important}.environment-grid{margin-top:29px!important;row-gap:20px!important}.environment-grid b{font:500 22px var(--estate-serif)!important}
+.leaks.rich>div{font-size:15px!important;padding:10px 0!important;border-color:rgba(203,159,79,.2)!important}.usage-row{font-size:15px!important;margin-top:27px!important}.usage-bar{height:12px!important;background:#28261d!important}.usage-bar i,.usage-bar.greenbar i{background:linear-gradient(90deg,var(--estate-brass3),var(--estate-brass2))!important}
+
+/* Energy is intentionally its own focused module. Hide climate/access/EV duplication. */
+.screen[data-screen="power"].active{display:grid!important;grid-template-rows:auto 1fr!important;gap:12px!important;min-height:0}
+.screen[data-screen="power"] .power-top-grid{height:100%!important;grid-template-columns:1fr 1fr!important;gap:14px!important;min-height:0!important;margin:0!important}
+.screen[data-screen="power"] .climate-card,
+.screen[data-screen="power"] .power-bottom-grid{display:none!important}
+.screen[data-screen="power"] .electrical-card{height:100%!important;min-height:0!important;padding:24px!important}
+.screen[data-screen="power"] .card-title-art img{width:132px!important;height:88px!important}
+.electrical-summary{margin:30px 0!important;gap:18px!important}.electrical-summary span{font:800 11px var(--estate-sans)!important}.electrical-summary b{font:500 26px var(--estate-serif)!important}.load-list{gap:18px!important}.load-list>div{grid-template-columns:170px 1fr 90px!important;font-size:15px!important}.load-list i{height:10px!important;background:#26261e!important}.load-list i:after{background:linear-gradient(90deg,var(--estate-brass3),var(--estate-brass2))!important}.load-list b{font:500 17px var(--estate-serif)!important}.backup-line{font-size:15px!important;margin-top:24px!important}
+
+/* Security / cameras */
+.camera-system-status{border:1px solid var(--estate-line)!important;border-radius:2px!important;background:#0d130f!important;padding:10px 14px!important}.camera-system-status b{font:500 17px var(--estate-serif)!important;color:var(--estate-brass2)!important}.camera-system-status small{font-size:12px!important;color:var(--estate-muted)!important}.camera-dot{background:var(--estate-good)!important;box-shadow:0 0 0 4px rgba(140,168,131,.12)!important}
+.camera-grid{gap:12px!important}.camera-tile{border:1px solid var(--estate-brass3)!important;border-radius:2px!important;background:#080b09!important;box-shadow:inset 0 0 0 3px #090b09,0 8px 20px rgba(0,0,0,.3)!important}.camera-feed{filter:saturate(.82) contrast(1.04) brightness(.9)}.camera-placeholder{background:linear-gradient(145deg,#172019,#080b09)!important;color:var(--estate-ivory)!important}.camera-placeholder-icon{color:var(--estate-brass2)!important}.camera-placeholder-copy b{font:500 22px var(--estate-script)!important;color:var(--estate-brass2)!important}.camera-placeholder-copy span{font-size:13px!important;color:var(--estate-muted)!important}.camera-overlay{padding:16px 18px!important}.camera-overlay b{font:500 24px var(--estate-script)!important;color:var(--estate-brass2)!important}.camera-overlay span{font-size:12px!important;color:#d7c9ad!important}.live-pill{font-size:10px!important;border-color:rgba(210,173,105,.45)!important}.camera-footer{font-size:12px!important;color:var(--estate-muted)!important}
+
+/* Summarized Sunday review in the same estate visual language. */
+.thesis-shell{background:linear-gradient(180deg,#0f1712,#080c09)!important;border:1px solid var(--estate-brass3)!important;border-radius:3px!important;box-shadow:inset 0 0 0 3px #080a08,inset 0 0 0 4px rgba(200,151,69,.1),0 12px 28px #000!important}
+.thesis-sticky{background:rgba(8,13,9,.96)!important;border-color:var(--estate-line)!important}.thesis-sticky .title{font:500 22px var(--estate-script)!important;color:var(--estate-brass2)!important}.thesis-sticky .status{font:700 13px var(--estate-sans)!important;color:var(--estate-muted)!important}.thesis-kicker{color:var(--estate-brass2)!important}.thesis-hero h2{font:500 38px var(--estate-script)!important;color:var(--estate-brass2)!important}.thesis-date{font-size:15px!important;color:var(--estate-muted)!important}.thesis-summary,.thesis-body{color:var(--estate-ivory)!important}.thesis-summary{font-size:18px!important;line-height:1.5!important}.thesis-card,.thesis-stock{background:#0d140f!important;border:1px solid rgba(203,159,79,.28)!important;border-radius:2px!important;box-shadow:0 6px 16px rgba(0,0,0,.22)!important}.market-summary-card span,.compact-list-title span,.compact-price span{color:var(--estate-brass2)!important}.market-summary-card b{font:500 18px var(--estate-serif)!important;color:var(--estate-ivory)!important}.thesis-symbol{color:var(--estate-brass2)!important}.thesis-company,.compact-list-title small,.compact-headline{color:var(--estate-muted)!important}.thesis-badge{background:#27251d!important;color:var(--estate-ivory)!important}.thesis-badge.buy{background:#283727!important;color:#b8d2af!important}.thesis-badge.intact{background:#252b22!important;color:#b9c9ad!important}.thesis-progress{background:rgba(203,159,79,.12)!important}.thesis-progress i{background:linear-gradient(90deg,var(--estate-brass3),var(--estate-brass2))!important}.thesis-hero-art>img,.thesis-bob-chip img,.thesis-end img{filter:sepia(.15) saturate(.7) brightness(.84)!important}.thesis-bob-chip{background:#12170f!important;border:1px solid var(--estate-brass3)!important}
+
+/* News rail / footer */
+.ticker-shell{height:52px!important;border-color:var(--estate-line)!important;background:#080d09!important}.ticker-label{padding:0 20px!important;background:linear-gradient(180deg,#76501e,#4e3416)!important;color:#fff0ce!important;font:800 11px var(--estate-sans)!important}.ticker-item{font:500 15px var(--estate-serif)!important;color:var(--estate-ivory)!important;padding:15px 12px!important}.ticker-item b{color:var(--estate-brass2)!important}.ticker-sep{color:var(--estate-brass)!important}
+footer{height:26px!important;padding:6px 30px!important;color:#8f826b!important;font:500 11px var(--estate-serif)!important;background:#060907!important}
+
+/* Across-room readability at the TV's native 1080p resolution. */
+@media (min-width:1500px) and (min-height:850px){
+  .detail-list>div{font-size:15px!important}
+  .section-caption{font-size:17px!important}
+  .portfolio-metrics b{font-size:16px!important}
+  .stock .zones{font-size:16px!important}
+  .leaks.rich>div,.usage-row{font-size:16px!important}
+}
+
+@media (max-width:1200px){
+  .brand h1{font-size:38px!important}
+  .stock-list{grid-template-columns:1fr!important;overflow:auto!important}
+  .portfolio-grid{grid-template-columns:1fr!important}
+  .screen[data-screen="power"] .power-top-grid{grid-template-columns:1fr!important;overflow:auto!important}
+}
