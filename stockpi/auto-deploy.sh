@@ -13,6 +13,27 @@ LOCK="/run/farmpi-auto-deploy.lock"
 DEPLOY_STARTED=0
 LAST_COMMIT=""
 
+# Files below are local runtime state, credentials, generated caches, or settings.
+# They must never be removed or overwritten by a GitHub code deployment.
+RSYNC_EXCLUDES=(
+  --exclude 'venv/'
+  --exclude 'cameras.env'
+  --exclude 'webull.env'
+  --exclude '.webull-token/'
+  --exclude 'conf/token.txt'
+  --exclude 'dashboard_config.json'
+  --exclude 'power_schedule.json'
+  --exclude 'stocks.json'
+  --exclude 'cloud_portfolio_cache.json'
+  --exclude 'webull-summary-cache.json'
+  --exclude 'quote-cache.json'
+  --exclude 'static/webull-activity.json'
+  --exclude 'backups/'
+  --exclude '.deployed-commit'
+  --exclude '__pycache__/'
+  --exclude '*.pyc'
+)
+
 exec 9>"$LOCK"
 flock -n 9 || exit 0
 
@@ -23,15 +44,9 @@ restore_previous(){
   local status="${1:-1}"
   set +e
   if [[ "$DEPLOY_STARTED" -eq 1 && -d "$BACKUP" ]]; then
-    log "Deployment failed; restoring previous working files."
+    log "Deployment failed; restoring previous working code while preserving local state."
     as_user rsync -a --delete \
-      --exclude 'venv/' \
-      --exclude 'cameras.env' \
-      --exclude 'dashboard_config.json' \
-      --exclude 'power_schedule.json' \
-      --exclude '.deployed-commit' \
-      --exclude '__pycache__/' \
-      --exclude '*.pyc' \
+      "${RSYNC_EXCLUDES[@]}" \
       "$BACKUP/" "$APPDIR/"
 
     if [[ -n "$LAST_COMMIT" ]]; then
@@ -81,8 +96,13 @@ else
 fi
 log "New main commit detected: ${NEW_COMMIT:0:12} (previous $PREVIOUS_LABEL)."
 
-# Validate files that can be checked without importing app dependencies.
+# Validate files that can be checked without starting the dashboard.
 python3 -m py_compile "$SOURCE/stockpi/app.py"
+for py_file in run_dashboard.py webull_readonly.py camera_motion_server.py webull_activity_service.py; do
+  if [[ -f "$SOURCE/stockpi/$py_file" ]]; then
+    python3 -m py_compile "$SOURCE/stockpi/$py_file"
+  fi
+done
 for json_file in dashboard_config.json power_schedule.json stocks.json; do
   if [[ -f "$SOURCE/stockpi/$json_file" ]]; then
     python3 -m json.tool "$SOURCE/stockpi/$json_file" >/dev/null
@@ -97,49 +117,57 @@ if [[ -x "$APPDIR/venv/bin/pip" && -f "$SOURCE/stockpi/requirements.txt" ]]; the
   as_user "$APPDIR/venv/bin/pip" install --quiet -r "$SOURCE/stockpi/requirements.txt"
 fi
 
-# Snapshot the current deployment so any later failure can roll back.
+# Snapshot the current deployed CODE. Local credentials/settings are deliberately
+# excluded from both backup and sync because deployment must never own them.
 rm -rf "$BACKUP"
 as_user mkdir -p "$BACKUP"
 as_user rsync -a --delete \
-  --exclude 'venv/' \
-  --exclude 'cameras.env' \
-  --exclude 'dashboard_config.json' \
-  --exclude 'power_schedule.json' \
-  --exclude '.deployed-commit' \
-  --exclude '__pycache__/' \
-  --exclude '*.pyc' \
+  "${RSYNC_EXCLUDES[@]}" \
+  --exclude 'auto-deploy.sh' \
   "$APPDIR/" "$BACKUP/"
 DEPLOY_STARTED=1
 
-# Sync repository app files while preserving private/runtime-local state.
-# auto-deploy.sh is replaced atomically after the main sync so the currently
-# executing script is never modified in place.
+# Sync repository application code while preserving all runtime-local state.
 as_user rsync -a --delete \
-  --exclude 'venv/' \
-  --exclude 'cameras.env' \
-  --exclude 'dashboard_config.json' \
-  --exclude 'power_schedule.json' \
-  --exclude '.deployed-commit' \
+  "${RSYNC_EXCLUDES[@]}" \
   --exclude 'auto-deploy.sh' \
-  --exclude '__pycache__/' \
-  --exclude '*.pyc' \
   "$SOURCE/stockpi/" "$APPDIR/"
 
+# Replace the deployer atomically so the currently running process is never
+# modified in place.
 if [[ -f "$SOURCE/stockpi/auto-deploy.sh" ]]; then
   as_user cp "$SOURCE/stockpi/auto-deploy.sh" "$APPDIR/.auto-deploy.sh.new"
   as_user chmod +x "$APPDIR/.auto-deploy.sh.new"
   as_user mv "$APPDIR/.auto-deploy.sh.new" "$APPDIR/auto-deploy.sh"
 fi
 
+# Migrate existing installations to the nonblocking runner. app.py remains the
+# Flask application module; run_dashboard.py starts Flask first and moves slow
+# network refreshes to background workers.
+SERVICE_FILE="/etc/systemd/system/farm-dashboard.service"
+if [[ -f "$APPDIR/run_dashboard.py" && -f "$SERVICE_FILE" ]]; then
+  if grep -q '^ExecStart=' "$SERVICE_FILE"; then
+    sed -i "s#^ExecStart=.*#ExecStart=$APPDIR/venv/bin/python $APPDIR/run_dashboard.py#" "$SERVICE_FILE"
+    systemctl daemon-reload
+  fi
+fi
+
 as_user "$APPDIR/venv/bin/python" -m py_compile "$APPDIR/app.py"
+if [[ -f "$APPDIR/run_dashboard.py" ]]; then
+  as_user "$APPDIR/venv/bin/python" -m py_compile "$APPDIR/run_dashboard.py"
+fi
+
 echo "$NEW_COMMIT" > "$STAMP"
 chown "$DEPLOY_USER" "$STAMP"
 
 systemctl restart farm-dashboard.service
 
+# The hardened runner normally answers in a few seconds. Allow a full minute so
+# a slow SD card or package import never causes a false rollback.
 healthy=0
-for _ in $(seq 1 20); do
-  if curl -fsS --max-time 2 http://127.0.0.1:8080/ >/dev/null 2>&1; then
+for _ in $(seq 1 60); do
+  if curl -fsS --max-time 2 http://127.0.0.1:8080/api/health >/dev/null 2>&1 || \
+     curl -fsS --max-time 2 http://127.0.0.1:8080/ >/dev/null 2>&1; then
     healthy=1
     break
   fi

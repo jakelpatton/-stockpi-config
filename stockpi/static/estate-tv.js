@@ -1,6 +1,14 @@
 (() => {
   function setText(selector,text){const el=document.querySelector(selector);if(el)el.textContent=text}
-  function addScriptOnce(src){if(!document.querySelector(`script[src="${src}"]`)){const s=document.createElement('script');s.src=src;s.defer=true;document.body.appendChild(s)}}
+  function addScriptOnce(src){
+    if(document.querySelector(`script[src="${src}"]`))return;
+    const s=document.createElement('script');
+    s.src=src;
+    // Dynamically inserted scripts are async by default; force insertion order so
+    // rotation/data modules do not race each other during kiosk startup.
+    s.async=false;
+    document.body.appendChild(s);
+  }
 
   function ensureActivityAssets(){
     if(!document.querySelector('link[href="/static/webull-activity.css"]')){const l=document.createElement('link');l.rel='stylesheet';l.href='/static/webull-activity.css';document.head.appendChild(l)}
@@ -13,6 +21,7 @@
   }
 
   function ensureMarketSequenceAssets(){
+    addScriptOnce('/static/rotation-controller.js');
     if(!document.querySelector('link[href="/static/market-sequence.css"]')){const l=document.createElement('link');l.rel='stylesheet';l.href='/static/market-sequence.css';document.head.appendChild(l)}
     addScriptOnce('/static/market-sequence.js');
     if(!document.querySelector('link[href="/static/market-alerts.css"]')){const l=document.createElement('link');l.rel='stylesheet';l.href='/static/market-alerts.css';document.head.appendChild(l)}
@@ -56,7 +65,7 @@
   }
 
   function maintainScreenLabel(){
-    const labels={stocks:'Portfolio & Markets',activity:'Orders & Trading Activity',home:'Estate Overview',water:'Water & Leak Watch',power:'Energy & Electrical',cameras:'Security & Cameras',thesis:'Sunday Market Review'};
+    const labels={stocks:'Portfolio & Markets',portfolio:'Portfolio',activity:'Orders & Trading Activity',limits:'Open Limit Orders',home:'Estate Overview',water:'Water & Leak Watch',power:'Energy & Electrical',cameras:'Security & Cameras',thesis:'Sunday Market Review'};
     const update=()=>{const active=document.querySelector('.screen.active');const el=document.getElementById('screenName');if(!active||!el)return;if(active.dataset.marketTitle)el.textContent=active.dataset.marketTitle;else if(labels[active.dataset.screen])el.textContent=labels[active.dataset.screen]};
     const main=document.querySelector('main.screens');if(main)new MutationObserver(update).observe(main,{attributes:true,subtree:true,attributeFilter:['class']});update();
   }

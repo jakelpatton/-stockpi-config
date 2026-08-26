@@ -38,6 +38,14 @@ EOF
 chmod 600 "$ENVFILE"
 unset NVR_PASSWORD
 
+# run_dashboard.py imports the Flask application and starts the HTTP server
+# immediately. Slow Webull/market/news refreshes run in background workers, so
+# port 8080 does not disappear for 20-30+ seconds on every restart.
+DASHBOARD_RUNNER="$APPDIR/run_dashboard.py"
+if [ ! -f "$DASHBOARD_RUNNER" ]; then
+  DASHBOARD_RUNNER="$APPDIR/app.py"
+fi
+
 sudo tee /etc/systemd/system/farm-dashboard.service >/dev/null <<EOF
 [Unit]
 Description=Farm Dashboard Server
@@ -47,7 +55,7 @@ Wants=network-online.target
 User=$USER
 WorkingDirectory=$APPDIR
 EnvironmentFile=$ENVFILE
-ExecStart=$APPDIR/venv/bin/python $APPDIR/app.py
+ExecStart=$APPDIR/venv/bin/python $DASHBOARD_RUNNER
 Restart=always
 RestartSec=5
 [Install]
