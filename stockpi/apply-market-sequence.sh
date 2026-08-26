@@ -32,6 +32,7 @@ echo "My Watchlist is read from Webull and refreshes automatically; owned symbol
 echo "Recommendation timestamps use recommendation_timestamp when present, otherwise last_reviewed date."
 echo "Threshold attention states are enabled for Buy / Strong Buy / Aggressive Buy levels."
 echo "Bottom ticker shows current price and daily percent beside stock symbols."
-echo "Wyze Farm Backyard camera uses the local HLS bridge at farmpi.local:8888/farm-backyard-cam."
+echo "Wyze Farm Backyard camera uses the working local WebRTC bridge on farmpi.local:5080."
+echo "HLS endpoint: http://farmpi.local:5080/hls/farm_backyard_cam.m3u8"
 echo "Credentials and token files were not touched."
 echo "Backup: $APPDIR/backups/$STAMP"
