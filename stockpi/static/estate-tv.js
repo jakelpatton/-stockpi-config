@@ -26,6 +26,12 @@
     if(!document.querySelector('script[src="/static/market-sequence.js"]')){
       const s=document.createElement('script');s.src='/static/market-sequence.js';s.defer=true;document.body.appendChild(s);
     }
+    if(!document.querySelector('link[href="/static/market-alerts.css"]')){
+      const l=document.createElement('link');l.rel='stylesheet';l.href='/static/market-alerts.css';document.head.appendChild(l);
+    }
+    if(!document.querySelector('script[src="/static/market-alerts.js"]')){
+      const s=document.createElement('script');s.src='/static/market-alerts.js';s.defer=true;document.body.appendChild(s);
+    }
   }
 
   function addHomeHeading(){
