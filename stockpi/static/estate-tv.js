@@ -65,7 +65,8 @@
   function relabel(){
     setText('.brand h1','Patton Estate');setText('.location-block b',"Farm • Est’d. 1838");setText('.location-block small','Mt. Vernon, Missouri');
     const stocks=document.querySelector('[data-screen="stocks"]');
-    if(stocks){const e=stocks.querySelector('.eyebrow');if(e)e.textContent='MARKETS • PORTFOLIO';const h=stocks.querySelector('h2');if(h)h.textContent='Portfolio & Markets';const c=stocks.querySelector('.section-caption');if(c)c.textContent='Owned positions • Webull account • investment detail • intraday progress'}
+    if(stocks){stocks.dataset.marketTitle='Portfolio';const e=stocks.querySelector('.eyebrow');if(e)e.textContent='WEBULL • OWNED POSITIONS';const h=stocks.querySelector('h2');if(h)h.textContent='Portfolio';const c=stocks.querySelector('.section-caption');if(c)c.textContent='Owned investments • position value • cost • gain/loss • intraday progress'}
+    const markets=document.querySelector('[data-screen="markets"]');if(markets)markets.dataset.marketTitle='Markets';
     addHomeHeading();
     const water=document.querySelector('[data-screen="water"]');if(water){const e=water.querySelector('.screen-heading .eyebrow');if(e)e.textContent='WATER • WELLS • LEAK DETECTION';const h=water.querySelector('.screen-heading h2');if(h)h.textContent='Water & Leak Watch'}
     const power=document.querySelector('[data-screen="power"]');if(power){const e=power.querySelector('.screen-heading .eyebrow');if(e)e.textContent='ESTATE POWER • LOADS • SUPPLY';const h=power.querySelector('.screen-heading h2');if(h)h.textContent='Energy & Electrical';const c=power.querySelector('.section-caption');if(c)c.textContent='Main House and Rockhouse energy usage'}
@@ -74,7 +75,7 @@
   }
 
   function maintainScreenLabel(){
-    const labels={stocks:'Portfolio & Markets',portfolio:'Portfolio',activity:'Orders & Trading Activity',limits:'Open Limit Orders',home:'Estate Overview',water:'Water & Leak Watch',power:'Energy & Electrical',cameras:'Security & Cameras',thesis:'Sunday Market Review'};
+    const labels={stocks:'Portfolio',markets:'Markets',portfolio:'Portfolio',activity:'Orders & Trading Activity',limits:'Open Limit Orders',home:'Estate Overview',water:'Water & Leak Watch',power:'Energy & Electrical',cameras:'Security & Cameras',thesis:'Sunday Market Review'};
     const update=()=>{const active=document.querySelector('.screen.active');const el=document.getElementById('screenName');if(!active||!el)return;if(active.dataset.marketTitle)el.textContent=active.dataset.marketTitle;else if(labels[active.dataset.screen])el.textContent=labels[active.dataset.screen]};
     const main=document.querySelector('main.screens');if(main)new MutationObserver(update).observe(main,{attributes:true,subtree:true,attributeFilter:['class']});update();
   }
