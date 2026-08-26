@@ -1,9 +1,4 @@
 (() => {
-  const CHECK_MS=1000;
-  let lastScreen='';
-  let lastScreenChange=Date.now();
-  let lastAdvance=0;
-
   const fmtTs=value=>{
     if(!value)return '—';
     const n=Number(value);
@@ -38,44 +33,17 @@
     }catch(e){el.textContent='DATA • refresh unavailable';el.title=String(e)}
   }
 
-  function activeName(){return document.querySelector('.screen.active')?.dataset.screen||''}
-
-  function recoverRotation(){
-    const current=activeName();
-    if(current!==lastScreen){lastScreen=current;lastScreenChange=Date.now();return;}
-    if(document.getElementById('cameraMotionOverlay')?.classList.contains('visible'))return;
-
-    // The thesis screen deliberately owns the rotation timer while its long
-    // scrolling review is running. Never let the generic stuck-screen watchdog
-    // interrupt it before the thesis script reaches the end and advances itself.
-    if(current==='thesis')return;
-
-    if(typeof cfg==='undefined'||!cfg.rotation_enabled||!Array.isArray(cfg.screens)||cfg.screens.length<2)return;
-    const limit=Math.max(8000,(Number(cfg.rotation_seconds)||18)*1000+5000);
-    const now=Date.now();
-    if(now-lastScreenChange<limit||now-lastAdvance<5000)return;
-    if(typeof showScreen!=='function')return;
-    let i=cfg.screens.indexOf(current);
-    if(i<0)i=Number.isFinite(Number(idx))?Number(idx):0;
-    lastAdvance=now;
-    showScreen((i+1)%cfg.screens.length);
-    lastScreen=activeName();
-    lastScreenChange=Date.now();
-  }
-
   function removeLegacyPortfolioError(){
     const p=document.getElementById('portfolioPL');
-    if(p&&/portfolio data unavailable/i.test(p.textContent||'')){
-      p.textContent='Webull account data reconnecting…';
-    }
+    if(p&&/portfolio data unavailable/i.test(p.textContent||''))p.textContent='Webull account data reconnecting…';
   }
 
   function boot(){
     ensureFreshness();
     refreshFreshness();
-    lastScreen=activeName();
     setInterval(refreshFreshness,15000);
-    setInterval(()=>{recoverRotation();removeLegacyPortfolioError()},CHECK_MS);
+    setInterval(removeLegacyPortfolioError,1000);
   }
+
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
