@@ -10,7 +10,7 @@ if [ ! -d "$APPDIR/static" ]; then
 fi
 
 mkdir -p "$APPDIR/backups/$STAMP/static"
-for f in static/estate-tv.js static/market-sequence.js static/market-sequence.css static/market-alerts.js static/market-alerts.css static/market-watchlist-sync.js; do
+for f in static/estate-tv.js static/market-sequence.js static/market-sequence.css static/market-alerts.js static/market-alerts.css static/market-watchlist-sync.js static/ticker-prices.js; do
   if [ -f "$APPDIR/$f" ]; then cp -a "$APPDIR/$f" "$APPDIR/backups/$STAMP/$f"; fi
 done
 
@@ -20,6 +20,7 @@ install -m 644 "$SOURCE_DIR/static/market-sequence.css" "$APPDIR/static/market-s
 install -m 644 "$SOURCE_DIR/static/market-alerts.js" "$APPDIR/static/market-alerts.js"
 install -m 644 "$SOURCE_DIR/static/market-alerts.css" "$APPDIR/static/market-alerts.css"
 install -m 644 "$SOURCE_DIR/static/market-watchlist-sync.js" "$APPDIR/static/market-watchlist-sync.js"
+install -m 644 "$SOURCE_DIR/static/ticker-prices.js" "$APPDIR/static/ticker-prices.js"
 
 sudo systemctl restart farm-dashboard
 sleep 2
@@ -29,5 +30,6 @@ echo "Order: Portfolio -> each owned stock -> Open Limit Orders -> My Watchlist 
 echo "My Watchlist is read from Webull and refreshes automatically; owned symbols are omitted from later watchlist pages to avoid duplicates."
 echo "Recommendation timestamps use recommendation_timestamp when present, otherwise last_reviewed date."
 echo "Threshold attention states are enabled for Buy / Strong Buy / Aggressive Buy levels."
+echo "Bottom ticker shows current price and daily percent beside stock symbols."
 echo "Credentials and token files were not touched."
 echo "Backup: $APPDIR/backups/$STAMP"
