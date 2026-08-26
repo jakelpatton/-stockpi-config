@@ -35,15 +35,28 @@
     try{const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error(String(r.status));return await r.json()}catch(e){return fallback}
   }
 
-  function logoHTML(symbol){
+  function logoHTML(symbol,extraClass=''){
     const meta=identity(symbol);
     const src=meta.domain?`https://icons.duckduckgo.com/ip3/${encodeURIComponent(meta.domain)}.ico`:'';
-    return `<span class="owned-logo"><span class="owned-logo-letter">${esc(symbol.slice(0,1))}</span>${src?`<img src="${src}" alt="${esc(meta.name)} logo" referrerpolicy="no-referrer" onerror="this.style.display='none'">`:''}</span>`;
+    return `<span class="owned-logo ${extraClass}"><span class="owned-logo-letter">${esc(symbol.slice(0,1))}</span>${src?`<img src="${src}" alt="${esc(meta.name)} logo" referrerpolicy="no-referrer" onerror="this.style.display='none'">`:''}</span>`;
+  }
+
+  function relabelPortfolio(){
+    const stocks=document.querySelector('.screen[data-screen="stocks"]');
+    if(!stocks)return;
+    stocks.dataset.marketTitle='Portfolio';
+    const e=stocks.querySelector('.screen-heading .eyebrow');
+    const h=stocks.querySelector('.screen-heading h2');
+    const c=stocks.querySelector('.screen-heading .section-caption');
+    if(e)e.textContent='WEBULL • OWNED POSITIONS';
+    if(h)h.textContent='Portfolio';
+    if(c)c.textContent='Owned investments • position value • cost • gain/loss • intraday progress';
   }
 
   function ensureRoot(){
     const stocks=document.querySelector('.screen[data-screen="stocks"]');
     if(!stocks)return null;
+    relabelPortfolio();
     document.getElementById('rows')?.classList.add('owned-legacy-hidden');
     document.getElementById('portfolioFocusRows')?.classList.add('owned-legacy-hidden');
     let root=document.getElementById('ownedPositionCards');
@@ -54,6 +67,27 @@
     const anchor=document.getElementById('portfolioFocusRows')||document.getElementById('rows')||document.getElementById('portfolioPanel')||stocks.querySelector('.screen-heading');
     anchor?.insertAdjacentElement('afterend',root);
     return root;
+  }
+
+  function ensureMarketsScreen(){
+    let screen=document.querySelector('.screen[data-screen="markets"]');
+    if(!screen){
+      const main=document.querySelector('main.screens');
+      if(!main)return null;
+      screen=document.createElement('section');
+      screen.className='screen';
+      screen.dataset.screen='markets';
+      screen.dataset.marketTitle='Markets';
+      screen.innerHTML=`
+        <div class="screen-heading markets-heading">
+          <div><div class="eyebrow">MARKET WATCH • FOLLOWING</div><h2>Markets</h2></div>
+          <div class="section-caption">Stocks being followed • current price • daily move • entry levels</div>
+        </div>
+        <div id="marketsFollowGrid" class="markets-follow-grid"></div>`;
+      main.appendChild(screen);
+    }
+    screen.dataset.marketTitle='Markets';
+    return screen.querySelector('#marketsFollowGrid');
   }
 
   function configureGrid(root,count){
@@ -72,6 +106,15 @@
     root.dataset.density=count<=3?'roomy':count<=6?'normal':count<=8?'compact':'dense';
   }
 
+  function configureMarketsGrid(root,count){
+    const cols=count<=12?2:count<=18?3:4;
+    const rows=Math.max(1,Math.ceil(Math.max(1,count)/cols));
+    root.style.setProperty('--markets-cols',String(cols));
+    root.style.setProperty('--markets-rows',String(rows));
+    root.dataset.count=String(count);
+    root.dataset.density=count<=8?'roomy':count<=12?'normal':count<=18?'compact':'dense';
+  }
+
   function sparkline(points,cls){
     const vals=(points||[]).map(Number).filter(Number.isFinite);
     if(vals.length<2)return `<div class="owned-chart-empty">DAY CHART • collecting data</div>`;
@@ -85,10 +128,11 @@
   }
 
   async function loadCharts(symbols){
+    const unique=[...new Set(symbols.filter(Boolean))];
     const now=Date.now();
-    if(now-lastChartFetch<CHART_REFRESH_MS && symbols.every(s=>chartCache.has(s)))return;
+    if(now-lastChartFetch<CHART_REFRESH_MS && unique.every(s=>chartCache.has(s)))return;
     lastChartFetch=now;
-    await Promise.all(symbols.map(async symbol=>{
+    await Promise.all(unique.map(async symbol=>{
       const data=await getJSON(`${location.protocol}//${location.hostname}:8092/api/chart/${encodeURIComponent(symbol)}`,null);
       if(data&&Array.isArray(data.points)&&data.points.length)chartCache.set(symbol,data.points);
     }));
@@ -140,31 +184,87 @@
     </article>`;
   }
 
+  function marketSignal(stock,current){
+    const buy=num(stock.buy),strong=num(stock.strong_buy,stock.strong),aggressive=num(stock.aggressive_buy,stock.aggressive);
+    if(Number.isFinite(current)&&Number.isFinite(aggressive)&&current<=aggressive)return 'AGGRESSIVE BUY';
+    if(Number.isFinite(current)&&Number.isFinite(strong)&&current<=strong)return 'STRONG BUY';
+    if(Number.isFinite(current)&&Number.isFinite(buy)&&current<=buy)return 'BUY';
+    return 'HOLD';
+  }
+
+  function renderMarketCard(stock,quote){
+    const symbol=String(stock.symbol||'').toUpperCase();
+    const meta=identity(symbol);
+    const current=num(quote?.price,stock.webull_last_price);
+    const dayPct=num(quote?.pct);
+    const buy=num(stock.buy),strong=num(stock.strong_buy,stock.strong),aggressive=num(stock.aggressive_buy,stock.aggressive);
+    const signal=marketSignal(stock,current);
+    return `<article class="market-follow-card">
+      <div class="market-follow-main">
+        <div class="market-follow-company">${logoHTML(symbol,'market-logo')}<div><b>${esc(symbol)}</b><span>${esc(meta.name)}</span></div></div>
+        <div class="market-follow-price"><b>${money(current)}</b><span class="${tone(dayPct)}">${signedPct(dayPct)}</span></div>
+        <div class="market-follow-signal ${signal.includes('BUY')?'buy':''}">${signal}</div>
+      </div>
+      <div class="market-follow-levels">
+        <div><span>Buy</span><b>${money(buy)}</b></div>
+        <div><span>Strong Buy</span><b>${money(strong)}</b></div>
+        <div><span>Aggressive</span><b>${money(aggressive)}</b></div>
+      </div>
+      <div class="market-follow-note">${esc(stock.note||'Following for a better entry.')}</div>
+    </article>`;
+  }
+
+  function followedStocks(stocks,positions){
+    const owned=new Set((positions||[]).filter(p=>Number(p.quantity)>0).map(p=>String(p.symbol||'').toUpperCase()));
+    return (stocks||[]).filter(stock=>{
+      const symbol=String(stock.symbol||'').toUpperCase();
+      if(!symbol||owned.has(symbol)||stock.owned||Number(stock.position_usd)>0)return false;
+      // Keep the intentional thesis/follow list. Webull-only watchlist rows with no
+      // stored recommendation/note stay off this page.
+      return Number.isFinite(num(stock.buy,stock.strong_buy,stock.strong,stock.aggressive_buy,stock.aggressive)) || !!stock.note;
+    });
+  }
+
   async function refresh(){
     const root=ensureRoot();
-    if(!root)return;
-    const [webull,quotesResult]=await Promise.all([
+    const marketsRoot=ensureMarketsScreen();
+    if(!root||!marketsRoot)return;
+    const [webull,quotesResult,stocks]=await Promise.all([
       getJSON('/api/webull/summary',{positions:[],connected:false}),
-      getJSON('/api/quotes',{quotes:{}})
+      getJSON('/api/quotes',{quotes:{}}),
+      getJSON('/api/stocks',[])
     ]);
     const positions=(webull.positions||[]).filter(p=>Number(p.quantity)>0);
+    const qmap=quotesResult.quotes||{};
+    const followed=followedStocks(stocks,positions);
+
     configureGrid(root,positions.length);
     if(!positions.length){
       root.innerHTML='<div class="owned-empty"><b>No owned positions found.</b><span>Waiting for the Webull account position feed.</span></div>';
-      return;
+    }else{
+      await loadCharts(positions.map(p=>String(p.symbol||'').toUpperCase()));
+      root.innerHTML=positions.map(p=>renderCard(p,qmap[String(p.symbol||'').toUpperCase()]||{})).join('');
     }
-    await loadCharts(positions.map(p=>String(p.symbol||'').toUpperCase()));
-    const qmap=quotesResult.quotes||{};
-    root.innerHTML=positions.map(p=>renderCard(p,qmap[String(p.symbol||'').toUpperCase()]||{})).join('');
+
+    configureMarketsGrid(marketsRoot,followed.length);
+    if(!followed.length){
+      marketsRoot.innerHTML='<div class="markets-empty"><b>No followed stocks configured.</b><span>Stocks with stored entry levels will appear here automatically.</span></div>';
+    }else{
+      marketsRoot.innerHTML=followed.map(s=>renderMarketCard(s,qmap[String(s.symbol||'').toUpperCase()]||{})).join('');
+    }
   }
 
   function boot(){
     ensureRoot();
+    ensureMarketsScreen();
+    relabelPortfolio();
     setTimeout(refresh,500);
     setInterval(refresh,REFRESH_MS);
     const main=document.querySelector('main.screens');
     if(main)new MutationObserver(()=>{
-      if(document.querySelector('.screen.active')?.dataset.screen==='stocks')setTimeout(refresh,100);
+      const active=document.querySelector('.screen.active')?.dataset.screen;
+      if(active==='stocks'||active==='markets')setTimeout(refresh,100);
+      relabelPortfolio();
     }).observe(main,{attributes:true,subtree:true,attributeFilter:['class']});
   }
 
