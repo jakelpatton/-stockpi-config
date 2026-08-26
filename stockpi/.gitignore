@@ -1,0 +1,10 @@
+# Local credentials / auth state — never commit
+webull.env
+cameras.env
+.webull-token/
+conf/token.txt
+
+# Runtime caches
+cloud_portfolio_cache.json
+__pycache__/
+*.pyc
