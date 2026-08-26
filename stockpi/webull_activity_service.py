@@ -18,7 +18,16 @@ import threading
 import time
 from typing import Any
 
-logging.getLogger("webull.core.client").setLevel(logging.CRITICAL)
+for _logger_name in (
+    "webull",
+    "webull.core",
+    "webull.core.client",
+    "webull.core.http",
+    "webull.core.http.initializer",
+    "webull.core.http.initializer.token",
+    "webull.core.http.initializer.token.token_manager",
+):
+    logging.getLogger(_logger_name).setLevel(logging.CRITICAL)
 
 try:
     from webull.core.client import ApiClient
@@ -32,7 +41,6 @@ except Exception:
 APPDIR = Path(os.environ.get("FARM_APP_DIR", str(Path.home() / "farmpi"))).expanduser()
 ENVFILE = Path(os.environ.get("WEBULL_ENV_FILE", str(APPDIR / "webull.env"))).expanduser()
 OUTFILE = APPDIR / "static" / "webull-activity.json"
-FULL_HISTORY_START = os.environ.get("WEBULL_HISTORY_START", "2000-01-01")
 POLL_SECONDS = max(8, int(os.environ.get("WEBULL_ACTIVITY_POLL_SECONDS", "15")))
 FULL_REFRESH_SECONDS = max(900, int(os.environ.get("WEBULL_HISTORY_REFRESH_SECONDS", "21600")))
 
@@ -225,16 +233,17 @@ class Monitor:
             return str(accounts[0].get("account_id") or accounts[0].get("accountId") or accounts[0].get("id") or "")
         return ""
 
-    def history_page_loop(self, trade, account_id: str, start_date: str, end_date: str) -> list[dict]:
+    def history_page_loop(self, trade, account_id: str, start_date: str | None = None, end_date: str | None = None) -> list[dict]:
         rows: list[dict] = []
         cursor = None
         seen_cursor = set()
         for _ in range(500):
-            res = trade.order_v3.get_order_history(
-                account_id, page_size=100, start_date=start_date, end_date=end_date,
-                last_client_order_id=cursor,
-            )
-            payload = response_json(res)
+            kwargs = {"page_size": 100, "last_client_order_id": cursor}
+            if start_date:
+                kwargs["start_date"] = start_date
+            if end_date:
+                kwargs["end_date"] = end_date
+            payload = response_json(trade.order_v3.get_order_history(account_id, **kwargs))
             raw = flatten_orders(payload)
             if not raw:
                 break
@@ -252,6 +261,27 @@ class Monitor:
             if len(raw) < 100:
                 break
         return dedupe_orders(rows)
+
+    @staticmethod
+    def order_local_date(order: dict) -> str:
+        value = order.get("place_time") or order.get("filled_time") or ""
+        if value in (None, ""):
+            return ""
+        text = str(value)
+        if text.isdigit():
+            try:
+                n = int(text)
+                if n > 10_000_000_000:
+                    n = n / 1000
+                return datetime.fromtimestamp(n).strftime("%Y-%m-%d")
+            except Exception:
+                return ""
+        if len(text) >= 10 and text[4:5] == "-" and text[7:8] == "-":
+            return text[:10]
+        try:
+            return datetime.fromisoformat(text.replace("Z", "+00:00")).astimezone().strftime("%Y-%m-%d")
+        except Exception:
+            return ""
 
     def open_page_loop(self, trade, account_id: str) -> list[dict]:
         rows: list[dict] = []
@@ -320,6 +350,7 @@ class Monitor:
                 client.do_subscribe([account_id])
             except Exception as exc:
                 with self.lock:
+                    self.event_account = None
                     self.state["event_stream"] = "polling"
                     self.state["event_error"] = str(exc)[:180]
                 self.write()
@@ -332,12 +363,17 @@ class Monitor:
         if not c["key"] or not c["secret"]:
             with self.lock:
                 self.state.update({
-                    "configured": False, "connected": False, "read_only": True,
+                    "configured": False,
+                    "connected": False,
+                    "stale": False,
+                    "read_only": True,
                     "error": "Webull credentials are not configured",
-                    "open_orders": [], "today_orders": [],
+                    "open_orders": self.state.get("open_orders", []),
+                    "today_orders": self.state.get("today_orders", []),
                 })
             self.write()
             return
+
         trade = self.clients(c)
         account_id = self.account_id(trade, c["account_id"])
         if not account_id:
@@ -346,17 +382,21 @@ class Monitor:
 
         today = datetime.now().strftime("%Y-%m-%d")
         open_orders = self.open_page_loop(trade, account_id)
-        today_orders = self.history_page_loop(trade, account_id, today, today)
+
+        # Webull US currently rejects same-day start_date/end_date on Order
+        # History. Query without date parameters and filter today's rows locally.
+        recent_orders = self.history_page_loop(trade, account_id)
+        today_orders = [o for o in recent_orders if self.order_local_date(o) == today]
 
         history = self.state.get("history") if isinstance(self.state.get("history"), list) else []
         need_full = not history or time.time() - self.last_full_refresh >= FULL_REFRESH_SECONDS
         if need_full:
-            history = self.history_page_loop(trade, account_id, FULL_HISTORY_START, today)
+            history = recent_orders
             self.last_full_refresh = time.time()
 
-        # Most recent first when timestamps are sortable ISO strings/millisecond strings.
         def sort_key(o):
             return str(o.get("place_time") or o.get("filled_time") or "")
+
         open_orders = sorted(open_orders, key=sort_key, reverse=True)
         today_orders = sorted(today_orders, key=sort_key, reverse=True)
         history = sorted(dedupe_orders(history), key=sort_key, reverse=True)
@@ -369,14 +409,16 @@ class Monitor:
             self.state.update({
                 "configured": True,
                 "connected": True,
+                "stale": False,
                 "read_only": True,
                 "error": None,
+                "last_success": iso_now(),
                 "event_stream": self.state.get("event_stream") or "polling",
                 "open_orders": open_orders,
                 "today_orders": today_orders,
                 "history": history,
                 "history_complete": True,
-                "history_start": FULL_HISTORY_START,
+                "history_start": "all available",
                 "history_synced_at": iso_now() if need_full else self.state.get("history_synced_at"),
                 "history_synced_epoch": self.last_full_refresh,
                 "counts": {
@@ -401,9 +443,13 @@ class Monitor:
                 self.refresh()
             except Exception as exc:
                 with self.lock:
-                    self.state["connected"] = False
+                    had_good = bool(self.state.get("connected") or self.state.get("last_success"))
+                    self.state["configured"] = True
+                    self.state["connected"] = had_good
+                    self.state["stale"] = had_good
                     self.state["read_only"] = True
                     self.state["error"] = str(exc)[:240]
+                    self.state["last_attempt"] = iso_now()
                     self.state.setdefault("event_stream", "polling")
                 self.write()
             time.sleep(POLL_SECONDS)
