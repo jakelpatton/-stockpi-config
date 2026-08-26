@@ -37,6 +37,20 @@
     }
   }
 
+  function slowTickerToHalfSpeed(){
+    const track=document.getElementById('tickerTrack');
+    if(!track||track.dataset.halfSpeed==='1')return;
+    const raw=getComputedStyle(track).animationDuration||'';
+    const first=raw.split(',')[0].trim();
+    const match=first.match(/^([0-9.]+)(ms|s)$/);
+    if(!match)return;
+    const value=parseFloat(match[1]);
+    if(!Number.isFinite(value)||value<=0)return;
+    const unit=match[2];
+    track.style.animationDuration=`${value*2}${unit}`;
+    track.dataset.halfSpeed='1';
+  }
+
   function addHomeHeading(){
     const home=document.querySelector('[data-screen="home"]');
     if(!home||home.querySelector('.estate-home-heading')) return;
@@ -105,6 +119,6 @@
     update();
   }
 
-  function boot(){ensureActivityAssets();ensurePortfolioAssets();ensureMarketSequenceAssets();relabel();maintainScreenLabel();setTimeout(relabel,600);setTimeout(relabel,1800)}
+  function boot(){ensureActivityAssets();ensurePortfolioAssets();ensureMarketSequenceAssets();relabel();maintainScreenLabel();setTimeout(slowTickerToHalfSpeed,700);setTimeout(relabel,600);setTimeout(relabel,1800)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
