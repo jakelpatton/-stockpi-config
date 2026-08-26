@@ -11,10 +11,16 @@ requires credentials to be committed to GitHub.
 from __future__ import annotations
 
 from pathlib import Path
+import logging
 import os
 import threading
 import time
 from typing import Any
+
+# The official SDK's default error logger can dump complete signed request
+# headers, including the App Key. Keep those credential-bearing request dumps
+# out of the dashboard journal; callers still receive the concise exception.
+logging.getLogger("webull.core.client").setLevel(logging.CRITICAL)
 
 try:
     from webull.core.client import ApiClient
