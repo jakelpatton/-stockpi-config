@@ -19,9 +19,7 @@
     addStyle('/static/thesis.css');
     addStyle('/static/thesis-summary.css');
     addStyle('/static/tv-fit.css');
-    addStyle('/static/estate-tv.css');
     addScript('/static/thesis.js');
-    addScript('/static/estate-tv.js');
     if(!document.getElementById('portfolioStyles')){
       const s=document.createElement('style'); s.id='portfolioStyles'; s.textContent=`
         .portfolio-panel{margin:0 0 14px;padding:14px 16px;border:1px solid rgba(100,116,139,.22);border-radius:16px;background:rgba(255,255,255,.72);box-shadow:0 8px 28px rgba(15,23,42,.06)}
@@ -33,6 +31,9 @@
         @media(max-width:900px){.portfolio-grid{grid-template-columns:1fr}.portfolio-head{align-items:flex-start}.portfolio-total b{font-size:20px}}
       `; document.head.appendChild(s);
     }
+    /* Estate theme must be last so it intentionally overrides legacy dashboard styles. */
+    addStyle('/static/estate-tv.css');
+    addScript('/static/estate-tv.js');
   }
 
   function money(v){return Number.isFinite(v)?v.toLocaleString(undefined,{style:'currency',currency:'USD',minimumFractionDigits:2,maximumFractionDigits:2}):'—'}
@@ -100,7 +101,7 @@
 
   function refreshFrames(){const active=document.querySelector('.screen.active')?.dataset.screen==='cameras';if(!active)return;const stamp=Date.now();CAMERAS.filter(c=>!c.disabled).forEach(c=>{const img=document.getElementById(`cameraFeed${c.channel}`);if(img)img.src=`/api/cameras/snapshot/${c.channel}?t=${stamp}`});const u=document.getElementById('cameraUpdated');if(u)u.textContent='Updated '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})}
 
-  function patchScreenName(){const map={stocks:'Portfolio & Markets',thesis:'Sunday Market Review',home:'Estate Overview',water:'Water & Leak Watch',power:'Energy & Electrical',cameras:'Security & Cameras'};const obs=new MutationObserver(()=>{const active=document.querySelector('.screen.active');const el=document.getElementById('screenName');if(active&&el&&map[active.dataset.screen])el.textContent=map[active.dataset.screen];if(active?.dataset.screen==='cameras')refreshFrames();if(active?.dataset.screen==='stocks')refreshPortfolio()});const main=document.querySelector('main.screens');if(main)obs.observe(main,{attributes:true,subtree:true,attributeFilter:['class']})}
+  function patchScreenName(){const map={stocks:'Portfolio & Markets',thesis:'Sunday Market Review',home:'Estate Overview',water:'Water & Leak Watch',power:'Energy & Electrical',cameras:'Security & Cameras'};const obs=new MutationObserver(()=>{const active=document.querySelector('.screen.active');const el=document.getElementById('screenName');if(active&&el&&map[active.dataset.screen])el.textContent=map[active.datasetScreen];if(active?.dataset.screen==='cameras')refreshFrames();if(active?.dataset.screen==='stocks')refreshPortfolio()});const main=document.querySelector('main.screens');if(main)obs.observe(main,{attributes:true,subtree:true,attributeFilter:['class']})}
 
   function boot(){ensureStyles();makePortfolio();makeScreen();patchScreenName();checkStatus();refreshFrames();refreshPortfolio();timer=setInterval(refreshFrames,REFRESH_MS);portfolioTimer=setInterval(refreshPortfolio,20000);setInterval(checkStatus,15000)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
