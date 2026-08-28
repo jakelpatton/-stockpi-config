@@ -4,12 +4,23 @@
   function addScriptOnce(src){
     const base=src.split('?')[0];
     if([...document.scripts].some(s=>(s.getAttribute('src')||'').split('?')[0]===base))return;
-    const s=document.createElement('script');s.src=src;s.async=false;document.body.appendChild(s);
+    const s=document.createElement('script');s.src=src;s.async=false;(document.body||document.head).appendChild(s);
   }
   function addStyleOnce(href){
     const base=href.split('?')[0];
     if([...document.querySelectorAll('link[rel="stylesheet"]')].some(l=>(l.getAttribute('href')||'').split('?')[0]===base))return;
     const l=document.createElement('link');l.rel='stylesheet';l.href=href;document.head.appendChild(l);
+  }
+
+  function isMobileEstate(){
+    const host=(location.hostname||'').toLowerCase();
+    return host==='mobile.1838farm.com'||new URLSearchParams(location.search).get('mobile')==='1';
+  }
+
+  function bootMobile(){
+    if(document.body)document.body.style.visibility='hidden';
+    addStyleOnce('/static/mobile.css?v=20260828a');
+    addScriptOnce('/static/mobile-app.js?v=20260828a');
   }
 
   // Activity and portfolio insight assets are independent of the core Portfolio
@@ -79,6 +90,7 @@
   }
 
   function boot(){
+    if(isMobileEstate()){bootMobile();return;}
     ensureActivityAssets();
     relabel();
     maintainScreenLabel();
