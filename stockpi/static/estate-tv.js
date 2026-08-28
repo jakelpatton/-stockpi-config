@@ -53,7 +53,7 @@
       stocks.dataset.marketTitle='Portfolio';
       const e=stocks.querySelector('.eyebrow');if(e)e.textContent='WEBULL • OWNED POSITIONS';
       const h=stocks.querySelector('h2');if(h)h.textContent='Portfolio';
-      const c=stocks.querySelector('.section-caption');if(c)c.textContent='Owned investments • cost • value • gain/loss • 1-day progress';
+      const c=stocks.querySelector('.section-caption');if(c)c.textContent='Premium • account value • P&L • cash yield • live market context';
     }
     const markets=document.querySelector('[data-screen="markets"]');if(markets)markets.dataset.marketTitle='Markets';
     addHomeHeading();
