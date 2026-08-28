@@ -1,5 +1,5 @@
 (() => {
-  let thesisData=null, raf=null, lastTs=0, y=0, maxY=0, active=false, pauseUntil=0;
+  let thesisData=null, sectorData=null, raf=null, lastTs=0, y=0, maxY=0, active=false, pauseUntil=0;
   const SPEED=38;
   const TOP_PAUSE=2500;
   const SECTION_PAUSE=700;
@@ -9,9 +9,13 @@
   const HOUSE='/static/38C388BD-A21A-4A6D-9EC6-14B5CC26F7C1.png';
   const BOB='/static/art1/bob.png';
   const LIVE_THESIS='https://raw.githubusercontent.com/jakelpatton/-stockpi-config/main/stockpi/static/thesis.json';
+  const LIVE_SECTORS='https://raw.githubusercontent.com/jakelpatton/-stockpi-config/main/stockpi/static/sector-outlook.json';
   const money=v=>v==null?'—':'$'+Number(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const paraHtml=v=>(Array.isArray(v)?v:[v]).filter(Boolean).map(p=>`<p>${esc(p)}</p>`).join('');
+  const pct=v=>{const n=Number(v);return Number.isFinite(n)?`${n>=0?'+':''}${n.toFixed(2)}%`:'—'};
+  const tone=v=>{const n=Number(v);return !Number.isFinite(n)?'flat':n>0?'up':n<0?'down':'flat'};
+  const outlookClass=v=>{const s=String(v||'').toUpperCase();return s==='STRONG'||s==='POSITIVE'?'positive':s==='WEAK'||s==='CAUTIOUS'?'cautious':'neutral'};
 
   function ensureSummaryStyles(){
     if(document.querySelector('link[href="/static/thesis-summary.css"]')) return;
@@ -50,8 +54,45 @@
     </article>`;
   }
 
-  function render(d){
+  function sectorRow(s){
+    return `<div class="sector-row">
+      <div class="sector-name"><b>${esc(s.name||s.symbol)}</b><span>${esc(s.symbol)} • ${esc(s.theme||'')}</span></div>
+      <div class="sector-number ${tone(s.day_pct)}">${pct(s.day_pct)}</div>
+      <div class="sector-number ${tone(s.week_pct)}">${pct(s.week_pct)}</div>
+      <div class="sector-number ${tone(s.month_pct)}">${pct(s.month_pct)}</div>
+      <div class="sector-number ${tone(s.relative_5d_pct)}">${pct(s.relative_5d_pct)}</div>
+      <div class="sector-outlook ${outlookClass(s.outlook)}">${esc(s.outlook||'NEUTRAL')}</div>
+    </div>`;
+  }
+
+  function sectorSection(d){
+    if(!d||!Array.isArray(d.sectors)||!d.sectors.length){
+      return `<section class="sector-review" data-thesis-stop>
+        <div class="compact-list-title"><span>SECTOR PERFORMANCE & DAILY OUTLOOK</span><small>Updating sector data…</small></div>
+        <div class="sector-loading thesis-card">Sector board will populate automatically from the latest trading-day data.</div>
+      </section>`;
+    }
+    const leaders=(d.leadership||[]).slice(0,2).map(esc).join(' • ')||'—';
+    const caution=(d.caution||[]).slice(0,2).map(esc).join(' • ')||'—';
+    const benchmark=d.benchmark||{};
+    return `<section class="sector-review" data-thesis-stop>
+      <div class="compact-list-title"><span>SECTOR PERFORMANCE & DAILY OUTLOOK</span><small>Trading day ${esc(d.as_of||'—')} • updated automatically</small></div>
+      <div class="sector-summary-strip">
+        <article class="thesis-card"><span>MARKET OUTLOOK</span><b class="sector-outlook ${outlookClass(d.market_outlook)}">${esc(d.market_outlook||'NEUTRAL')}</b><small>SPY ${pct(benchmark.week_pct)} 5D • ${pct(benchmark.month_pct)} 1M</small></article>
+        <article class="thesis-card"><span>LEADERSHIP</span><b>${leaders}</b><small>Highest trend + relative-strength scores</small></article>
+        <article class="thesis-card"><span>CAUTION</span><b>${caution}</b><small>Weakest current trend + relative strength</small></article>
+      </div>
+      <div class="sector-table">
+        <div class="sector-row sector-header"><div>Sector / ETF</div><div>1D</div><div>5D</div><div>1M</div><div>REL 5D</div><div>Outlook</div></div>
+        ${d.sectors.map(sectorRow).join('')}
+      </div>
+      <div class="sector-method"><b>${esc(d.summary||'')}</b><span>${esc(d.methodology||'Rules-based sector trend and relative strength; not analyst consensus.')}</span></div>
+    </section>`;
+  }
+
+  function render(d,sectors){
     thesisData=d;
+    sectorData=sectors||sectorData;
     const stocks=d.stocks||[];
     const date=new Date(d.review_date+'T12:00:00').toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});
     const buys=stocks.filter(s=>(s.action||'').toUpperCase().includes('BUY'));
@@ -66,7 +107,7 @@
     track.innerHTML=`
       <section class="thesis-hero thesis-hero-compact" data-thesis-stop>
         <div class="thesis-hero-copy">
-          <div class="thesis-kicker">FARM • INVESTMENT RESEARCH • WEEKLY SUMMARY</div>
+          <div class="thesis-kicker">1838 ESTATE • INVESTMENT RESEARCH • WEEKLY SUMMARY</div>
           <h2>Market Position Review</h2>
           <div class="thesis-date">${esc(date)}</div>
           <div class="thesis-summary">${paraHtml(summary)}</div>
@@ -80,6 +121,8 @@
         <article class="thesis-card market-summary-card"><span>THESIS WARNINGS</span><b>${warnings.length?warnings.map(x=>esc(x.symbol)).join(' • '):'None'}</b></article>
         <article class="thesis-card market-summary-card"><span>NEW MONEY RANKING</span><b>${(d.new_money_ranking||[]).slice(0,4).map(esc).join(' → ')||'—'}</b></article>
       </section>
+
+      ${sectorSection(sectorData)}
 
       <section class="compact-position-list" data-thesis-stop>
         <div class="compact-list-title"><span>POSITION SUMMARY</span><small>Current close vs. existing entry zones</small></div>
@@ -168,11 +211,17 @@
     return r.json();
   }
 
+  async function loadSectors(){
+    try{return await getJson(LIVE_SECTORS)}
+    catch(e){try{return await getJson('/static/sector-outlook.json')}catch(e2){return sectorData}}
+  }
+
   async function load(){
-    try{ render(await getJson(LIVE_THESIS)); }
+    const sectors=await loadSectors();
+    try{ render(await getJson(LIVE_THESIS),sectors); }
     catch(e){
-      try{ render(await getJson('/static/thesis.json')); }
-      catch(e2){ const t=document.getElementById('thesisTrack'); if(t)t.innerHTML='<div class="thesis-hero"><div class="thesis-hero-copy"><div class="thesis-kicker">FARM • INVESTMENT RESEARCH</div><h2>Latest review unavailable</h2><div class="thesis-summary">The dashboard will retry automatically.</div></div></div>'; }
+      try{ render(await getJson('/static/thesis.json'),sectors); }
+      catch(e2){ const t=document.getElementById('thesisTrack'); if(t)t.innerHTML='<div class="thesis-hero"><div class="thesis-hero-copy"><div class="thesis-kicker">1838 ESTATE • INVESTMENT RESEARCH</div><h2>Latest review unavailable</h2><div class="thesis-summary">The dashboard will retry automatically.</div></div></div>'; }
     }
   }
 
