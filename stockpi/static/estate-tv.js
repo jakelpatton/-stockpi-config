@@ -17,9 +17,23 @@
     return host==='mobile.1838farm.com'||new URLSearchParams(location.search).get('mobile')==='1';
   }
 
+  function blockMobilePortfolioRequest(){
+    if(window.__estateMobileFetchWrapped)return;
+    const nativeFetch=window.fetch.bind(window);
+    window.fetch=(input,init)=>{
+      const url=typeof input==='string'?input:(input&&input.url)||'';
+      if(url.includes('/api/webull/summary')){
+        return Promise.resolve(new Response(JSON.stringify({configured:false,connected:false,read_only:true,balance:{},positions:[],watchlists:[]}),{status:200,headers:{'Content-Type':'application/json'}}));
+      }
+      return nativeFetch(input,init);
+    };
+    window.__estateMobileFetchWrapped=true;
+  }
+
   function bootMobile(){
     if(document.body)document.body.style.visibility='hidden';
-    addStyleOnce('/static/mobile.css?v=20260828a');
+    blockMobilePortfolioRequest();
+    addStyleOnce('/static/mobile.css?v=20260828b');
     addScriptOnce('/static/mobile-app.js?v=20260828a');
   }
 
