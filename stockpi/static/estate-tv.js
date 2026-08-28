@@ -12,11 +12,13 @@
     const l=document.createElement('link');l.rel='stylesheet';l.href=href;document.head.appendChild(l);
   }
 
-  // Activity is independent of the Portfolio renderer and safe to add here.
-  // Stock identity, Portfolio, Markets and rotation are loaded directly by dashboard.html.
+  // Activity and portfolio insight assets are independent of the core Portfolio
+  // renderer and can safely enrich it after first paint.
   function ensureActivityAssets(){
     addStyleOnce('/static/webull-activity.css?v=20260826stable');
     addScriptOnce('/static/webull-activity.js?v=20260826stable');
+    addStyleOnce('/static/portfolio-insights.css?v=20260828premium');
+    addScriptOnce('/static/portfolio-insights.js?v=20260828premium');
   }
 
   function slowTickerToHalfSpeed(){
