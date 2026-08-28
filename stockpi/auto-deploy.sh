@@ -44,17 +44,24 @@ log(){ echo "[farmpi-deploy] $*"; logger -t farmpi-deploy -- "$*" 2>/dev/null ||
 as_user(){ runuser -u "$DEPLOY_USER" -- env HOME="$DEPLOY_HOME" "$@"; }
 
 restart_kiosk(){
-  local uid runtime
+  local uid runtime socket
   uid="$(id -u "$DEPLOY_USER" 2>/dev/null || true)"
   runtime="/run/user/$uid"
+  socket=""
+
+  # Avoid a find|grep -q pipeline here. With `set -o pipefail`, grep can exit as
+  # soon as it sees a match and make find receive SIGPIPE, incorrectly turning a
+  # valid Wayland socket into a failed condition.
+  if [[ -n "$uid" && -d "$runtime" ]]; then
+    socket="$(find "$runtime" -maxdepth 1 -type s -name 'wayland-*' -print -quit 2>/dev/null || true)"
+  fi
 
   # The wall display is a dedicated local Wayland kiosk. Restarting Chromium after
   # a healthy code deployment prevents a stale/white page from surviving a Flask
   # restart. If nobody is logged into the graphical session, simply skip it.
-  if [[ -x "$APPDIR/start-kiosk.sh" && -n "$uid" && -d "$runtime" ]] && \
-     find "$runtime" -maxdepth 1 -type s -name 'wayland-*' -print -quit 2>/dev/null | grep -q .; then
-    log "Refreshing local Chromium kiosk."
-    as_user bash -c "nohup '$APPDIR/start-kiosk.sh' >>/tmp/1838-estate-kiosk-deploy.log 2>&1 </dev/null &"
+  if [[ -x "$APPDIR/start-kiosk.sh" && -n "$socket" ]]; then
+    log "Refreshing local Chromium kiosk on $(basename "$socket")."
+    as_user bash -c "export XDG_RUNTIME_DIR='$runtime'; export WAYLAND_DISPLAY='$(basename "$socket")'; nohup '$APPDIR/start-kiosk.sh' >>/tmp/1838-estate-kiosk-deploy.log 2>&1 </dev/null &"
   else
     log "No active Wayland kiosk session found; display refresh skipped."
   fi
