@@ -43,6 +43,23 @@ flock -n 9 || exit 0
 log(){ echo "[farmpi-deploy] $*"; logger -t farmpi-deploy -- "$*" 2>/dev/null || true; }
 as_user(){ runuser -u "$DEPLOY_USER" -- env HOME="$DEPLOY_HOME" "$@"; }
 
+restart_kiosk(){
+  local uid runtime
+  uid="$(id -u "$DEPLOY_USER" 2>/dev/null || true)"
+  runtime="/run/user/$uid"
+
+  # The wall display is a dedicated local Wayland kiosk. Restarting Chromium after
+  # a healthy code deployment prevents a stale/white page from surviving a Flask
+  # restart. If nobody is logged into the graphical session, simply skip it.
+  if [[ -x "$APPDIR/start-kiosk.sh" && -n "$uid" && -d "$runtime" ]] && \
+     find "$runtime" -maxdepth 1 -type s -name 'wayland-*' -print -quit 2>/dev/null | grep -q .; then
+    log "Refreshing local Chromium kiosk."
+    as_user bash -c "nohup '$APPDIR/start-kiosk.sh' >>/tmp/1838-estate-kiosk-deploy.log 2>&1 </dev/null &"
+  else
+    log "No active Wayland kiosk session found; display refresh skipped."
+  fi
+}
+
 restore_previous(){
   local status="${1:-1}"
   set +e
@@ -198,6 +215,7 @@ if [[ "$healthy" -ne 1 ]]; then
   restore_previous 1
 fi
 
+restart_kiosk
 DEPLOY_STARTED=0
 log "Deployment ${NEW_COMMIT:0:12} is healthy."
 exit 0
