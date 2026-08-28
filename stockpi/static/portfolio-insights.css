@@ -1,0 +1,89 @@
+/* 1838 Estate Portfolio Insights — useful Premium/account context without crowding cards. */
+.portfolio-insights-active .owned-summary-total{
+  position:relative;
+  padding-bottom:15px;
+}
+.portfolio-insight-sub{
+  position:absolute;
+  left:8px;
+  right:5px;
+  bottom:3px;
+  display:block;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+  font:800 7px/1 var(--estate-sans,Arial,sans-serif);
+  font-style:normal;
+  letter-spacing:.035em;
+  color:var(--estate-muted,#b9aa8c);
+}
+.premium-pill{
+  display:inline-block;
+  margin-right:7px;
+  padding:3px 6px 2px;
+  border:1px solid rgba(210,173,105,.5);
+  border-radius:999px;
+  background:rgba(210,173,105,.09);
+  color:var(--estate-brass2,#d2ad69);
+  font:900 7px/1 var(--estate-sans,Arial,sans-serif);
+  letter-spacing:.12em;
+  vertical-align:1px;
+}
+.owned-market-context{
+  display:flex;
+  align-items:center;
+  gap:13px;
+  min-height:24px;
+  margin-top:auto;
+  padding-top:7px;
+  border-top:1px solid rgba(203,159,79,.13);
+  white-space:nowrap;
+  overflow:hidden;
+}
+.owned-market-context>span{
+  display:flex;
+  align-items:baseline;
+  gap:5px;
+  min-width:0;
+}
+.owned-market-context i{
+  font:900 7px/1 var(--estate-sans,Arial,sans-serif);
+  font-style:normal;
+  letter-spacing:.09em;
+  color:var(--estate-muted,#b9aa8c);
+}
+.owned-market-context b{
+  font:650 10px/1 var(--estate-serif,Georgia,serif);
+  color:var(--estate-ivory,#eadfc7);
+}
+.owned-market-context em{
+  font:850 8px/1 var(--estate-sans,Arial,sans-serif);
+  font-style:normal;
+}
+.owned-market-context .session{
+  margin-left:auto;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+/* Dense 2-row portfolio pages keep the added context compact. */
+.owned-position-grid[data-density="normal"] .owned-market-context{
+  min-height:16px;
+  gap:8px;
+  margin-top:2px;
+  padding-top:3px;
+}
+.owned-position-grid[data-density="normal"] .owned-market-context i{
+  font-size:6px;
+}
+.owned-position-grid[data-density="normal"] .owned-market-context b{
+  font-size:8px;
+}
+.owned-position-grid[data-density="normal"] .owned-market-context em{
+  font-size:7px;
+}
+
+@media(max-width:1200px){
+  .portfolio-insight-sub{font-size:6px}
+  .owned-market-context{gap:8px}
+}
