@@ -33,8 +33,8 @@
   function bootMobile(){
     if(document.body)document.body.style.visibility='hidden';
     blockMobilePortfolioRequest();
-    addStyleOnce('/static/mobile.css?v=20260828b');
-    addScriptOnce('/static/mobile-app.js?v=20260828a');
+    addStyleOnce('/static/mobile.css?v=20260828c');
+    addScriptOnce('/static/mobile-app.js?v=20260828c');
   }
 
   // Activity and portfolio insight assets are independent of the core Portfolio
