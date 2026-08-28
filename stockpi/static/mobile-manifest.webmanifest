@@ -1,0 +1,18 @@
+{
+  "name": "1838 Estate",
+  "short_name": "1838 Estate",
+  "description": "1838 Estate remote property dashboard",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f2efe6",
+  "theme_color": "#244b3a",
+  "icons": [
+    {
+      "src": "/static/38C388BD-A21A-4A6D-9EC6-14B5CC26F7C1.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
