@@ -11,6 +11,7 @@ BACKUP="$DEPLOY_HOME/.farmpi-backup"
 STAMP="$APPDIR/.deployed-commit"
 LOCK="/run/farmpi-auto-deploy.lock"
 SERVICE_FILE="/etc/systemd/system/farm-dashboard.service"
+KIOSK_TRIGGER="/tmp/1838-estate-kiosk-refresh"
 DEPLOY_STARTED=0
 LAST_COMMIT=""
 ORIGINAL_EXECSTART=""
@@ -49,19 +50,21 @@ restart_kiosk(){
   runtime="/run/user/$uid"
   socket=""
 
-  # Avoid a find|grep -q pipeline here. With `set -o pipefail`, grep can exit as
-  # soon as it sees a match and make find receive SIGPIPE, incorrectly turning a
-  # valid Wayland socket into a failed condition.
   if [[ -n "$uid" && -d "$runtime" ]]; then
     socket="$(find "$runtime" -maxdepth 1 -type s -name 'wayland-*' -print -quit 2>/dev/null || true)"
   fi
 
-  # The wall display is a dedicated local Wayland kiosk. Restarting Chromium after
-  # a healthy code deployment prevents a stale/white page from surviving a Flask
-  # restart. If nobody is logged into the graphical session, simply skip it.
-  if [[ -x "$APPDIR/start-kiosk.sh" && -n "$socket" ]]; then
-    log "Refreshing local Chromium kiosk on $(basename "$socket")."
-    as_user bash -c "export XDG_RUNTIME_DIR='$runtime'; export WAYLAND_DISPLAY='$(basename "$socket")'; nohup '$APPDIR/start-kiosk.sh' >>/tmp/1838-estate-kiosk-deploy.log 2>&1 </dev/null &"
+  # The supervisor owns Chromium lifecycle. A trigger asks an existing supervisor
+  # to rebuild the browser; starting another supervisor is safe because it uses a
+  # single-instance flock and exits immediately when one is already running.
+  if [[ -f "$APPDIR/kiosk-supervisor.sh" && -n "$socket" ]]; then
+    log "Requesting local kiosk refresh on $(basename "$socket")."
+    as_user bash -c "export XDG_RUNTIME_DIR='$runtime'; export WAYLAND_DISPLAY='$(basename "$socket")'; touch '$KIOSK_TRIGGER'; nohup bash '$APPDIR/kiosk-supervisor.sh' >>/tmp/1838-estate-kiosk-deploy.log 2>&1 </dev/null &"
+  elif [[ -f "$APPDIR/start-kiosk.sh" && -n "$socket" ]]; then
+    # Compatibility fallback for an installation that has not received the
+    # supervisor yet.
+    log "Refreshing legacy local Chromium kiosk on $(basename "$socket")."
+    as_user bash -c "export XDG_RUNTIME_DIR='$runtime'; export WAYLAND_DISPLAY='$(basename "$socket")'; nohup bash '$APPDIR/start-kiosk.sh' >>/tmp/1838-estate-kiosk-deploy.log 2>&1 </dev/null &"
   else
     log "No active Wayland kiosk session found; display refresh skipped."
   fi
@@ -76,10 +79,6 @@ restore_previous(){
       "${RSYNC_EXCLUDES[@]}" \
       "$BACKUP/" "$APPDIR/"
 
-    # If this deployment changed the systemd runner, put the prior ExecStart back
-    # before restarting the rolled-back application. Without this, a failed first
-    # run_dashboard.py deployment could restore old code but leave systemd pointing
-    # at a file that no longer exists.
     if [[ "$SERVICE_FILE_CHANGED" -eq 1 && -n "$ORIGINAL_EXECSTART" && -f "$SERVICE_FILE" ]]; then
       sed -i "s#^ExecStart=.*#${ORIGINAL_EXECSTART}#" "$SERVICE_FILE"
       systemctl daemon-reload
@@ -111,16 +110,30 @@ if [[ -f "$SERVICE_FILE" ]]; then
   ORIGINAL_EXECSTART="$(grep '^ExecStart=' "$SERVICE_FILE" | head -n1 || true)"
 fi
 
-if [[ ! -d "$SOURCE/.git" ]]; then
-  log "Creating deployment checkout."
+sync_checkout(){
+  if [[ ! -d "$SOURCE/.git" ]]; then
+    log "Creating deployment checkout."
+    rm -rf "$SOURCE"
+    as_user git clone --quiet --depth 1 --branch "$BRANCH" "$REPO_URL" "$SOURCE"
+    return
+  fi
+
+  as_user git -C "$SOURCE" remote set-url origin "$REPO_URL"
+  if as_user git -C "$SOURCE" fetch --quiet --depth 1 origin "$BRANCH" && \
+     as_user git -C "$SOURCE" reset --hard --quiet FETCH_HEAD && \
+     as_user git -C "$SOURCE" clean -fdq; then
+    return
+  fi
+
+  # A power interruption can leave empty loose Git objects. This checkout is only
+  # a disposable deployment cache, so rebuild it automatically rather than leaving
+  # the timer permanently failed.
+  log "Deployment checkout is damaged or incomplete; rebuilding it from GitHub."
   rm -rf "$SOURCE"
   as_user git clone --quiet --depth 1 --branch "$BRANCH" "$REPO_URL" "$SOURCE"
-else
-  as_user git -C "$SOURCE" remote set-url origin "$REPO_URL"
-  as_user git -C "$SOURCE" fetch --quiet --depth 1 origin "$BRANCH"
-  as_user git -C "$SOURCE" reset --hard --quiet FETCH_HEAD
-  as_user git -C "$SOURCE" clean -fdq
-fi
+}
+
+sync_checkout
 
 NEW_COMMIT="$(as_user git -C "$SOURCE" rev-parse HEAD)"
 LAST_COMMIT="$(cat "$STAMP" 2>/dev/null || true)"
@@ -136,7 +149,6 @@ else
 fi
 log "New main commit detected: ${NEW_COMMIT:0:12} (previous $PREVIOUS_LABEL)."
 
-# Validate files that can be checked without starting the dashboard.
 python3 -m py_compile "$SOURCE/stockpi/app.py"
 for py_file in run_dashboard.py webull_readonly.py camera_motion_server.py webull_activity_service.py; do
   if [[ -f "$SOURCE/stockpi/$py_file" ]]; then
@@ -152,13 +164,10 @@ if [[ -f "$SOURCE/portfolio.json" ]]; then
   python3 -m json.tool "$SOURCE/portfolio.json" >/dev/null
 fi
 
-# Resolve/install dependency changes before touching the running application.
 if [[ -x "$APPDIR/venv/bin/pip" && -f "$SOURCE/stockpi/requirements.txt" ]]; then
   as_user "$APPDIR/venv/bin/pip" install --quiet -r "$SOURCE/stockpi/requirements.txt"
 fi
 
-# Snapshot the current deployed CODE. Local credentials/settings are deliberately
-# excluded from both backup and sync because deployment must never own them.
 rm -rf "$BACKUP"
 as_user mkdir -p "$BACKUP"
 as_user rsync -a --delete \
@@ -167,23 +176,17 @@ as_user rsync -a --delete \
   "$APPDIR/" "$BACKUP/"
 DEPLOY_STARTED=1
 
-# Sync repository application code while preserving all runtime-local state.
 as_user rsync -a --delete \
   "${RSYNC_EXCLUDES[@]}" \
   --exclude 'auto-deploy.sh' \
   "$SOURCE/stockpi/" "$APPDIR/"
 
-# Replace the deployer atomically so the currently running process is never
-# modified in place.
 if [[ -f "$SOURCE/stockpi/auto-deploy.sh" ]]; then
   as_user cp "$SOURCE/stockpi/auto-deploy.sh" "$APPDIR/.auto-deploy.sh.new"
   as_user chmod +x "$APPDIR/.auto-deploy.sh.new"
   as_user mv "$APPDIR/.auto-deploy.sh.new" "$APPDIR/auto-deploy.sh"
 fi
 
-# Migrate existing installations to the nonblocking runner. app.py remains the
-# Flask application module; run_dashboard.py starts Flask first and moves slow
-# network refreshes to background workers.
 if [[ -f "$APPDIR/run_dashboard.py" && -f "$SERVICE_FILE" ]]; then
   if grep -q '^ExecStart=' "$SERVICE_FILE"; then
     NEW_EXECSTART="ExecStart=$APPDIR/venv/bin/python $APPDIR/run_dashboard.py"
@@ -205,8 +208,6 @@ chown "$DEPLOY_USER" "$STAMP"
 
 systemctl restart farm-dashboard.service
 
-# The hardened runner normally answers in a few seconds. Allow a full minute so
-# a slow SD card or package import never causes a false rollback.
 healthy=0
 for _ in $(seq 1 60); do
   if curl -fsS --max-time 2 http://127.0.0.1:8080/api/health >/dev/null 2>&1 || \
