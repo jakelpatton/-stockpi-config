@@ -72,22 +72,17 @@ while true; do
   # A fresh launch already satisfies any refresh request left from a deployment.
   rm -f "$REFRESH_TRIGGER"
   log "Launching kiosk on $WAYLAND_DISPLAY."
-  bash "$LAUNCHER" &
+  FARMPI_KIOSK_CHILD=1 bash "$LAUNCHER" &
   launcher_pid=$!
 
   while kill -0 "$launcher_pid" 2>/dev/null; do
     reason=""
 
-    # Auto-deploy and manual recovery can request a browser rebuild without
-    # needing to know which Wayland socket the desktop currently uses.
     if [[ -e "$REFRESH_TRIGGER" ]]; then
       rm -f "$REFRESH_TRIGGER"
       reason="external refresh request"
     fi
 
-    # If the TV/monitor disappears and comes back on HDMI, rebuild Chromium.
-    # Some TVs keep HDMI electrically connected in standby, so the scheduled
-    # wake check below is retained as a second recovery path.
     current_hdmi="$(hdmi_state)"
     if [[ "$current_hdmi" != "$last_hdmi" ]]; then
       if printf '%s\n' "$current_hdmi" | grep -q ':connected'; then
@@ -96,9 +91,6 @@ while true; do
       last_hdmi="$current_hdmi"
     fi
 
-    # The dashboard already wakes the TV by CEC. Relaunch Chromium once during
-    # that configured wake minute so a compositor/TV handshake cannot leave a
-    # stale or invisible browser from the night before.
     today="$(date +%F)"
     hhmm="$(date +%H:%M)"
     configured_wake="$(wake_time)"
@@ -108,8 +100,6 @@ while true; do
       reason="scheduled TV wake"
     fi
 
-    # If Flask temporarily disappears, wait for it to recover and then rebuild
-    # the page instead of leaving Chromium parked on an error page indefinitely.
     if curl -fsS --max-time 2 "$DASHBOARD_URL" >/dev/null 2>&1; then
       if [[ "$dashboard_was_down" -eq 1 ]]; then
         dashboard_was_down=0
@@ -125,7 +115,6 @@ while true; do
       break
     fi
 
-    # If the compositor itself is replaced, restart after its new socket appears.
     if [[ ! -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" ]]; then
       log "Wayland socket disappeared; restarting when the desktop returns."
       kill_kiosk_browser
