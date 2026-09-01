@@ -17,8 +17,6 @@ LAST_COMMIT=""
 ORIGINAL_EXECSTART=""
 SERVICE_FILE_CHANGED=0
 
-# Files below are local runtime state, credentials, generated caches, or settings.
-# They must never be removed or overwritten by a GitHub code deployment.
 RSYNC_EXCLUDES=(
   --exclude 'venv/'
   --exclude 'cameras.env'
@@ -54,15 +52,10 @@ restart_kiosk(){
     socket="$(find "$runtime" -maxdepth 1 -type s -name 'wayland-*' -print -quit 2>/dev/null || true)"
   fi
 
-  # The supervisor owns Chromium lifecycle. A trigger asks an existing supervisor
-  # to rebuild the browser; starting another supervisor is safe because it uses a
-  # single-instance flock and exits immediately when one is already running.
   if [[ -f "$APPDIR/kiosk-supervisor.sh" && -n "$socket" ]]; then
     log "Requesting local kiosk refresh on $(basename "$socket")."
     as_user bash -c "export XDG_RUNTIME_DIR='$runtime'; export WAYLAND_DISPLAY='$(basename "$socket")'; touch '$KIOSK_TRIGGER'; nohup bash '$APPDIR/kiosk-supervisor.sh' >>/tmp/1838-estate-kiosk-deploy.log 2>&1 </dev/null &"
   elif [[ -f "$APPDIR/start-kiosk.sh" && -n "$socket" ]]; then
-    # Compatibility fallback for an installation that has not received the
-    # supervisor yet.
     log "Refreshing legacy local Chromium kiosk on $(basename "$socket")."
     as_user bash -c "export XDG_RUNTIME_DIR='$runtime'; export WAYLAND_DISPLAY='$(basename "$socket")'; nohup bash '$APPDIR/start-kiosk.sh' >>/tmp/1838-estate-kiosk-deploy.log 2>&1 </dev/null &"
   else
@@ -125,9 +118,6 @@ sync_checkout(){
     return
   fi
 
-  # A power interruption can leave empty loose Git objects. This checkout is only
-  # a disposable deployment cache, so rebuild it automatically rather than leaving
-  # the timer permanently failed.
   log "Deployment checkout is damaged or incomplete; rebuilding it from GitHub."
   rm -rf "$SOURCE"
   as_user git clone --quiet --depth 1 --branch "$BRANCH" "$REPO_URL" "$SOURCE"
@@ -185,6 +175,13 @@ if [[ -f "$SOURCE/stockpi/auto-deploy.sh" ]]; then
   as_user cp "$SOURCE/stockpi/auto-deploy.sh" "$APPDIR/.auto-deploy.sh.new"
   as_user chmod +x "$APPDIR/.auto-deploy.sh.new"
   as_user mv "$APPDIR/.auto-deploy.sh.new" "$APPDIR/auto-deploy.sh"
+fi
+
+# Existing installations previously started start-kiosk.sh directly from labwc.
+# Migrate that desktop autostart entry during deployment so the supervisor also
+# survives future reboots; install.sh does not need to be rerun.
+if [[ -f "$APPDIR/configure-kiosk-autostart.sh" ]]; then
+  as_user bash "$APPDIR/configure-kiosk-autostart.sh"
 fi
 
 if [[ -f "$APPDIR/run_dashboard.py" && -f "$SERVICE_FILE" ]]; then
