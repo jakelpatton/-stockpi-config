@@ -49,7 +49,16 @@ if [[ -n "$CONFIG" ]]; then
   sudo cat "$CONFIG" >"$WORK/config.yml"
   chmod 600 "$WORK/config.yml"
 
-  CRED="$(sudo awk -F: '/^[[:space:]]*credentials-file[[:space:]]*:/ {sub(/^[^:]*:[[:space:]]*/, ""); gsub(/["'"'"']/, ""); print; exit}' "$CONFIG" 2>/dev/null || true)"
+  CRED="$(python3 - "$WORK/config.yml" <<'PY'
+from pathlib import Path
+import sys
+for raw in Path(sys.argv[1]).read_text(errors='ignore').splitlines():
+    s = raw.strip()
+    if s.startswith('credentials-file:'):
+        print(s.split(':', 1)[1].strip().strip('"\''))
+        break
+PY
+)"
   if [[ -n "$CRED" && "$CRED" != /* ]]; then
     CRED="$(dirname "$CONFIG")/$CRED"
   fi
@@ -81,7 +90,19 @@ for line in text.splitlines():
 p.write_text('\n'.join(lines) + '\n')
 PY
 
-  PUBLIC_HOSTNAMES="$(awk -F: '/^[[:space:]]*hostname[[:space:]]*:/ {sub(/^[^:]*:[[:space:]]*/, ""); gsub(/["'"'"']/, ""); print}' "$WORK/config.yml" | paste -sd, - || true)"
+  PUBLIC_HOSTNAMES="$(python3 - "$WORK/config.yml" <<'PY'
+from pathlib import Path
+import sys
+hosts=[]
+for raw in Path(sys.argv[1]).read_text(errors='ignore').splitlines():
+    s=raw.strip()
+    if s.startswith('hostname:'):
+        value=s.split(':',1)[1].strip().strip('"\'')
+        if value:
+            hosts.append(value)
+print(','.join(hosts))
+PY
+)"
 else
   MODE="token"
   TOKEN="$(python3 - "$EXEC_TEXT" "$SERVICE_TEXT" "$ENV_TEXT" <<'PY' 2>/dev/null || true
