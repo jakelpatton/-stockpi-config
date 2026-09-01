@@ -11,6 +11,7 @@ TARGET_HOME="$(getent passwd "$TARGET_USER" | cut -d: -f6)"
 MODEL="$(tr -d '\0' </proc/device-tree/model 2>/dev/null || echo 'Unknown Raspberry Pi')"
 ARCH="$(uname -m)"
 STAGE="$TARGET_HOME/.farmpi-pi5-installer"
+PI35_ENABLE="${FARMPI_PI35_ENABLE:-1}"
 
 cat <<EOF
 FarmPi Raspberry Pi 5 bootstrap
@@ -49,10 +50,30 @@ export FARMPI_HOSTNAME="${FARMPI_HOSTNAME:-farmpi5}"
 
 bash ./install.sh
 
+# The new Pi 5 is being built with the older 3.5-inch MPI3501/Waveshare-style
+# GPIO display attached. Configure it with Raspberry Pi OS's in-kernel piscreen
+# DRM/KMS driver instead of the obsolete LCD-show/fbcp stack. HDMI KMS remains
+# enabled so the television stays the main FarmPi kiosk output.
+if [[ "$PI35_ENABLE" == "1" || "$PI35_ENABLE" == "true" || "$PI35_ENABLE" == "yes" ]]; then
+  echo ""
+  echo "Configuring the 3.5-inch SPI touchscreen..."
+  FARMPI_PI35_ROTATE="${FARMPI_PI35_ROTATE:-270}" \
+  FARMPI_PI35_SPEED="${FARMPI_PI35_SPEED:-18000000}" \
+    bash "$TARGET_HOME/farmpi/configure-pi35-display.sh" enable
+else
+  echo ""
+  echo "Skipping the 3.5-inch SPI display because FARMPI_PI35_ENABLE=$PI35_ENABLE."
+fi
+
 echo ""
 echo "Pi 5 bootstrap complete."
 echo "Staging name: $FARMPI_HOSTNAME.local"
-echo "After reboot the local display should enter the supervised kiosk automatically."
+if [[ "$PI35_ENABLE" == "1" || "$PI35_ENABLE" == "true" || "$PI35_ENABLE" == "yes" ]]; then
+  echo "3.5-inch LCD: configured for the piscreen DRM/KMS driver; reboot required."
+  echo "LCD status:  cd ~/farmpi && ./configure-pi35-display.sh status"
+  echo "LCD disable: cd ~/farmpi && ./configure-pi35-display.sh disable"
+fi
+echo "After reboot the local HDMI display should enter the supervised kiosk automatically."
 echo ""
 echo "PRIMARY CUTOVER (run only after the Pi 5 dashboard works locally):"
 echo "  cd ~/farmpi"
