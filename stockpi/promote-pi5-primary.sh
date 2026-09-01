@@ -111,16 +111,20 @@ fi
 
 echo "Pi 5 has registered with the existing Cloudflare tunnel."
 
-# When a locally-managed config exposes hostnames, record the current public
-# response before removing the old connector. Access-protected 3xx/4xx responses
-# still prove that Cloudflare is serving the hostname; 5xx is treated as unhealthy.
+# When a locally-managed config exposes hostnames, verify the public hostname.
+# Access-protected 3xx/4xx responses still prove Cloudflare is serving it; 5xx or
+# a connection failure is treated as unhealthy.
 check_public_hostnames() {
   local stage="$1" host code failed=0
   [[ -n "$PUBLIC_HOSTNAMES" ]] || return 0
   IFS=',' read -ra hosts <<<"$PUBLIC_HOSTNAMES"
   for host in "${hosts[@]}"; do
     [[ -n "$host" ]] || continue
-    code="$(curl -k -sS -o /dev/null -w '%{http_code}' --max-time 15 "https://$host/" || echo 000)"
+    if code="$(curl -k -sS -o /dev/null -w '%{http_code}' --max-time 15 "https://$host/")"; then
+      :
+    else
+      code="000"
+    fi
     echo "$stage public check: $host -> HTTP $code"
     if [[ "$code" == "000" || "$code" =~ ^5 ]]; then
       failed=1
