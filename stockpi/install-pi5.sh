@@ -42,15 +42,23 @@ rm -rf "$STAGE"
 git clone --quiet --depth 1 https://github.com/jakelpatton/-stockpi-config.git "$STAGE"
 cd "$STAGE/stockpi"
 
-# Keep a staging Pi 5 from colliding with an older FarmPi that may still be online.
-# Override this when the old Pi is powered off if you want to retain farmpi.local:
-#   FARMPI_HOSTNAME=farmpi bash install-pi5.sh
+# Stage under farmpi5 so the old Pi can stay online during validation. The final
+# promotion script moves the existing Cloudflare tunnel to this Pi, renames the
+# old Pi to farmpi3, and gives this Pi the legacy farmpi.local identity.
 export FARMPI_HOSTNAME="${FARMPI_HOSTNAME:-farmpi5}"
 
 bash ./install.sh
 
 echo ""
 echo "Pi 5 bootstrap complete."
-echo "This Pi is currently named: $FARMPI_HOSTNAME"
+echo "Staging name: $FARMPI_HOSTNAME.local"
 echo "After reboot the local display should enter the supervised kiosk automatically."
-echo "If this Pi is replacing the old unit permanently, you may keep farmpi5.local or reinstall/rename it to farmpi after the old unit is offline."
+echo ""
+echo "PRIMARY CUTOVER (run only after the Pi 5 dashboard works locally):"
+echo "  cd ~/farmpi"
+echo "  bash migrate-from-existing-pi.sh jpatton@farmpi.local"
+echo "  bash promote-pi5-primary.sh jpatton@farmpi.local"
+echo ""
+echo "The promotion step migrates the existing Cloudflare tunnel without committing credentials to GitHub,"
+echo "verifies the Pi 5 connector before stopping the old connector, renames the old Pi to farmpi3,"
+echo "and makes this Pi 5 the new farmpi.local primary."
