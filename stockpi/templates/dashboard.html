@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>1838 Estate</title>
 <link rel="stylesheet" href="/static/style.css">
-<link rel="stylesheet" href="/static/thesis.css?v=20260826c">
-<link rel="stylesheet" href="/static/thesis-summary.css?v=20260826c">
 <link rel="stylesheet" href="/static/tv-fit.css?v=20260826c">
 <link rel="stylesheet" href="/static/estate-tv.css?v=20260826c">
 <link rel="stylesheet" href="/static/owned-positions.css?v=20260826c">
@@ -99,11 +97,10 @@ async function updateNews(){try{let n=await fetch('/api/news',{cache:'no-store'}
 let cfg={rotation_enabled:true,rotation_seconds:18,screens:['stocks','home','water','power']},idx=0,timer;
 async function loadRotation(){try{cfg=await fetch('/api/dashboard-settings',{cache:'no-store'}).then(r=>r.json())}catch(e){}document.body.className=cfg.theme==='dark'?'farm-dark':'farm-light';buildDots();schedule()}
 function buildDots(){$('dots').innerHTML=(cfg.screens||[]).map((s,i)=>`<button class="dot ${i===idx?'active':''}" onclick="showScreen(${i})" aria-label="${s}"></button>`).join('')}
-function showScreen(i){if(!cfg.screens?.length)return;idx=((i%cfg.screens.length)+cfg.screens.length)%cfg.screens.length;document.querySelectorAll('.screen').forEach(x=>x.classList.toggle('active',x.dataset.screen===cfg.screens[idx]));const active=document.querySelector('.screen.active');$('screenName').textContent=active?.dataset.marketTitle||({stocks:'Portfolio',markets:'Markets',activity:'Orders & Trading Activity',home:'Estate Overview',water:'Water Systems',power:'Power / Climate / Electrical',thesis:'Sunday Market Review'})[cfg.screens[idx]]||cfg.screens[idx];buildDots();schedule()}
+function showScreen(i){if(!cfg.screens?.length)return;idx=((i%cfg.screens.length)+cfg.screens.length)%cfg.screens.length;document.querySelectorAll('.screen').forEach(x=>x.classList.toggle('active',x.dataset.screen===cfg.screens[idx]));const active=document.querySelector('.screen.active');$('screenName').textContent=active?.dataset.marketTitle||({stocks:'Portfolio',markets:'Markets',activity:'Orders & Trading Activity',home:'Estate Overview',water:'Water Systems',power:'Power / Climate / Electrical'})[cfg.screens[idx]]||cfg.screens[idx];buildDots();schedule()}
 function schedule(){clearTimeout(timer);if(cfg.rotation_enabled)timer=setTimeout(()=>showScreen((idx+1)%cfg.screens.length),Math.max(5,Number(cfg.rotation_seconds)||18)*1000)}
 setInterval(()=>$('clock').textContent=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),1000);updateStocks();updateHome();updateNews();loadRotation();setInterval(updateStocks,5000);setInterval(updateHome,15000);setInterval(updateNews,300000);
 </script>
-<script src="/static/thesis.js?v=20260826c"></script>
 <script src="/static/stock-identity.js?v=20260826c"></script>
 <script src="/static/rotation-controller.js?v=20260826c"></script>
 <script src="/static/owned-positions.js?v=20260826c"></script>
