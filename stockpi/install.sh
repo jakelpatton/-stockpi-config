@@ -54,7 +54,7 @@ rsync -a \
   ./ "$APPDIR/"
 
 chmod +x "$APPDIR/start-kiosk.sh" "$APPDIR/auto-deploy.sh" "$APPDIR/install-auto-deploy.sh" 2>/dev/null || true
-chmod +x "$APPDIR/kiosk-supervisor.sh" 2>/dev/null || true
+chmod +x "$APPDIR/kiosk-supervisor.sh" "$APPDIR/configure-kiosk-autostart.sh" 2>/dev/null || true
 
 if [[ ! -x "$APPDIR/venv/bin/python" ]]; then
   python3 -m venv "$APPDIR/venv"
@@ -109,25 +109,12 @@ EOF
 sudo systemctl daemon-reload
 sudo systemctl enable --now farm-dashboard.service
 
-# Raspberry Pi OS Trixie/Bookworm desktop uses labwc/Wayland. The supervisor is
-# intentionally started from the graphical session so it inherits a valid display
-# environment. It continuously relaunches Chromium if it dies, after an HDMI
-# reconnect, after Flask recovers, and once at the scheduled morning TV wake.
-mkdir -p "$TARGET_HOME/.config/labwc"
-AUTOSTART="$TARGET_HOME/.config/labwc/autostart"
-touch "$AUTOSTART"
-sed -i '\#1838 Estate kiosk supervisor#d;\#farmpi/start-kiosk.sh#d;\#farmpi/kiosk-supervisor.sh#d' "$AUTOSTART"
-
-if command -v lwrespawn >/dev/null 2>&1; then
-  KIOSK_COMMAND="$(command -v lwrespawn) /bin/bash $APPDIR/kiosk-supervisor.sh &"
-else
-  KIOSK_COMMAND="/bin/bash $APPDIR/kiosk-supervisor.sh &"
+# Install the kiosk supervisor as a persistent per-user systemd service. The
+# helper also keeps a labwc autostart fallback; its lock prevents duplicates.
+if [[ -f "$APPDIR/configure-kiosk-autostart.sh" ]]; then
+  runuser -u "$TARGET_USER" -- env HOME="$TARGET_HOME" APPDIR="$APPDIR" \
+    bash "$APPDIR/configure-kiosk-autostart.sh"
 fi
-cat >> "$AUTOSTART" <<EOF
-# 1838 Estate kiosk supervisor
-$KIOSK_COMMAND
-EOF
-chown -R "$TARGET_USER":"$(id -gn "$TARGET_USER")" "$TARGET_HOME/.config/labwc"
 
 # Make a dedicated dashboard Pi boot straight into the graphical desktop and do
 # not let Raspberry Pi OS blank the output. These are the same settings available
