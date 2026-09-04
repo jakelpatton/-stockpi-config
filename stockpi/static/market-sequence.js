@@ -158,7 +158,7 @@
   function desiredRotation(dynamicScreens){
     if(typeof cfg==='undefined'||!Array.isArray(cfg.screens))return dynamicScreens;
     const marketNames=new Set(['stocks','activity','portfolio','limits',...dynamicScreens]);
-    const rest=cfg.screens.filter(s=>!marketNames.has(s)&&!String(s).startsWith('owned-')&&!String(s).startsWith('watchlist-'));
+    const rest=cfg.screens.filter(s=>s!=='thesis'&&!marketNames.has(s)&&!String(s).startsWith('owned-')&&!String(s).startsWith('watchlist-'));
     const generatedNoWatch=dynamicScreens.filter(s=>!String(s).startsWith('watchlist-'));
     const watch=dynamicScreens.filter(s=>String(s).startsWith('watchlist-'));
     // Keep the overview screen visible, then detailed portfolio/owned/limits,
