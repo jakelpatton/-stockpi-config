@@ -54,8 +54,31 @@ if [[ -n "${WAYLAND_DISPLAY:-}" && -S "${XDG_RUNTIME_DIR}/${WAYLAND_DISPLAY}" ]]
   OZONE_ARGS+=(--ozone-platform=wayland)
 fi
 
+# Chromium 151 on the 1 GB Raspberry Pi 3 has shown intermittent white-frame
+# failures on the vc4/V3D Wayland GPU path. Keep the Pi 5 hardware accelerated,
+# but force the older Pi 3 onto Chromium's software compositor for stability.
+MODEL="$(tr -d '\0' </proc/device-tree/model 2>/dev/null || true)"
+RENDER_ARGS=()
+SOFTWARE_RENDER=0
+if [[ "$MODEL" == *"Raspberry Pi 3"* ]]; then
+  SOFTWARE_RENDER=1
+  RENDER_ARGS+=(
+    --disable-gpu
+    --disable-gpu-compositing
+    --disable-features=Vulkan
+  )
+fi
+
 BOOT_URL="${URL}?fresh=$(date +%s)"
-echo "Launching 1838 Estate kiosk: $BOOT_URL" >"$LOG"
+{
+  echo "Launching 1838 Estate kiosk: $BOOT_URL"
+  echo "Hardware: ${MODEL:-unknown}"
+  if [[ "$SOFTWARE_RENDER" -eq 1 ]]; then
+    echo "Renderer: software (Pi 3 white-screen workaround)"
+  else
+    echo "Renderer: hardware accelerated"
+  fi
+} >"$LOG"
 chromium "$BOOT_URL" \
   --kiosk \
   --noerrdialogs \
@@ -67,16 +90,21 @@ chromium "$BOOT_URL" \
   --disable-session-crashed-bubble \
   --disable-restore-session-state \
   --enable-features=OverlayScrollbar \
-  "${OZONE_ARGS[@]}" >>"$LOG" 2>&1 &
+  "${OZONE_ARGS[@]}" \
+  "${RENDER_ARGS[@]}" >>"$LOG" 2>&1 &
 CHROMIUM_PID=$!
 
 # One refresh after the page scripts have had time to initialize catches a rare
 # first-frame Wayland/Chromium blank render without creating duplicate browsers.
-(
-  sleep 10
-  if kill -0 "$CHROMIUM_PID" 2>/dev/null && command -v wtype >/dev/null 2>&1 && [[ -n "${WAYLAND_DISPLAY:-}" ]]; then
-    wtype -M ctrl -M shift -k r -m shift -m ctrl >/dev/null 2>&1 || wtype -k F5 >/dev/null 2>&1 || true
-  fi
-) &
+# The Pi 3 software-render path is deliberately left alone after launch. An
+# injected hard refresh can itself re-trigger the white compositor frame there.
+if [[ "$SOFTWARE_RENDER" -ne 1 ]]; then
+  (
+    sleep 10
+    if kill -0 "$CHROMIUM_PID" 2>/dev/null && command -v wtype >/dev/null 2>&1 && [[ -n "${WAYLAND_DISPLAY:-}" ]]; then
+      wtype -M ctrl -M shift -k r -m shift -m ctrl >/dev/null 2>&1 || wtype -k F5 >/dev/null 2>&1 || true
+    fi
+  ) &
+fi
 
 wait "$CHROMIUM_PID"
