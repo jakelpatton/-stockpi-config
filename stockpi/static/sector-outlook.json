@@ -1,6 +1,6 @@
 {
   "as_of": "2026-09-04",
-  "generated_at": "2026-09-08T00:28:48Z",
+  "generated_at": "2026-09-09T00:20:01Z",
   "source": "Public daily ETF market data",
   "methodology": "Rules-based 5D + 1M trend and 5D relative strength vs SPY; not analyst consensus.",
   "market_outlook": "CAUTIOUS",
