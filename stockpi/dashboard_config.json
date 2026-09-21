@@ -1,6 +1,12 @@
 {
   "rotation_enabled": true,
-  "rotation_seconds": 18,
+  "rotation_seconds": 14.4,
   "theme": "dark",
-  "screens": ["stocks", "activity", "home", "water", "power", "cameras", "thesis"]
+  "screens": [
+    "stocks",
+    "activity",
+    "home",
+    "water",
+    "power"
+  ]
 }
