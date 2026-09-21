@@ -31,7 +31,7 @@
     if(ownTimer){clearTimeout(ownTimer);ownTimer=null;}
     try{if(typeof timer!=='undefined')clearTimeout(timer)}catch(e){}
   }
-  function seconds(){return Math.max(5,Number(cfg?.rotation_seconds)||18)}
+  function seconds(){return Math.max(5,Number(cfg?.rotation_seconds)||14.4)}
 
   function markScreenChange(){
     const nowName=activeName();
