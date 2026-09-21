@@ -243,7 +243,7 @@ def save_power_config(v): POWER_CONFIG.write_text(json.dumps(v, indent=2))
 
 
 def load_dash_config():
-    d = {"rotation_enabled": True, "rotation_seconds": 18, "theme": "light", "screens": ["stocks", "home", "water", "power", "cameras"]}
+    d = {"rotation_enabled": True, "rotation_seconds": 14.4, "theme": "light", "screens": ["stocks", "home", "water", "power", "cameras"]}
     d.update(_json(DASH_CONFIG, {})); return d
 
 
@@ -374,7 +374,7 @@ def dashboard_settings():
     if request.method == "POST":
         d = request.get_json(silent=True) or {}
         cfg["rotation_enabled"] = bool(d.get("rotation_enabled", cfg["rotation_enabled"]))
-        cfg["rotation_seconds"] = max(5, min(300, int(d.get("rotation_seconds", cfg["rotation_seconds"]))))
+        cfg["rotation_seconds"] = max(5, min(300, float(d.get("rotation_seconds", cfg["rotation_seconds"]))))
         cfg["theme"] = d.get("theme", cfg["theme"]); save_dash_config(cfg)
     return jsonify(cfg)
 
