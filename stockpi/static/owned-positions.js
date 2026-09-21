@@ -5,7 +5,7 @@
   var LIVE_TIMEOUT_MS = 30000;
   var SECONDARY_TIMEOUT_MS = 15000;
   var CHART_TIMEOUT_MS = 7000;
-  var MAX_PER_PAGE = 6;
+  var MAX_PER_PAGE = 3;
   var chartCache = {};
   var currentPositions = [];
   var currentQuotes = {};
@@ -63,16 +63,7 @@
     return {screen:screen,summary:summary,root:root};
   }
 
-  function ensureMarkets(){
-    var screen=document.querySelector('.screen[data-screen="markets"]');
-    if(!screen){
-      var main=document.querySelector('main.screens');if(!main)return null;
-      screen=document.createElement('section');screen.className='screen';screen.setAttribute('data-screen','markets');screen.setAttribute('data-market-title','Markets');
-      screen.innerHTML='<div class="screen-heading"><div><div class="eyebrow">MARKET WATCH • FOLLOWING</div><h2>Markets</h2></div><div class="section-caption">Stocks being followed • current price • daily move • entry levels</div></div><div id="marketsFollowGrid" class="markets-follow-grid"><div class="markets-empty"><b>Loading markets…</b><span>Portfolio loads first.</span></div></div>';
-      main.appendChild(screen);
-    }
-    return screen.querySelector('#marketsFollowGrid');
-  }
+  function ensureMarkets(){ return null; }
 
   function setPortfolioLayout(root,count){
     var cols=1,rows=1,density='roomy';
@@ -143,13 +134,19 @@
   }
 
   function renderSummary(positions,qmap){
-    var invested=0,value=0,pl=0,chips=[];
+    var invested=0,value=0,pl=0;
     for(var i=0;i<positions.length;i++){
       var p=positions[i],s=String(p.symbol||'').toUpperCase(),m=metrics(p,qmap[s]||quoteFromPosition(p));
-      if(isFinite(m.invested))invested+=m.invested;if(isFinite(m.value))value+=m.value;if(isFinite(m.totalPL))pl+=m.totalPL;
-      chips.push('<div class="owned-summary-chip"><b>'+esc(s)+'</b><span>'+money(m.value)+'</span><em class="'+tone(m.dayPct)+'">'+signedPct(m.dayPct)+'</em></div>');
+      if(isFinite(m.invested))invested+=m.invested;
+      if(isFinite(m.value))value+=m.value;
+      if(isFinite(m.totalPL))pl+=m.totalPL;
     }
-    return '<div class="owned-summary-total"><span>Total invested</span><b>'+money(invested)+'</b></div><div class="owned-summary-total"><span>Total value</span><b>'+money(value)+'</b></div><div class="owned-summary-total"><span>Total gain / loss</span><b class="'+tone(pl)+'">'+signedMoney(pl)+'</b></div><div class="owned-summary-total"><span>Positions</span><b>'+positions.length+'</b></div><div class="owned-summary-chips">'+chips.join('')+'</div>';
+    var pct=invested?pl/invested*100:NaN;
+    return '<div class="owned-summary-total"><span>Total invested</span><b>'+money(invested)+'</b></div>'+
+      '<div class="owned-summary-total"><span>Total value</span><b>'+money(value)+'</b></div>'+
+      '<div class="owned-summary-total"><span>Total gain / loss</span><b class="'+tone(pl)+'">'+signedMoney(pl)+'</b></div>'+
+      '<div class="owned-summary-total"><span>Total return</span><b class="'+tone(pl)+'">'+signedPct(pct)+'</b></div>'+
+      '<div class="owned-summary-total"><span>Positions</span><b>'+positions.length+'</b></div>';
   }
 
   function renderPortfolio(positions,qmap,source){
@@ -168,7 +165,7 @@
   function updateRotation(extra){
     try{
       if(typeof cfg==='undefined'||!cfg.screens)return;
-      var wanted=['stocks'].concat(extra||[]).concat(['markets','activity','home','water','power','thesis']),available=[];
+      var wanted=['stocks'].concat(extra||[]).concat(['activity','home','water','power']),available=[];
       for(var i=0;i<wanted.length;i++)if(document.querySelector('.screen[data-screen="'+wanted[i]+'"]'))available.push(wanted[i]);
       var sig=available.join('|');cfg.rotation_enabled=true;
       if(sig!==lastRotation){cfg.screens=available;lastRotation=sig;if(typeof buildDots==='function')buildDots();if(typeof schedule==='function')schedule();}
@@ -190,7 +187,7 @@
       var qmap=qr&&qr.quotes?qr.quotes:{};
       for(var i=0;i<positions.length;i++){var p=positions[i],s=String(p.symbol||'').toUpperCase(),fallback=quoteFromPosition(p);if(!qmap[s])qmap[s]=fallback;}
       currentQuotes=qmap;renderPortfolio(positions,qmap,'live');
-      return fetchJSON('/api/stocks',SECONDARY_TIMEOUT_MS,[]).then(function(stocks){renderMarkets(stocks,positions,qmap);});
+      return null;
     });
   }
 
@@ -209,7 +206,7 @@
   }
 
   function boot(){
-    ensurePortfolio();ensureMarkets();
+    ensurePortfolio();
     fetchJSON('/static/portfolio-snapshot.json?ts='+Date.now(),4000,null).then(function(snapshot){
       if(snapshot&&snapshot.positions){
         var positions=snapshot.positions.filter(function(p){return num(p.quantity,p.qty)>0;});
@@ -219,7 +216,7 @@
       setTimeout(liveRefresh,300);
     });
     setInterval(liveRefresh,REFRESH_MS);
-    document.addEventListener('farm-screen-change',function(e){var n=e&&e.detail?String(e.detail.screen||''):'';if(n==='stocks'||n==='markets'||n.indexOf('portfolio-')===0)setTimeout(liveRefresh,100);});
+    document.addEventListener('farm-screen-change',function(e){var n=e&&e.detail?String(e.detail.screen||''):'';if(n==='stocks'||n.indexOf('portfolio-')===0)setTimeout(liveRefresh,100);});
   }
 
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
