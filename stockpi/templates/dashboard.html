@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="/static/style.css">
 <link rel="stylesheet" href="/static/tv-fit.css?v=20260826c">
 <link rel="stylesheet" href="/static/estate-tv.css?v=20260826c">
-<link rel="stylesheet" href="/static/owned-positions.css?v=20260826c">
+<link rel="stylesheet" href="/static/owned-positions.css?v=20260920a">
 </head>
 <body class="farm-light">
 <header class="topbar">
@@ -102,8 +102,8 @@ function schedule(){clearTimeout(timer);if(cfg.rotation_enabled)timer=setTimeout
 setInterval(()=>$('clock').textContent=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),1000);updateStocks();updateHome();updateNews();loadRotation();setInterval(updateStocks,5000);setInterval(updateHome,15000);setInterval(updateNews,300000);
 </script>
 <script src="/static/stock-identity.js?v=20260826c"></script>
-<script src="/static/rotation-controller.js?v=20260826c"></script>
-<script src="/static/owned-positions.js?v=20260826c"></script>
+<script src="/static/rotation-controller.js?v=20260920a"></script>
+<script src="/static/owned-positions.js?v=20260920a"></script>
 <script src="/static/estate-tv.js?v=20260826c"></script>
 </body>
 </html>
