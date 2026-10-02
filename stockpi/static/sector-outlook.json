@@ -1,59 +1,59 @@
 {
-  "as_of": "2026-09-29",
-  "generated_at": "2026-10-01T01:19:39Z",
+  "as_of": "2026-10-01",
+  "generated_at": "2026-10-02T01:42:47Z",
   "source": "Public daily ETF market data",
   "methodology": "Rules-based 5D + 1M trend and 5D relative strength vs SPY; not analyst consensus.",
   "market_outlook": "CAUTIOUS",
   "benchmark": {
     "symbol": "SPY",
-    "close": 764.2,
-    "day_pct": -0.18,
-    "week_pct": -1.19,
-    "month_pct": -0.37
+    "close": 763.99,
+    "day_pct": 0.18,
+    "week_pct": -0.42,
+    "month_pct": -0.15
   },
   "leadership": [
-    "Energy",
+    "Semiconductors",
     "Technology"
   ],
   "caution": [
-    "Utilities",
-    "Communication Services"
+    "Communication Services",
+    "Financials"
   ],
-  "summary": "Leadership: Energy and Technology. Caution: Utilities and Communication Services. SPY is -1.2% over 5D and -0.4% over 1M.",
+  "summary": "Leadership: Semiconductors and Technology. Caution: Communication Services and Financials. SPY is -0.4% over 5D and -0.2% over 1M.",
   "sectors": [
     {
       "symbol": "SOXX",
       "name": "Semiconductors",
       "theme": "AI chips & semiconductor equipment",
-      "close": 567.44,
-      "day_pct": 1.19,
-      "week_pct": -0.93,
-      "month_pct": 11.04,
-      "relative_5d_pct": 0.25,
-      "score": 0,
-      "outlook": "NEUTRAL"
+      "close": 576.33,
+      "day_pct": 1.35,
+      "week_pct": 1.81,
+      "month_pct": 14.93,
+      "relative_5d_pct": 2.23,
+      "score": 3,
+      "outlook": "STRONG"
     },
     {
       "symbol": "XLK",
       "name": "Technology",
       "theme": "Large-cap technology",
-      "close": 194.5,
-      "day_pct": -0.02,
-      "week_pct": -0.9,
-      "month_pct": 4.29,
-      "relative_5d_pct": 0.29,
-      "score": 0,
-      "outlook": "NEUTRAL"
+      "close": 197.81,
+      "day_pct": 1.05,
+      "week_pct": 1.59,
+      "month_pct": 7.74,
+      "relative_5d_pct": 2.01,
+      "score": 3,
+      "outlook": "STRONG"
     },
     {
       "symbol": "XLI",
       "name": "Industrials",
       "theme": "Power, equipment & automation",
-      "close": 169.13,
-      "day_pct": 0.21,
-      "week_pct": -0.67,
-      "month_pct": -3.43,
-      "relative_5d_pct": 0.52,
+      "close": 168.64,
+      "day_pct": 0.99,
+      "week_pct": -0.11,
+      "month_pct": -2.4,
+      "relative_5d_pct": 0.3,
       "score": -1,
       "outlook": "CAUTIOUS"
     },
@@ -61,23 +61,23 @@
       "symbol": "XLU",
       "name": "Utilities",
       "theme": "Grid & power demand",
-      "close": 39.71,
-      "day_pct": 1.17,
-      "week_pct": -2.02,
-      "month_pct": -5.97,
-      "relative_5d_pct": -0.84,
-      "score": -3,
-      "outlook": "WEAK"
+      "close": 39.68,
+      "day_pct": 0.61,
+      "week_pct": 0.81,
+      "month_pct": -7.01,
+      "relative_5d_pct": 1.23,
+      "score": 1,
+      "outlook": "POSITIVE"
     },
     {
       "symbol": "XLE",
       "name": "Energy",
       "theme": "Oil, gas & power feedstock",
-      "close": 61.54,
-      "day_pct": -0.9,
-      "week_pct": -0.39,
-      "month_pct": -3.78,
-      "relative_5d_pct": 0.8,
+      "close": 62.7,
+      "day_pct": 1.95,
+      "week_pct": 0.16,
+      "month_pct": -3.69,
+      "relative_5d_pct": 0.58,
       "score": 0,
       "outlook": "NEUTRAL"
     },
@@ -85,25 +85,25 @@
       "symbol": "XLC",
       "name": "Communication Services",
       "theme": "Digital platforms & connectivity",
-      "close": 111.47,
-      "day_pct": 0.26,
-      "week_pct": -1.81,
-      "month_pct": 0.01,
-      "relative_5d_pct": -0.63,
-      "score": -2,
-      "outlook": "CAUTIOUS"
+      "close": 109.94,
+      "day_pct": -0.93,
+      "week_pct": -3.55,
+      "month_pct": -2.21,
+      "relative_5d_pct": -3.14,
+      "score": -3,
+      "outlook": "WEAK"
     },
     {
       "symbol": "XLF",
       "name": "Financials",
       "theme": "Financial conditions",
-      "close": 54.01,
-      "day_pct": -0.33,
-      "week_pct": -1.44,
-      "month_pct": -6.41,
-      "relative_5d_pct": -0.25,
-      "score": -2,
-      "outlook": "CAUTIOUS"
+      "close": 53.46,
+      "day_pct": 0.11,
+      "week_pct": -1.96,
+      "month_pct": -7.28,
+      "relative_5d_pct": -1.55,
+      "score": -3,
+      "outlook": "WEAK"
     }
   ]
 }
